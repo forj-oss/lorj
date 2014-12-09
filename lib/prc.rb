@@ -80,6 +80,19 @@ module PrcLib
       @app_defaults
    end
 
+   def log_file= v
+      sFile = File.basename(v)
+      sDir = File.dirname(File.expand_path(v))
+      if not File.exists?(sDir)
+         raise "'%s' doesn't exist. Unable to create file '%s'" % [sDir, sFile]
+      end
+      @log_file = File.join(sDir, sFile)
+   end
+
+   def log_file
+      @log_file
+   end
+
    def level= v
 
       @level = v

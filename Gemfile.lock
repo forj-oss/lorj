@@ -1,13 +1,16 @@
 PATH
   remote: .
   specs:
-    procontrol (1.0.0)
+    lorj (1.0.0)
+      ansi (>= 1.4.3)
+      bundler
 
 GEM
   remote: https://rubygems.org/
   specs:
+    ansi (1.4.3)
     diff-lcs (1.2.5)
-    rake (10.3.2)
+    rake (10.4.2)
     rspec (3.1.0)
       rspec-core (~> 3.1.0)
       rspec-expectations (~> 3.1.0)
@@ -26,6 +29,6 @@ PLATFORMS
 
 DEPENDENCIES
   bundler (~> 1.7)
-  procontrol!
+  lorj!
   rake (~> 10.0)
   rspec (~> 3.1.0)

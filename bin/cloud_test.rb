@@ -15,7 +15,7 @@ require 'appinit.rb'
 AppInit::forj_initialize()
 
 # Initialize global Log object
-$FORJ_LOGGER=ForjLog.new()
+$FORJ_LOGGER=LorjLog.new()
 
 require 'lib-forj.rb'
 

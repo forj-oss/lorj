@@ -43,7 +43,8 @@ module PrcLib
             PrcLib.data_path = File.expand_path(File.join("~", ".%s" % PrcLib.app_name))
          end
 
-         sLogFile = File.join(PrcLib.data_path, "%s.log" % PrcLib.app_name)
+         sLogFile = PrcLib.log_file
+         sLogFile = File.join(PrcLib.data_path, "%s.log" % PrcLib.app_name) if PrcLib.log_file.nil?
 
          @oFileLogger = Logger.new(sLogFile, 'weekly')
          @oFileLogger.level = Logger::DEBUG
@@ -67,6 +68,7 @@ module PrcLib
             end
             str
          end
+         PrcLib.log_file = sLogFile
       end
 
       def info?

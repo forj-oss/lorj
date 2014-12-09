@@ -410,6 +410,11 @@ module Lorj
       #   - ++ ->
       def self.build_section_mapping
 
+         if Lorj::rhGet(@@yDefaults, :sections).nil?
+            PrcLib.warning("defaults.yaml do not defines :sections")
+            return nil
+         end
+
          Lorj::rhGet(@@yDefaults, :sections).each { | section, hValue |
             next if section == :default
             hValue.each_key { | map_key |
@@ -470,7 +475,7 @@ module Lorj
    # In your main:
    # * Config.set        : To set runtime depending on options given by the user (cli parameters for example)
    # * Config.get        : To get any kind of data, for example to test values.
-   # * Config.saveConfig : To save setting in local config. Use Lorj::Config::LocalSet to set this kind of data to save
+   # * Config.saveConfig : To save setting in local config. Use Lorj::Config::localSet to set this kind of data to save
    # * Config.localSet   : To set a local default data. If the main wanted to manage local config.
    # * Config.meta_each  : For example to display all data per section name, with values.
    #
@@ -575,6 +580,8 @@ module Lorj
          else
             @sConfigName = File.join(PrcLib.data_path,sConfigDefaultName)
          end
+
+         PrcLib.ensure_dir_exists(File.dirname(@sConfigName))
 
          if File.exists?(@sConfigName)
             @yLocal = YAML.load_file(@sConfigName)
@@ -721,7 +728,7 @@ module Lorj
       end
 
       # Function to set a runtime key/value, but remove it if value is nil.
-      # To set in config.yaml, use Lorj::Config::LocalSet
+      # To set in config.yaml, use Lorj::Config::localSet
       # To set on extra data, like account information, use Lorj::Config::ExtraSet
       #
       # * *Args*    :

@@ -80,17 +80,18 @@ module Lorj
          if @oConfig.exist?(:account_name)
             @sAccountName = @oConfig[:account_name]
          else
-            @sAccountName = 'hpcloud'
+            @sAccountName = 'lorj'
          end
-         @sAccountFile = File.join($FORJ_ACCOUNTS_PATH, @sAccountName)
+         @sAccountFile = File.join(PrcLib.data_path, 'accounts', @sAccountName)
 
-         sProvider = 'hpcloud'
+         sProvider = 'lorj'
          sProvider = @oConfig.get(:provider) if @oConfig.get(:provider)
 
          @hAccountData = {}
          _set(:account, :name, @sAccountName) if exist?(:name) != 'hash'
          _set(:account, :provider, sProvider)  if exist?(:provider) != 'hash'
 
+         PrcLib.ensure_dir_exists(File.join(PrcLib.data_path, 'accounts'))
       end
 
       # oForjAccount data get at several levels:
@@ -118,16 +119,16 @@ module Lorj
          default_key = key
 
          if not section
-            Logging.debug("Lorj::Account.get: No section found for key '%s'." % [key])
+            PrcLib.debug("Lorj::Account.get: Unable to get account data '%s'. No section found. check defaults.yaml." % [key])
          else
-            return rhGet(@hAccountData, section, key) if rhExist?(@hAccountData, section, key) == 2
+            return Lorj::rhGet(@hAccountData, section, key) if Lorj::rhExist?(@hAccountData, section, key) == 2
 
             hMeta = @oConfig.getAppDefault(:sections)
-            if rhExist?(hMeta, section, key, :default) == 3
-               default_key = rhGet(hMeta, section, key, :default)
-               Logging.debug("Lorj::Account.get: Reading default key '%s' instead of '%s'" % [default_key, key])
+            if Lorj::rhExist?(hMeta, section, key, :default) == 3
+               default_key = Lorj::rhGet(hMeta, section, key, :default)
+               PrcLib.debug("Lorj::Account.get: Reading default key '%s' instead of '%s'" % [default_key, key])
             end
-            return default if rhExist?(hMeta, section, key, :account_exclusive) == 3
+            return default if Lorj::rhExist?(hMeta, section, key, :account_exclusive) == 3
          end
 
          @oConfig.get(default_key , default )
@@ -160,22 +161,22 @@ module Lorj
          key = key.to_sym if key.class == String
          section = Lorj::Default.get_meta_section(key)
          if not section
-            Logging.debug("Lorj::Account.exist?: No section found for key '%s'." % [key])
+            PrcLib.debug("Lorj::Account.exist?: No section found for key '%s'." % [key])
             return nil
          end
 
          return 'runtime' if @oConfig.runtimeExist?(key)
 
-         return @sAccountName if rhExist?(@hAccountData, section, key) == 2
+         return @sAccountName if Lorj::rhExist?(@hAccountData, section, key) == 2
 
          hMeta = @oConfig.getAppDefault(:sections)
-         if rhExist?(hMeta, section, key, :default) == 3
-            default_key = rhGet(hMeta, section, key, :default)
-            Logging.debug("Lorj::Account.exist?: Reading default key '%s' instead of '%s'" % [default_key, key])
+         if Lorj::rhExist?(hMeta, section, key, :default) == 3
+            default_key = Lorj::rhGet(hMeta, section, key, :default)
+            PrcLib.debug("Lorj::Account.exist?: Reading default key '%s' instead of '%s'" % [default_key, key])
          else
             default_key = key
          end
-         return nil if rhExist?(hMeta, section, key, :account_exclusive) == 3
+         return nil if Lorj::rhExist?(hMeta, section, key, :account_exclusive) == 3
 
          @oConfig.exist?(default_key)
 
@@ -193,14 +194,14 @@ module Lorj
          key = key.to_sym if key.class == String
          section = Lorj::Default.get_meta_section(key)
 
-         rhGet(@oConfig.getAppDefault(:sections, section), key, :readonly)
+         Lorj::rhGet(@oConfig.getAppDefault(:sections, section), key, :readonly)
 
       end
 
       def meta_set(key, hMeta)
          key = key.to_sym if key.class == String
          section = Lorj::Default.get_meta_section(key)
-         hCurMeta = rhGet(@oConfig.getAppDefault(:sections, section), key)
+         hCurMeta = Lorj::rhGet(@oConfig.getAppDefault(:sections, section), key)
          hMeta.each { | mykey, myvalue |
             Lorj::rhSet(hCurMeta, myvalue, mykey)
             }
@@ -211,12 +212,12 @@ module Lorj
 
          key = key.to_sym if key.class == String
          section = Lorj::Default.get_meta_section(key)
-         rhExist?(@oConfig.getAppDefault(:sections, section), key) == 1
+         Lorj::rhExist?(@oConfig.getAppDefault(:sections, section), key) == 1
       end
 
       def get_meta_section(key)
          key = key.to_sym if key.class == String
-         rhGet(@account_section_mapping, key)
+         Lorj::rhGet(@account_section_mapping, key)
       end
 
       def meta_type?(key)
@@ -230,7 +231,7 @@ module Lorj
 
       # Loop on account metadata
       def metadata_each
-         rhGet(Lorj::Default.dump(), :sections).each { | section, hValue |
+         Lorj::rhGet(Lorj::Default.dump(), :sections).each { | section, hValue |
             next if section == :default
             hValue.each { | key, value |
                yield section, key, value
@@ -245,7 +246,7 @@ module Lorj
          key = key.to_sym if key.class == String
          section = Lorj::Default.get_meta_section(key)
 
-         rhGet(@oConfig.getAppDefault(:sections, section), key, :account_exclusive)
+         Lorj::rhGet(@oConfig.getAppDefault(:sections, section), key, :account_exclusive)
       end
 
       # This function update a section/key=value if the account structure is defined.
@@ -275,7 +276,7 @@ module Lorj
       end
 
       def getAccountData(section, key, default=nil)
-         return rhGet(@hAccountData, section, key) if rhExist?(@hAccountData, section, key) == 2
+         return Lorj::rhGet(@hAccountData, section, key) if Lorj::rhExist?(@hAccountData, section, key) == 2
          default
       end
 
@@ -301,8 +302,8 @@ module Lorj
             Lorj::rhSet(@hAccountData, @sAccountName, :account, :name) if Lorj::rhExist?(@hAccountData, :account, :name) != 2
             Lorj::rhSet(@hAccountData, sProvider, :account, :provider) if Lorj::rhExist?(@hAccountData, :account, :provider) != 2
 
-            if rhKeyToSymbol?(@hAccountData, 2)
-               @hAccountData = rhKeyToSymbol(@hAccountData, 2)
+            if Lorj::rhKeyToSymbol?(@hAccountData, 2)
+               @hAccountData = Lorj::rhKeyToSymbol(@hAccountData, 2)
                self.ac_save()
             end
             return @hAccountData
