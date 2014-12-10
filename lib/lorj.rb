@@ -30,7 +30,12 @@ require 'prc-logging.rb'   # Load class PrcLib::Logging
 require 'prc-config.rb'    # Load class Lorj::Config
 require 'prc-account.rb'   # Load class Lorj::Account
 
-require "core/core"                 # Lorj Core class
+require "core/core"                 # Lorj Core classes
+require "core/lorj-data"            # Lorj Lorj::Data object
+require "core/lorj-basedefinition"  # Lorj Lorj::BaseDefinition object
+require "core/lorj-baseprocess"     # Lorj Lorj::BaseProcess object
+require "core/lorj-basecontroller"  # Lorj Lorj::BaseController object
+require "core/lorj-keypath"         # Lorj Lorj::BaseDefinition object
 require "core/definition"           # Lorj Process definition
 require "core/definition_internal"  # Lorj internal functions
 

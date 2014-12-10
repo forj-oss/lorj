@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    lorj (1.0.0)
+    lorj (0.1.0)
       ansi (>= 1.4.3)
       bundler
 

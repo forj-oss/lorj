@@ -5,8 +5,8 @@ require 'lorj'
 require 'ansi'
 
 # If you want to see what is happening in the framework, uncomment debug settings.
-PrcLib.level = Logger::DEBUG # Printed out to your console.
-PrcLib.core_level = 3 # framework debug levels. (0 to 5)
+#PrcLib.level = Logger::DEBUG # Printed out to your console.
+#PrcLib.core_level = 3 # framework debug levels. (0 to 5)
 
 # Load global Config
 

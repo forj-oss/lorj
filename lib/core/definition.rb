@@ -15,6 +15,13 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+# Module Lorj which contains several classes.
+#
+# Those classes describes :
+# - processes (BaseProcess)   : How to create/delete/edit/query object.
+# - controler (BaseControler) : If a provider is defined, define how will do object creation/etc...
+# - definition(BaseDefinition): Functions to declare objects, query/data mapping and setup
+# this task to make it to work.
 module Lorj
    class BaseDefinition
 
@@ -55,7 +62,6 @@ module Lorj
       # meta data are defined in defaults.yaml and loaded in Lorj::Default class definition
       # Cloud provider can redefine ForjData defaults and add some extra parameters.
       # To get Application defaults, read defaults.yaml, under :sections:
-      @@meta_data = {}
       # <Section>:
       #   <Data>:               Required. Symbol/String. default: nil
       #                         => Data name. This symbol must be unique, across sections.
@@ -70,8 +76,11 @@ module Lorj
       #                            oConfig.set/get cannot.
       #     :account:           Optional. default: False
       #                         => setup will configure the account with this <Data>
+      #     :ask_sort:          Number which represents the ask order in the step group. (See /:setup/:ask_step for details)
+      #     :after:  <Data>     Name of the previous <Data> to ask before the current one.
       #     :depends_on:
       #                         => Identify :data type required to be set before the current one.
+      #     :default_value:     Default value at setup time. This is not necessarily the Application default value (See /:default)
       #     :validate:          Regular expression to validate end user input during setup.
       #     :value_mapping:     list of values to map as defined by the controller
       #       :controller:      mapping for get controller value from process values
@@ -91,6 +100,19 @@ module Lorj
       #       :values:
       #                         to retrieve from.
       #                         otherwise define simply a list of possible values.
+      #       :ask_step:        Step number. By default, setup will determine the step, thanks to meta lorj object dependencies tree.
+      #                         This number start at 0. Each step can be defined by /:setup/:ask_step/<steps> list.
+      #
+      # :setup:                  This section describes group of fields to ask, step by step.
+      #     :ask_step:           Define an Array of setup steps to ask to the end user. The step order is respected, and start at 0
+      #     -  :desc:            Define the step description
+      #        :explanation:  |- Define a multiline explanation. This is printed out in brown color.
+      #        :add:             Define a list of additionnal fields to ask.
+      #        - <Data>          Data to ask.
+      #
+      # :default:                List of <Data> application default values.
+      #     <Data> :             Value to use at the config application level.
+      @@meta_data = {}
 
       # The Generic Process can pre-define some data and value (function predefine_data)
       # The Generic Process (and external framework call) only knows about Generic data.
