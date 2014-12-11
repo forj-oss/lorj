@@ -35,6 +35,11 @@ module Lorj
          @oDefinition = oDefinition
       end
 
+      def controller_connect(sObjectType, hParams = {})
+         raise Lorj::PrcError.new(), "No Controler object loaded." if not @oDefinition
+         @oDefinition.connect(sObjectType)
+      end
+
       def controller_create(sObjectType, hParams = {})
          raise Lorj::PrcError.new(), "No Controler object loaded." if not @oDefinition
          @oDefinition.create(sObjectType)
@@ -146,7 +151,7 @@ module Lorj
       end
 
       def query_single(sCloudObj, oList, sQuery, name, sInfoMsg = {})
-         oList = controler.query(sCloudObj, sQuery)
+         oList = controller_query(sCloudObj, sQuery)
          sInfo = {
             :notfound   => "No %s '%s' found",
             :checkmatch => "Found 1 %s. checking exact match for '%s'.",

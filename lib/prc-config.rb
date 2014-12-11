@@ -152,7 +152,7 @@ module Lorj
    #
    #   rhSet(yVal, 'blabla', :test2, 'text') => :test
    #   # yVal  = {:test2 => {:test5 => :test, 'text' => 'blabla'}, :test5 => :test }
-   def Lorj::rhSet(yVal, value, *p)
+   def self::rhSet(yVal, value, *p)
       if p.length() == 0
          return yVal
       end
@@ -192,7 +192,7 @@ module Lorj
    #   - hash of hashes updated.
    # * *Raises* :
    #   Nothing
-   def Lorj.rhKeyToSymbol(yVal, levels = 1)
+   def self.rhKeyToSymbol(yVal, levels = 1)
       return nil if yVal.nil? or yVal.class != Hash
       yRes = {}
       yVal.each { | key, value |
@@ -223,7 +223,7 @@ module Lorj
    #   - false : all key path are symbols.
    # * *Raises* :
    #   Nothing
-   def Lorj.rhKeyToSymbol?(yVal, levels = 1)
+   def self.rhKeyToSymbol?(yVal, levels = 1)
       return false if yVal.nil? or yVal.class != Hash
       yVal.each { | key, value |
       if key.class == String
@@ -360,6 +360,8 @@ module Lorj
       # * *Raises* :
       #   - ++ ->
       def self.meta_each
+         return nil if Lorj::rhGet(@@yDefaults, :sections).nil?
+
          Lorj::rhGet(@@yDefaults, :sections).each { | section, hValue |
             hValue.each { | key, value |
                yield section, key, value
@@ -458,9 +460,14 @@ module Lorj
 
             PrcLib.info("Reading default configuration '%s'..." % @@sDefaultsName)
 
-            @@yDefaults = YAML.load_file(@@sDefaultsName)
+            if File.exists?(@@sDefaultsName)
+               @@yDefaults = YAML.load_file(@@sDefaultsName)
 
-            self.build_section_mapping
+               self.build_section_mapping
+            else
+               PrcLib.warning("PrcLib.app_defaults is set to '%s'. Trying to load '%s' but not found. Application defaults won't be loaded." % [PrcLib.app_defaults, @@sDefaultsName])
+            end
+
          end
       end
 

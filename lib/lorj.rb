@@ -41,11 +41,8 @@ require "core/definition_internal"  # Lorj internal functions
 
 module Lorj
    slib_forj = File.dirname(__FILE__)
-   $FORJ_LIB = File.expand_path(File.join(File.dirname(slib_forj),'lib'))
 
+   PrcLib.lib_path = File.expand_path(File.join(File.dirname(slib_forj),'lib'))
 
-   raise "$FORJ_LIB is missing. Please set it." if not $FORJ_LIB
-
-   $PROVIDERS_PATH = File.expand_path(File.join($FORJ_LIB,  "providers"))
-   $CORE_PROCESS_PATH = File.join($FORJ_LIB, "core_process")
+   PrcLib.core_level = 0
 end

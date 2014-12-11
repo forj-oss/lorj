@@ -142,8 +142,6 @@ module Lorj
          # Loading ProcessClass
          # Create Process derived from respectively BaseProcess
 
-         # TODO: Replace Global variables by equivalent to PrcLib.<var>
-
          PrcLib.core_level = 0 if PrcLib.core_level.nil?
 
          if oForjConfig.nil?
@@ -172,8 +170,9 @@ module Lorj
             # And load the content from the <sProcessClass>.rb
             if sProcessClass.is_a?(Symbol)
                # Ensure file and processName is capitalized
-               sProcessClass = sProcessClass.to_s.capitalize if (/[A-Z]/ =~ sProcessClass.to_s) != 0
-               sFile = File.join($CORE_PROCESS_PATH, sProcessClass + '.rb')
+               sProcessClass = sProcessClass.to_s
+               sProcessClass = sProcessClass.capitalize if (/[A-Z]/ =~ sProcessClass.to_s) != 0
+               sFile = File.join(PrcLib.process_path, sProcessClass + '.rb')
             else
                if sProcessClass.include?('/')
                   # Consider a path to the process file. File name is the name of the class.
@@ -191,7 +190,7 @@ module Lorj
                      }
                   end
                else
-                  sPath = $CORE_PROCESS_PATH
+                  sPath = PrcLib.process_path
                   sProcessClass = sProcessClass.capitalize if (/[A-Z]/ =~ sProcessClass) != 0
                   sFile = sProcessClass + '.rb'
                end
@@ -215,7 +214,7 @@ module Lorj
             Lorj.debug(1, "Loading Controller/definition '%s'" % sControllerClass)
             # Add Provider Object -------------
             if sControllerClass.is_a?(Symbol)
-               sPath = File.join($PROVIDERS_PATH, sControllerClass.to_s)
+               sPath = File.join(PrcLib.controller_path, sControllerClass.to_s)
                sControllerClass = sControllerClass.to_s.capitalize if (/[A-Z]/ =~ sControllerClass.to_s) != 0
                sFile = sControllerClass.to_s + '.rb'
             else
@@ -235,7 +234,7 @@ module Lorj
                      }
                   end
                else
-                  sPath = File.join($PROVIDERS_PATH, sControllerClass)
+                  sPath = File.join(PrcLib.controller_path, sControllerClass)
                   sControllerClass = sControllerClass.capitalize if (/[A-Z]/ =~ sControllerClass) != 0
                   sFile = sControllerClass + '.rb'
                end
@@ -487,7 +486,7 @@ module Lorj
    class CloudCore < Core
       def initialize(oConfig, sAccount = nil, aProcesses = [])
 
-         unless oConfig.is_a?(ForjAccount)
+         unless oConfig.is_a?(Lorj::Account)
             oForjAccount = Lorj::Account.new(oConfig)
             unless sAccount.nil?
                oForjAccount.ac_load(sAccount)
@@ -500,7 +499,7 @@ module Lorj
          sControllerMod = oForjAccount.get(:provider_name)
          raise Lorj::PrcError.new(), "Provider_name not set. Unable to create instance CloudCore." if sControllerMod.nil?
 
-         sControllerProcessMod = File.join($PROVIDERS_PATH, sControllerMod, sControllerMod.capitalize + "Process.rb")
+         sControllerProcessMod = File.join(PrcLib.controller_path, sControllerMod, sControllerMod.capitalize + "Process.rb")
          if File.exist?(sControllerProcessMod)
             aProcessList << sControllerProcessMod
          else
@@ -662,7 +661,7 @@ module Lorj
       # * *Raises* :
       #   nothing
       def << (hHash)
-         @hParams.merge!(hHash)
+         @hParams.merge!(hHash) unless hHash.nil?
       end
 
       # check Lorj::Data attributes or object exists. Or check key/value pair existence.

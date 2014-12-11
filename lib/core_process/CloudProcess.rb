@@ -17,11 +17,11 @@
 
 # It requires Core objects to be defined + default ForjProcess functions.
 
-require File.join($CORE_PROCESS_PATH, "global_process.rb")
-require File.join($CORE_PROCESS_PATH, "network_process.rb")
+require File.join(PrcLib.process_path, "global_process.rb")
+require File.join(PrcLib.process_path, "network_process.rb")
 
 # Define framework object on BaseDefinition
-class BaseDefinition
+class Lorj::BaseDefinition
 
    # All objects used by this process are built from a Controller
    process_default :use_controller => true
@@ -197,7 +197,8 @@ class BaseDefinition
    define_obj(:keypairs,
       {
          :create_e   => :forj_get_or_create_keypair,
-         :query_e    => :forj_query_keypair
+         :query_e    => :forj_query_keypair,
+         :get_e      => :forj_get_keypair
 #         :delete_e   => :forj_delete_keypair
       })
 
@@ -267,9 +268,9 @@ class BaseDefinition
       {
          :create_e   => :forj_get_or_create_server,
          :query_e    => :forj_query_server,
-         :get_e      => :forj_get_server
+         :get_e      => :forj_get_server,
 #         :update_e   => :forj_update_server,
-#         :delete_e   => :forj_delete_server
+         :delete_e   => :forj_delete_server
       })
 
    obj_needs   :CloudObject,  :compute_connection
@@ -291,6 +292,8 @@ class BaseDefinition
    def_attribute  :private_ip_address
    def_attribute  :public_ip_address
 
+   def_attribute  :image_id
+   def_attribute  :key_name
    # ************************************ SERVER Addresses Object
    # Object representing the list of IP addresses attached to a server.
    define_obj(:public_ip,

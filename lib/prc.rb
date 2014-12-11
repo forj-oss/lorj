@@ -105,4 +105,27 @@ module PrcLib
       @level
    end
 
+   def lib_path=(v)
+      @lib_path = v if @lib_path.nil?
+   end
+
+   def lib_path()
+      @lib_path
+   end
+
+   def controller_path()
+      File.expand_path(File.join(@lib_path,  "providers"))
+   end
+
+   def process_path()
+      File.join(@lib_path, "core_process")
+   end
+end
+
+
+class Object
+  # Simplify boolean test on objects
+  def boolean?
+    self.is_a?(TrueClass) || self.is_a?(FalseClass)
+  end
 end

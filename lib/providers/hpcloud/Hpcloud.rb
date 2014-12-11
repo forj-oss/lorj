@@ -27,7 +27,7 @@ require File.join($HPCLOUD_PATH, "network.rb")
 require File.join($HPCLOUD_PATH, "security_groups.rb")
 
 # Defines Meta HPCloud object
-class Hpcloud < BaseDefinition
+class Hpcloud
 
    define_obj :services
    obj_needs   :data, :account_id,      :mapping => :hp_access_key
@@ -176,7 +176,7 @@ end
 
 # Following class describe how FORJ should handle HP Cloud objects.
 # Except Cloud connection, all HPCloud objects management are described/called in HP* modules.
-class HpcloudController < BaseController
+class HpcloudController
 
    def connect(sObjectType, hParams)
       case sObjectType
@@ -187,7 +187,7 @@ class HpcloudController < BaseController
          when :network_connection
             Fog::HP::Network.new(hParams[:hdata])
          else
-            forjError "'%s' is not a valid object for 'connect'" % sObjectType
+            Error "'%s' is not a valid object for 'connect'" % sObjectType
       end
    end
 
@@ -252,7 +252,7 @@ class HpcloudController < BaseController
             required?(hParams, :subnetwork)
             HPNetwork.add_interface(hParams[:router], hParams[:subnetwork])
          else
-            forjError "'%s' is not a valid object for 'create'" % sObjectType
+            Error "'%s' is not a valid object for 'create'" % sObjectType
       end
    end
 
@@ -296,7 +296,7 @@ class HpcloudController < BaseController
             required?(hParams, :compute_connection)
             HPCompute.query_flavor(hParams[:compute_connection], sQuery)
          else
-            forjError "'%s' is not a valid object for 'query'" % sObjectType
+            Error "'%s' is not a valid object for 'query'" % sObjectType
       end
    end
 
@@ -307,26 +307,33 @@ class HpcloudController < BaseController
          when :rule
             HPSecurityGroups.delete_rule(hParams[:network_connection], hParams[:id])
             hParams[:network_connection].security_group_rules.get(hParams[:id]).destroy
-         else
+          when :server
+            required?(hParams, :compute_connection)
+            required?(hParams, :server)
+            HPCompute.delete_server(hParams[:compute_connection], hParams[:server] )
+        else
             nil
       end
    end
 
    def get(sObjectType, sUniqId, hParams)
       case sObjectType
-        when :server_log
+         when :server_log
             required?(hParams, :server)
-
+            
             hParams[:server].console_output(sUniqId)
-        when :server
+         when :server
             required?(hParams, :compute_connection)
             HPCompute.get_server(hParams[:compute_connection], sUniqId)
-        when :image
+         when :image
             required?(hParams, :compute_connection)
             HPCompute.get_image(hParams[:compute_connection], sUniqId)
          when :network
             required?(hParams, :network_connection)
             HPNetwork.get_network(hParams[:network_connection], sUniqId)
+         when :keypairs
+            required?(hParams, :compute_connection)
+            HPKeyPairs.get_keypair(hParams[:compute_connection], sUniqId)
          else
             forjError "'%s' is not a valid object for 'get'" % sObjectType
       end
@@ -339,21 +346,21 @@ class HpcloudController < BaseController
                yield(value)
             }
          else
-            forjError "'%s' is not a valid list for 'each'" % oFogObject.class
+            Error "'%s' is not a valid list for 'each'" % oFogObject.class
       end
    end
 
    def get_attr(oControlerObject, key)
       begin
          if oControlerObject.is_a?(Excon::Response)
-            rhGet(oControlerObject.data, :body, key)
+            Lorj::rhGet(oControlerObject.data, :body, key)
          else
             attributes = oControlerObject.attributes
             raise "attribute '%s' is unknown in '%s'. Valid one are : '%s'" % [key[0], oControlerObject.class, oControlerObject.class.attributes ] unless oControlerObject.class.attributes.include?(key[0])
-            rhGet(attributes, key)
+            Lorj::rhGet(attributes, key)
          end
       rescue => e
-         forjError "Unable to map '%s'. %s" % [key, e.message]
+         Error "Unable to map '%s'. %s" % [key, e.message]
       end
    end
 
@@ -364,7 +371,7 @@ class HpcloudController < BaseController
          raise "attribute '%s' is unknown in '%s'. Valid one are : '%s'" % [key[0], oControlerObject.class, oControlerObject.class.attributes ] unless oControlerObject.class.attributes.include?(key[0])
          Lorj::rhSet(attributes, value, key)
       rescue => e
-         forjError "Unable to map '%s' on '%s'" % [key, sObjectType]
+         Error "Unable to map '%s' on '%s'" % [key, sObjectType]
       end
    end
 
@@ -372,11 +379,11 @@ class HpcloudController < BaseController
    def update(sObjectType, oObject, hParams)
       case sObjectType
          when :router
-            forjError "Object to update is nil" if oObject.nil?
+            Error "Object to update is nil" if oObject.nil?
 
             HPNetwork.update_router(oObject[:object])
          else
-            forjError "'%s' is not a valid list for 'update'" % oFogObject.class
+            Error "'%s' is not a valid list for 'update'" % oFogObject.class
       end
    end
 
@@ -396,7 +403,7 @@ class HpcloudController < BaseController
                hServiceToFind = oParams[:list_services]
             end
             # Search for service. Ex: Can be :Networking or network. I currently do not know why...
-            hSearchServices= rhGet(hServices, :service_catalog)
+            hSearchServices= Lorj::rhGet(hServices, :service_catalog)
             sService = nil
             hServiceToFind.each { | sServiceElem |
                if hSearchServices.key?(sServiceElem)
@@ -405,15 +412,15 @@ class HpcloudController < BaseController
                end
             }
 
-            forjError "Unable to find services %s" % hServiceToFind if sService.nil?
-            result = rhGet(hServices, :service_catalog, sService).keys
+            Error "Unable to find services %s" % hServiceToFind if sService.nil?
+            result = Lorj::rhGet(hServices, :service_catalog, sService).keys
             result.delete("name")
             result.each_index { | iIndex |
                result[iIndex] = result[iIndex].to_s if result[iIndex].is_a?(Symbol)
             }
             return result
          else
-            forjError "'%s' is not a valid object for 'get_services'" % sObjectType
+            Error "'%s' is not a valid object for 'get_services'" % sObjectType
       end
    end
 end

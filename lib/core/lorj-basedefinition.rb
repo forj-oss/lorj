@@ -22,7 +22,24 @@
 # - definition(BaseDefinition): Functions to declare objects, query/data mapping and setup
 # this task to make it to work.
 
+require 'highline/import'
+require 'erb'
+
 module Lorj
+   # This class limits ERC template to access only to config object data.
+   class ERBConfig
+      attr_reader :config
+
+      def initialize(config)
+          @config = config
+      end
+
+      # Bind this limited class with ERB templates
+      def get_binding()
+         binding()
+      end
+   end
+     
    # Following class defines class levels function to
    # declare framework objects.
    # As each process needs to define new object to deal with
@@ -229,7 +246,7 @@ module Lorj
 
          return nil if not sCloudObj
 
-         raise Lorj::PrcError.new(), "$s.Get: '%s' is not a known object type." % [self.class, sCloudObj] if Lorj::rhExist?(@@meta_obj, sCloudObj) != 1
+         raise Lorj::PrcError.new(), "%s.Get: '%s' is not a known object type." % [self.class, sCloudObj] if Lorj::rhExist?(@@meta_obj, sCloudObj) != 1
 
          if hConfig.length > 0
             # cleanup runtime data to avoid conflicts between multiple calls
@@ -585,7 +602,11 @@ module Lorj
          aSetup.each_index { | iStep |
             Lorj.debug(2, "Ask step %s:" % iStep)
             puts "%s%s%s" % [ANSI.bold, aSetup[iStep][:desc], ANSI.clear] unless aSetup[iStep][:desc].nil?
-            puts "%s\n\n" % ANSI.yellow(aSetup[iStep][:explanation]) unless aSetup[iStep][:explanation].nil?
+            begin
+              puts "%s\n\n" % ANSI.yellow(erb(aSetup[iStep][:explanation])) unless aSetup[iStep][:explanation].nil?
+            rescue => e
+               PrcLib.Error "setup step '%d/:explanation' : %s" % [iStep, e.message]
+            end
             aOrder = aSetup[iStep][:order]
             aOrder.each_index { | iIndex |
             Lorj.debug(2, "Ask order %s:" % iIndex)
@@ -602,8 +623,16 @@ module Lorj
 
 
                   sDesc = "'%s' value" % sKey
-                  puts "#{sKey}: %s" % [hParam[:explanation]] unless Lorj::rhGet(hParam, :explanation).nil?
-                  sDesc = hParam[:desc] unless hParam[:desc].nil?
+                  begin
+                     puts "#{sKey}: %s" % [erb(hParam[:explanation])] unless hParam[:explanation].nil?
+                  rescue => e
+                     PrcLib.Error "setup key '%s/:explanation' : %s" % [sKey, e.message]
+                  end
+                  begin
+                     sDesc = erb(hParam[:desc]) unless hParam[:desc].nil?
+                  rescue => e
+                     PrcLib.Error "setup key '%s/:desc' : %s" % [sKey, e.message]
+                  end
                   sDefault = @oForjConfig.get(sKey, hParam[:default_value])
                   rValidate = nil
 
@@ -647,13 +676,39 @@ module Lorj
                               raise Lorj::PrcError.new(), "#{sKey}: query_type => :process_call requires missing :query_call declaration (Provider function)" if hValues[:query_call].nil?
                               pProc = hValues[:query_call]
                               sObjectToLoad = hValues[:object]
+
+                              # Building Process function hParams parameter
                               oParams = ObjectData.new
-                              oParams.add(oObject)
-                              oParams << hValues[:query_params]
+                              oParams << { default_value: sDefault }
+
+                              unless hValues[:query_params].nil?
+                                 hValues[:query_params].each { | key, value |
+                                   if mRes = value.match(/lorj::config\[(.*)\]/)
+                                      aExtract = mRes[1].split(', ')
+                                      aExtract.map! { | v | v = v[1..-1].to_sym if v[0] == ':' }
+                                      oParams << { key => config[aExtract] }
+                                   else
+                                      oParams << { key => value }
+                                   end
+                                 }
+                              end
+
                               begin
-                                 aList = @oForjProcess.method(pProc).call(sObjectToLoad, oParams)
+                                 hProcResult = @oForjProcess.method(pProc).call(sObjectToLoad, oParams)
                               rescue => e
                                  raise Lorj::PrcError.new(), "Error during call of '%s':\n%s" % [pProc, e.message]
+                              end
+
+                              if hProcResult.is_a?(Hash)
+                                 sDefault = hProcResult[:default_value].nil? ? sDefault : hProcResult[:default_value]
+                                 if hProcResult[:list].nil? or ! hProcResult[:list].is_a?(Array)
+                                    PrcLib.debug("Process function '%s' did not return an :list => Array of values." % [ hValues[:query_call] ])
+                                 else
+                                    aList = hProcResult[:list]
+                                 end
+                              else
+                                 PrcLib.debug("Process function '%s' did not return an Hash with :list and :default_value")
+                                 aList = []
                               end
                            else
                               raise Lorj::PrcError.new, "'%s' invalid. %s/list_values/values_type supports %s. " % [hValues[:values_type], sKey, [:provider_function]]
@@ -699,7 +754,12 @@ module Lorj
                      @oForjConfig.set(sKey, value)
                      if hParam[:post_step_function]
                         pProc = hParam[:post_step_function]
-                        bOk = @oForjProcess.method(pProc).call()
+                        bResult = @oForjProcess.method(pProc).call()
+                        if bResult.boolean?
+                           bOk = bResult
+                        else
+                           PrcLib.debug("Warning: '%s' did not return any boolean value. Ignored" % [pProc])
+                        end
                      end
                   end
                }
@@ -719,6 +779,7 @@ module Lorj
          }
 
          @oForjConfig = oForjConfig
+         @oERBConfig = ERBConfig.new(oForjConfig)
          raise Lorj::PrcError.new(), "'%s' is not a valid ForjAccount or ForjConfig Object." % [oForjConfig.class] if not oForjConfig.is_a?(Lorj::Account) and not oForjConfig.is_a?(Lorj::Config)
 
          @oProvider = oForjProvider
@@ -1013,7 +1074,6 @@ module Lorj
          }
          bDone
       end
-
 
       private
 

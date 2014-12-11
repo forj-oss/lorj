@@ -67,6 +67,8 @@ module Lorj
       #                         => Data name. This symbol must be unique, across sections.
       #     :desc:              Required. String. default: nil
       #                         => Description
+      #     :explanation:  |-   Print a multiline explanation before ask the key value.
+      #                         ERB template enable. To get config data, type <%= config[...] %>
       #     :readonly:          Optional. true/false. Default: false
       #                         => oForjConfig.set() will fail if readonly is true.
       #                            Can be set, only thanks to oForjConfig.setup()
@@ -105,8 +107,9 @@ module Lorj
       #
       # :setup:                  This section describes group of fields to ask, step by step.
       #     :ask_step:           Define an Array of setup steps to ask to the end user. The step order is respected, and start at 0
-      #     -  :desc:            Define the step description
+      #     -  :desc:            Define the step description. ERB template enable. To get config data, type config[...]
       #        :explanation:  |- Define a multiline explanation. This is printed out in brown color.
+      #                          ERB template enable. To get config data, type <%= config[...] %>
       #        :add:             Define a list of additionnal fields to ask.
       #        - <Data>          Data to ask.
       #
@@ -500,6 +503,10 @@ module Lorj
          Lorj::rhSet(@@predefine_data_value, value, oKeyPath.sFullPath, :values)
       end
 
-
+      # function to interpret a template data, and use ERBConfig as data context.
+      # ERBConfig contains config object only.
+      def erb(str)
+         ERB.new(str).result(@oERBConfig.get_binding())
+      end
    end
 end
