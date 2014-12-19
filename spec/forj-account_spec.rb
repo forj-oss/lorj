@@ -16,10 +16,11 @@
 #    limitations under the License.
 
 require 'rubygems'
+# require 'byebug'
 require 'bundler/setup'
 
-$APP_PATH = File.dirname(__FILE__)
-$LIB_PATH = File.expand_path(File.join(File.dirname($APP_PATH), 'lib'))
+$APP_PATH = File.dirname(File.dirname(__FILE__))
+$LIB_PATH = File.expand_path(File.join($APP_PATH, 'lib'))
 
 $LOAD_PATH << $LIB_PATH
 
@@ -28,7 +29,7 @@ require 'lorj' # Load lorj framework
 PrcLib.log_file = 'lorj-rspec.log'
 PrcLib.level = Logger::FATAL
 PrcLib.app_name = 'lorj-spec'
-PrcLib.app_defaults = 'lorj-spec'
+PrcLib.app_defaults = File.join($APP_PATH, 'lorj-spec')
 
 describe 'class: Lorj::Account,' do
   context 'when creating a new instance,' do

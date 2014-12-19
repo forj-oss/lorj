@@ -12,3 +12,4 @@
 *.a
 mkmf.log
 lorj-rspec.log
+Gemfile.lock

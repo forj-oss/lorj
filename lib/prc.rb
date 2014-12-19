@@ -82,8 +82,13 @@ module PrcLib
     @app_name = v unless @app_name
   end
 
+  # TODO: Support for several defaults, depending on controllers loaded.
   def app_defaults=(v)
-    @app_defaults = File.expand_path(v) unless @app_defaults
+    return if @app_defaults
+    unless v[0] == '/'
+       v = File.join(File.dirname(__FILE__), v)
+    end
+    @app_defaults = File.expand_path(v)
   end
 
   def log_file=(v)
