@@ -17,9 +17,7 @@
 #    limitations under the License.
 #++
 
-
-
-require "lorj/version"
+require 'lorj/version'
 
 # This is the lorj base library.
 
@@ -30,19 +28,19 @@ require 'prc-logging.rb'   # Load class PrcLib::Logging
 require 'prc-config.rb'    # Load class Lorj::Config
 require 'prc-account.rb'   # Load class Lorj::Account
 
-require "core/core"                 # Lorj Core classes
-require "core/lorj-data"            # Lorj Lorj::Data object
-require "core/lorj-basedefinition"  # Lorj Lorj::BaseDefinition object
-require "core/lorj-baseprocess"     # Lorj Lorj::BaseProcess object
-require "core/lorj-basecontroller"  # Lorj Lorj::BaseController object
-require "core/lorj-keypath"         # Lorj Lorj::BaseDefinition object
-require "core/definition"           # Lorj Process definition
-require "core/definition_internal"  # Lorj internal functions
+require 'core/core'                 # Lorj Core classes
+require 'core/lorj-data'            # Lorj Lorj::Data object
+require 'core/lorj-basedefinition'  # Lorj Lorj::BaseDefinition object
+require 'core/lorj-baseprocess'     # Lorj Lorj::BaseProcess object
+require 'core/lorj-basecontroller'  # Lorj Lorj::BaseController object
+require 'core/lorj-keypath'         # Lorj Lorj::BaseDefinition object
+require 'core/definition'           # Lorj Process definition
+require 'core/definition_internal'  # Lorj internal functions
 
 module Lorj
-   slib_forj = File.dirname(__FILE__)
+  slib_forj = File.dirname(__FILE__)
 
-   PrcLib.lib_path = File.expand_path(File.join(File.dirname(slib_forj),'lib'))
+  PrcLib.lib_path = File.expand_path(File.join(File.dirname(slib_forj), 'lib'))
 
-   PrcLib.core_level = 0
+  PrcLib.core_level = 0
 end

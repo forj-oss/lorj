@@ -15,113 +15,107 @@
 require 'fileutils'
 require 'logger'
 
-
+# General lorj library. Used as library data configuration
+# List of possible library settings:
+# PrcLib.log          : PrcLib::Logging object. Used internally by PrcLib
+#                       logging system.
+#                       This object is automatically created as soon as
+#                       a message is printed out
+# PrcLib.core_level   : lorj debug level. from 0 to 5.
+# PrcLib.data_path    : Define the data local directory.
+#                       By default: ~/.<app_name>
+# PrcLib.app_name     : Define the application name. By default 'lorj'
+# PrcLib.app_defaults : Used by Lorj::Config to load application default data.
+#                       By default nil.
+# PrcLib.log_file     : Define the log file name used.
+#                       By default, defined as ~/.<app_name>/<app_name>.log
+# PrcLib.level        : logger level used.
+#                       Can be set at runtime, with PrcLib.set_level
 module PrcLib
 
-   def PrcLib.dir_exists?(path)
-      if File.exists?(path)
-         if not File.directory?(path)
-            msg = "'%s' is not a directory. Please fix it." % path
-            unless log_object.nil?
-               log_object.fatal(1, msg)
-            else
-               raise msg
-            end
-         end
-         if not File.readable?(path) or not File.writable?(path) or not File.executable?(path)
-            msg = "%s is not a valid directory. Check permissions and fix it." % path
-            unless log_object.nil?
-               log_object.fatal(1, msg)
-            else
-               raise msg
-            end
-         end
-         return true
+  # Check if dir exists and is fully accessible (rwx)
+  def self.dir_exists?(path)
+    if File.exist?(path)
+      unless File.directory?(path)
+        msg = "'%s' is not a directory. Please fix it." % path
+        unless log_object.nil?
+          log_object.fatal(1, msg)
+        else
+          fail msg
+        end
       end
-      false
-   end
-
-
-   def PrcLib.ensure_dir_exists(path)
-      if not dir_exists?(path)
-         FileUtils.mkpath(path) if not File.directory?(path)
+      if !File.readable?(path) || !File.writable?(path) || !File.executable?(path)
+        msg = '%s is not a valid directory. Check permissions and fix it.' % path
+        unless log_object.nil?
+          log_object.fatal(1, msg)
+        else
+          fail msg
+        end
       end
-   end
+      return true
+    end
+    false
+  end
+
+  # ensure dir exists and is fully accessible (rwx)
+  def self.ensure_dir_exists(path)
+    unless dir_exists?(path)
+      FileUtils.mkpath(path) unless File.directory?(path)
+    end
+  end
+
+  # Define module data for lorj library configuration
+  class << self
+    attr_accessor :log, :core_level
+    attr_reader :data_path, :app_name, :app_defaults, :log_file, :level
+  end
+
+  module_function
+
+  def data_path=(v)
+    @data_path = File.expand_path(v) unless @data_path
+    PrcLib.ensure_dir_exists(@data_path)
+  end
 
 
-   class << self
-      attr_accessor :log, :core_level
-   end
+  def app_name=(v)
+    @app_name = v unless @app_name
+  end
 
-   module_function
+  def app_defaults=(v)
+    @app_defaults = File.expand_path(v) unless @app_defaults
+  end
 
-   def data_path= v
-      @data_path = File.expand_path(v) if not @data_path
-      PrcLib.ensure_dir_exists(@data_path)
-   end
+  def log_file=(v)
+    sFile = File.basename(v)
+    sDir = File.dirname(File.expand_path(v))
+    unless File.exist?(sDir)
+      fail "'%s' doesn't exist. Unable to create file '%s'" % [sDir, sFile]
+    end
+    @log_file = File.join(sDir, sFile)
+  end
 
-   def data_path
-      @data_path
-   end
+  def level=(v)
+    @level = v
+    unless PrcLib.log.nil?
+      PrcLib.set_level(v)
+    end
+  end
 
-   def app_name= v
-      @app_name = v if not @app_name
-   end
+  def lib_path=(v)
+    @lib_path = v if @lib_path.nil?
+  end
 
-   def app_name
-      @app_name
-   end
+  attr_reader :lib_path
 
-   def app_defaults= v
-      @app_defaults = File.expand_path(v) if not @app_defaults
-   end
+  def controller_path
+    File.expand_path(File.join(@lib_path,  'providers'))
+  end
 
-   def app_defaults
-      @app_defaults
-   end
-
-   def log_file= v
-      sFile = File.basename(v)
-      sDir = File.dirname(File.expand_path(v))
-      if not File.exists?(sDir)
-         raise "'%s' doesn't exist. Unable to create file '%s'" % [sDir, sFile]
-      end
-      @log_file = File.join(sDir, sFile)
-   end
-
-   def log_file
-      @log_file
-   end
-
-   def level= v
-
-      @level = v
-      unless PrcLib.log.nil?
-         PrcLib.set_level(v)
-      end
-   end
-
-   def level
-      @level
-   end
-
-   def lib_path=(v)
-      @lib_path = v if @lib_path.nil?
-   end
-
-   def lib_path()
-      @lib_path
-   end
-
-   def controller_path()
-      File.expand_path(File.join(@lib_path,  "providers"))
-   end
-
-   def process_path()
-      File.join(@lib_path, "core_process")
-   end
+  def process_path
+    File.join(@lib_path, 'core_process')
+  end
 end
-
 
 class Object
   # Simplify boolean test on objects

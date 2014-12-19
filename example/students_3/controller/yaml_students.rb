@@ -14,14 +14,12 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-
 # This class describes how to process some actions, and will do everything prior
 # this task to make it to work.
 
-
 # declare yaml student API to the controller
 cur_path = File.dirname(__FILE__)
-api_file = File.expand_path(File.join(cur_path, "..", "..", "yaml_students", 'yaml_students.rb'))
+api_file = File.expand_path(File.join(cur_path, '..', '..', 'yaml_students', 'yaml_students.rb'))
 require api_file
 
 # The controller is a combination of 2 elements:
@@ -38,7 +36,7 @@ require api_file
 #   file name convention is identical than controller class.
 #   file: my_code.rb => needs to create MyCode class
 
-controller_file = File.expand_path(File.join(cur_path,'yaml_students_controller.rb'))
+controller_file = File.expand_path(File.join(cur_path, 'yaml_students_controller.rb'))
 require controller_file # Load controller mapping
 
 # Declare
@@ -55,40 +53,39 @@ require controller_file # Load controller mapping
 #   from itself.
 
 class YamlStudents
+  # This is a new object which is known by the controller only.
+  # Used to open the yaml file. Generically, I named it :connection.
+  # But this can be any name you want. Only the controller will deal with it.
+  define_obj(:connection,
+             create_e: :controller_create # Nothing complex to do. So, simply call the controller create.
+  )
 
-   # This is a new object which is known by the controller only.
-   # Used to open the yaml file. Generically, I named it :connection.
-   # But this can be any name you want. Only the controller will deal with it.
-   define_obj(:connection,{
-    :create_e => :controller_create # Nothing complex to do. So, simply call the controller create.
-   })
+  obj_needs :data,   :connection_string,  mapping: :file_name
+  undefine_attribute :id    # Do not return any predefined ID
+  undefine_attribute :name  # Do not return any predefined NAME
 
-   obj_needs   :data,   :connection_string,  :mapping => :file_name
-   undefine_attribute :id    # Do not return any predefined ID
-   undefine_attribute :name  # Do not return any predefined NAME
+  # The student model have to be expanded.
+  define_obj(:student)
+  # It requires to create a connection to the data, ie opening the yaml file.
+  # So, before working with the :student object, the controller requires a connection
+  # This connection will be loaded in the memory and provided to the controller
+  # when needed.
+  # obj_needs :CloudObject update the :student object to requires a connection before.
+  obj_needs :CloudObject,              :connection
 
-   # The student model have to be expanded.
-   define_obj(:student)
-   # It requires to create a connection to the data, ie opening the yaml file.
-   # So, before working with the :student object, the controller requires a connection
-   # This connection will be loaded in the memory and provided to the controller
-   # when needed.
-   # obj_needs :CloudObject update the :student object to requires a connection before.
-   obj_needs   :CloudObject,              :connection
+  # To simplify controller wrapper, we use hdata built by lorj, and passed to the API
+  # This hdata is a hash containing mapped data, thanks to set_hdata.
+  set_hdata :first_name
+  set_hdata :last_name
+  # Instead of 'course', the yaml API uses 'training'
+  set_hdata :course, mapping: :training
 
-   # To simplify controller wrapper, we use hdata built by lorj, and passed to the API
-   # This hdata is a hash containing mapped data, thanks to set_hdata.
-   set_hdata :first_name
-   set_hdata :last_name
-   # Instead of 'course', the yaml API uses 'training'
-   set_hdata :course, :mapping => :training
+  get_attr_mapping :course, :training
+  # instead of 'student_name', the yaml API uses 'name'
+  get_attr_mapping :student_name, :name
 
-   get_attr_mapping :course, :training
-   # instead of 'student_name', the yaml API uses 'name'
-   get_attr_mapping :student_name, :name
-
-   # This controller will know how to manage a student file with those data.
-   # But note that the file can have a lot of more data than what the process
-   # usually manage. It is up to you to increase your process to manage more data.
-   # Then each controller may need to define mapping fields.
+  # This controller will know how to manage a student file with those data.
+  # But note that the file can have a lot of more data than what the process
+  # usually manage. It is up to you to increase your process to manage more data.
+  # Then each controller may need to define mapping fields.
 end

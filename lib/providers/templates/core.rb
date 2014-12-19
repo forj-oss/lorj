@@ -14,48 +14,45 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-
 # This file is given as an example.
 
-require File.join($PROVIDER_PATH, "compute.rb")
-require File.join($PROVIDER_PATH, "network.rb")
+require File.join($PROVIDER_PATH, 'compute.rb')
+require File.join($PROVIDER_PATH, 'network.rb')
 
 # Defines Meta MyCloud object
 class Mycloud
+  # Defines Object structure and function stored on the Hpcloud class object.
 
-   # Defines Object structure and function stored on the Hpcloud class object.
+  # ForjCloud has a list of predefined object, like compute_connection, network, ...
+  # See lib/providers/core/cloud_data_pref.rb
 
-   # ForjCloud has a list of predefined object, like compute_connection, network, ...
-   # See lib/providers/core/cloud_data_pref.rb
-   
-   # Compute Object
-   define_obj :compute_connection
-   # Defines Data used by compute.
-   obj_needs(:data, :account_id,  { :mapping => :user})
-   obj_needs(:data, :account_key, { :mapping => :pwd})
-   obj_needs(:data, :auth_uri,    { :mapping => :auth_uri})
-   obj_needs(:data, :tenant,      { :mapping => :project})
-   obj_needs(:data, :compute,     { :mapping => :compute_service})
+  # Compute Object
+  define_obj :compute_connection
+  # Defines Data used by compute.
+  obj_needs(:data, :account_id,   mapping: :user)
+  obj_needs(:data, :account_key,  mapping: :pwd)
+  obj_needs(:data, :auth_uri,     mapping: :auth_uri)
+  obj_needs(:data, :tenant,       mapping: :project)
+  obj_needs(:data, :compute,      mapping: :compute_service)
 
-   define_obj :network_connection
-   obj_needs(:data, :account_id,  { :mapping => :user})
-   obj_needs(:data, :account_key, { :mapping => :pwd})
-   obj_needs(:data, :auth_uri,    { :mapping => :auth_uri})
-   obj_needs(:data, :tenant,      { :mapping => :project})
-   obj_needs(:data, :network,     { :mapping => :network_service})
+  define_obj :network_connection
+  obj_needs(:data, :account_id,   mapping: :user)
+  obj_needs(:data, :account_key,  mapping: :pwd)
+  obj_needs(:data, :auth_uri,     mapping: :auth_uri)
+  obj_needs(:data, :tenant,       mapping: :project)
+  obj_needs(:data, :network,      mapping: :network_service)
 
-   define_obj :network
-   obj_needs(:CloudObject, :network_connection)
-   obj_needs(:data,        :network_name)
+  define_obj :network
+  obj_needs(:CloudObject, :network_connection)
+  obj_needs(:data,        :network_name)
 
-   # defines setup Cloud data
-   # This definition is required only if you need to change the predefined data.
-   # To get details on what kind of parameters can be applied to a CloudData, see lib/defaults.yaml
-   define_data(:account_id,  {:provisioned_by => :setup, :desc => 'MyCloud username'})
-   define_data(:account_key, {:provisioned_by => :setup, :desc => 'HPCloud secret Key'})
-   define_data(:auth_uri,    {:provisioned_by => :setup, :desc => 'HPCloud Authentication service URL'})
-   define_data(:tenant,      {:provisioned_by => :setup, :desc => 'HPCloud Tenant ID'})
-   define_data(:compute,     {:provisioned_by => :setup, :desc => 'HPCloud Compute service zone (Ex: region-a.geo-1)'})
-   define_data(:network,     {:provisioned_by => :setup, :desc => 'HPCloud Network service zone (Ex: region-a.geo-1)'})
-
+  # defines setup Cloud data
+  # This definition is required only if you need to change the predefined data.
+  # To get details on what kind of parameters can be applied to a CloudData, see lib/defaults.yaml
+  define_data(:account_id,  provisioned_by: :setup, desc: 'MyCloud username')
+  define_data(:account_key, provisioned_by: :setup, desc: 'HPCloud secret Key')
+  define_data(:auth_uri,    provisioned_by: :setup, desc: 'HPCloud Authentication service URL')
+  define_data(:tenant,      provisioned_by: :setup, desc: 'HPCloud Tenant ID')
+  define_data(:compute,     provisioned_by: :setup, desc: 'HPCloud Compute service zone (Ex: region-a.geo-1)')
+  define_data(:network,     provisioned_by: :setup, desc: 'HPCloud Network service zone (Ex: region-a.geo-1)')
 end

@@ -14,34 +14,33 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-
 # This class describes how to process some actions, and will do everything prior
 # this task to make it to work.
 
-
 class Openstack < BaseDefinition
-   def initialize()
-      superclass.provides([:compute, :network])
-   end
-   
-   def compute()
-      Fog::Compute.new({
-         :provider            => :openstack,
-         :openstack_api_key   => superclass.oForjAccount.get(:account_id),
-         :openstack_username  => superclass.oForjAccount.get(:account_key),
-         :openstack_auth_url  => superclass.oForjAccount.get(:auth_uri),
-         :openstack_tenant    => superclass.oForjAccount.get(:tenant_id),
-         :openstack_region    => superclass.oForjAccount.get(:compute)
-         })
-   end
-   def network()
-      Fog::Network.new({
-         :provider            => :openstack,
-         :openstack_api_key   => superclass.oForjAccount.get(:account_id),
-         :openstack_username  => superclass.oForjAccount.get(:account_key),
-         :openstack_auth_url  => superclass.oForjAccount.get(:auth_uri),
-         :openstack_tenant    => superclass.oForjAccount.get(:tenant_id),
-         :openstack_region    => superclass.oForjAccount.get(:network)
-         })
-   end
+  def initialize
+    superclass.provides([:compute, :network])
+  end
+
+  def compute
+    Fog::Compute.new(
+       provider: :openstack,
+       openstack_api_key: superclass.oForjAccount.get(:account_id),
+       openstack_username: superclass.oForjAccount.get(:account_key),
+       openstack_auth_url: superclass.oForjAccount.get(:auth_uri),
+       openstack_tenant: superclass.oForjAccount.get(:tenant_id),
+       openstack_region: superclass.oForjAccount.get(:compute)
+       )
+  end
+
+  def network
+    Fog::Network.new(
+       provider: :openstack,
+       openstack_api_key: superclass.oForjAccount.get(:account_id),
+       openstack_username: superclass.oForjAccount.get(:account_key),
+       openstack_auth_url: superclass.oForjAccount.get(:auth_uri),
+       openstack_tenant: superclass.oForjAccount.get(:tenant_id),
+       openstack_region: superclass.oForjAccount.get(:network)
+       )
+  end
 end

@@ -14,7 +14,6 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-
 # This class describes how to process some actions, and will do everything prior
 # this task to make it to work.
 
@@ -22,7 +21,7 @@
 
 # declare yaml student API to the controller
 cur_path = File.dirname(__FILE__)
-api_file = File.expand_path(File.join(cur_path, "..", "..", "yaml_students", 'yaml_students.rb'))
+api_file = File.expand_path(File.join(cur_path, '..', '..', 'yaml_students', 'yaml_students.rb'))
 require api_file
 
 # The controller is a combination of 2 elements:
@@ -39,7 +38,7 @@ require api_file
 #   file name convention is identical than controller class.
 #   file: my_code.rb => needs to create MyCode class
 
-controller_file = File.expand_path(File.join(cur_path,'yaml_students_controller.rb'))
+controller_file = File.expand_path(File.join(cur_path, 'yaml_students_controller.rb'))
 require controller_file # Load controller mapping
 
 # Declare
@@ -56,27 +55,26 @@ require controller_file # Load controller mapping
 #   from itself.
 
 class YamlStudents
+  define_obj(:connection,
+             create_e: :controller_create # Nothing complex to do. So, simply call the controller create.
+  )
 
-   define_obj(:connection,{
-      :create_e => :controller_create # Nothing complex to do. So, simply call the controller create.
-   })
+  obj_needs :data,   :connection_string,  mapping: :file_name
+  undefine_attribute :id    # Do not return any predefined ID
+  undefine_attribute :name  # Do not return any predefined NAME
 
-   obj_needs   :data,   :connection_string,  :mapping => :file_name
-   undefine_attribute :id    # Do not return any predefined ID
-   undefine_attribute :name  # Do not return any predefined NAME
+  # The student model has been expanded. The object name will be built from first and last name
+  define_obj(:student)
+  obj_needs :CloudObject,              :connection
 
-   # The student model has been expanded. The object name will be built from first and last name
-   define_obj(:student)
-   obj_needs   :CloudObject,              :connection
+  set_hdata :first_name
+  set_hdata :last_name
+  set_hdata :course,      mapping: :training
 
-   set_hdata   :first_name
-   set_hdata   :last_name
-   set_hdata   :course,      :mapping => :training
+  get_attr_mapping :course, :training
 
-   get_attr_mapping :course, :training
-
-   # This controller will know how to manage a student file with those data.
-   # But note that the file can have a lot of more data than what the process
-   # usually manage. It is up to you to increase your process to manage more data.
-   # Then each controller may need to define mapping fields.
+  # This controller will know how to manage a student file with those data.
+  # But note that the file can have a lot of more data than what the process
+  # usually manage. It is up to you to increase your process to manage more data.
+  # Then each controller may need to define mapping fields.
 end

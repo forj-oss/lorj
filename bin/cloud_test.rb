@@ -1,9 +1,9 @@
 #!/usr/bin/env ruby
 
-#require 'byebug'
+# require 'byebug'
 
 $APP_PATH = File.dirname(__FILE__)
-$LIB_PATH = File.expand_path(File.join(File.dirname($APP_PATH),'lib'))
+$LIB_PATH = File.expand_path(File.join(File.dirname($APP_PATH), 'lib'))
 
 $LOAD_PATH << $LIB_PATH
 
@@ -12,17 +12,17 @@ $LOAD_PATH << File.join($LIB_PATH, 'lib-forj', 'lib')
 require 'appinit.rb'
 
 # Initialize forj paths
-AppInit::forj_initialize()
+AppInit.forj_initialize
 
 # Initialize global Log object
-$FORJ_LOGGER=LorjLog.new()
+$FORJ_LOGGER = LorjLog.new
 
 require 'lib-forj.rb'
 
 Logging.set_level(Logger::DEBUG)
 
 # Load global Config
-oConfig = ForjConfig.new()
+oConfig = ForjConfig.new
 
 aProcesses = []
 
@@ -39,8 +39,8 @@ $LIB_FORJ_DEBUG = 3 # verbose
 infra_dir = File.expand_path(oConfig.get(:infra_repo))
 
 # Ask information if needed.
-if not Dir.exist?(File.expand_path(infra_dir))
-   Logging.warning(<<-END
+unless Dir.exist?(File.expand_path(infra_dir))
+  Logging.warning(<<-END
 Your infra workspace directory is missing.
 
 Forj uses an infra workspace directory to store any kind of data that are private to you.
@@ -51,31 +51,30 @@ If you already have an existing infra workspace, use 'forj set infra_repo=<PathT
 
 Otherwise, we will build a new one with some predefined data, you can review and update later.
    END
-   )
-   sAsk = "Do you want to create a new one from Maestro (yes/no)?" % [infra_dir]
-   bBuildInfra=agree(sAsk)
-   if not bBuildInfra
-      puts 'Process aborted on your demand.'
-      exit 0
-   end
+  )
+  sAsk = 'Do you want to create a new one from Maestro (yes/no)?' % [infra_dir]
+  bBuildInfra = agree(sAsk)
+  unless bBuildInfra
+    puts 'Process aborted on your demand.'
+    exit 0
+  end
 end
 
 oCloud = ForjCloud.new(oConfig, 'hpcloud', aProcesses)
 
-#oConfig.set(:instance_name, "test")
-#oCloud.Create(:metadata)
-#oCloud.Create(:infra_repository)
-#oCloud.Create(:userdata)
+# oConfig.set(:instance_name, "test")
+# oCloud.Create(:metadata)
+# oCloud.Create(:infra_repository)
+# oCloud.Create(:userdata)
 
+# oCloud.Setup(:server, 'hpcloud')
+# oCloud.Setup(:forge, 'hpcloud')
 
-#oCloud.Setup(:server, 'hpcloud')
-#oCloud.Setup(:forge, 'hpcloud')
-
-#oCloud.Create(:forge)
+# oCloud.Create(:forge)
 
 oConfig.set(:box_name, '183')
 oConfig.set(:box, 'maestro')
-#oConfig.Create(:server)
+# oConfig.Create(:server)
 oCloud.Create(:ssh)
 
-#oCloud.Query(:server, 'maestro')
+# oCloud.Query(:server, 'maestro')

@@ -14,11 +14,10 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-require "bundler/gem_tasks"
+require 'bundler/gem_tasks'
 require 'rspec/core/rake_task'
 
 desc 'Run the specs.'
-RSpec::Core::RakeTask.new do |t| 
+RSpec::Core::RakeTask.new do |t|
   t.pattern = 'spec/*_spec.rb'
 end
-

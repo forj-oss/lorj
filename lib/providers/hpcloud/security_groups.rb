@@ -15,53 +15,53 @@
 #    limitations under the License.
 
 module HPSecurityGroups
-   def HPSecurityGroups.query_sg(oNetworkConnect, sQuery)
-      oNetworkConnect.security_groups.all(sQuery)
-   end
+  def self.query_sg(oNetworkConnect, sQuery)
+    oNetworkConnect.security_groups.all(sQuery)
+  end
 
-   def HPSecurityGroups.create_sg(oNetwork, name, description)
-      params = {:name => name}
-      params[:description] = description if description
-      oNetwork.security_groups.create( params )
-   end
+  def self.create_sg(oNetwork, name, description)
+    params = { name: name }
+    params[:description] = description if description
+    oNetwork.security_groups.create(params)
+  end
 
-   def HPSecurityGroups.create_rule(oNetwork, hData)
-      oNetwork.security_group_rules.create( hData )
-   end
+  def self.create_rule(oNetwork, hData)
+    oNetwork.security_group_rules.create(hData)
+  end
 
-   def HPSecurityGroups.query_rule(oNetwork, sQuery)
-      oNetwork.security_group_rules.all(sQuery)
-   end
+  def self.query_rule(oNetwork, sQuery)
+    oNetwork.security_group_rules.all(sQuery)
+  end
 
-   def HPSecurityGroups.delete_rule(oNetwork, rule_id)
-      oNetwork.security_group_rules.get(rule_id).destroy
-   end
+  def self.delete_rule(oNetwork, rule_id)
+    oNetwork.security_group_rules.get(rule_id).destroy
+  end
 end
 
 module HPKeyPairs
-   def HPKeyPairs.query_keypair(oComputeConnect, sQuery)
-      cKeyPairs = oComputeConnect.key_pairs.all()
-      aResults = []
-      cKeyPairs.each { |sElem|
-         bSelect = true
-         attributes = sElem.instance_variable_get(:@attributes)
-         sQuery.each { | key, value |
-            if attributes[key] != value
-               bSelect = false
-               break
-            end
-         }
-         aResults.push sElem if bSelect
-      }
-      aResults
-   end
+  def self.query_keypair(oComputeConnect, sQuery)
+    cKeyPairs = oComputeConnect.key_pairs.all
+    aResults = []
+    cKeyPairs.each do |sElem|
+      bSelect = true
+      attributes = sElem.instance_variable_get(:@attributes)
+      sQuery.each do | key, value |
+        if attributes[key] != value
+          bSelect = false
+          break
+        end
+      end
+      aResults.push sElem if bSelect
+    end
+    aResults
+  end
 
-   def HPKeyPairs.get_keypair(oComputeConnect, sId)
-      #byebug
-      oComputeConnect.key_pairs.get(sId)
-   end
+  def self.get_keypair(oComputeConnect, sId)
+    # byebug
+    oComputeConnect.key_pairs.get(sId)
+  end
 
-   def HPKeyPairs.create_keypair(oComputeConnect, name, pubkey)
-      oComputeConnect.key_pairs.create( :name => name, :public_key => pubkey)
-   end
+  def self.create_keypair(oComputeConnect, name, pubkey)
+    oComputeConnect.key_pairs.create(name: name, public_key: pubkey)
+  end
 end

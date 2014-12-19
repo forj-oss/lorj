@@ -17,17 +17,15 @@
 # This file is given as an example.
 
 class Mycloud # This class is automatically derived from ForjCloudBase and ForjProcess
+  def provider_network_new
+    Fog::Network.new({ provider: :mycloud }.merge(hget_cloudObjMapping))
+  end
 
-   def provider_network_new
-      Fog::Network.new({:provider  => :mycloud}.merge(hget_cloudObjMapping()))
-   end
+  def provider_query_network(oNetwork, name)
+    oNetwork.networks.all(name: name)
+  end
 
-   def provider_query_network(oNetwork, name)
-      oNetwork.networks.all(:name => name)
-   end
-
-   def provider_create_network(oNetwork, name)
-      oNetwork.networks.create(:name => name)
-   end
-
+  def provider_create_network(oNetwork, name)
+    oNetwork.networks.create(name: name)
+  end
 end

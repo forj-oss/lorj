@@ -8,9 +8,9 @@ require 'lorj'
 # PrcLib.core_level = 3 # framework debug levels.
 
 # Initialize the framework
-hProcesses = [ File.join($APP_PATH, 'process', 'Students.rb')]
+hProcesses = [File.join($APP_PATH, 'process', 'Students.rb')]
 
-oStudentCore = Lorj::Core.new( nil, hProcesses)
+oStudentCore = Lorj::Core.new(nil, hProcesses)
 
 # Ask the framework to create the object student 'Robert Redford'
-oStudentCore.Create(:student, :student_name => "Robert Redford")
+oStudentCore.Create(:student, student_name: 'Robert Redford')
