@@ -15,493 +15,676 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+# rubocop: disable Metrics/AbcSize
+
 # Module Lorj which contains several classes.
 #
 # Those classes describes :
 # - processes (BaseProcess)   : How to create/delete/edit/query object.
-# - controler (BaseControler) : If a provider is defined, define how will do object creation/etc...
-# - definition(BaseDefinition): Functions to declare objects, query/data mapping and setup
+# - controler (BaseControler) : If a provider is defined, define how will do
+#                               object creation/etc...
+# - definition(BaseDefinition): Functions to declare objects, query/data mapping
+#                               and setup
 # this task to make it to work.
 module Lorj
+  # Global Process functions
   class BaseDefinition
-    private
+    # Process declaration
+    # Defines current Process context
+    #
+    # parameters:
+    # - +process_class+ : Process Class object.
+    #
+    def self.current_process(cProcessClass)
+      PrcLib.model.heap true
+      PrcLib.model.process_context(cProcessClass)
+    end
 
-     ###################################################
-     # Class management Section
-     ###################################################
+    # Process declaration
+    # Set obj_needs requirement setting to false
+    #
+    def self.obj_needs_optional
+      PrcLib.model.heap true
+      PrcLib.model.needs_optional true
+    end
 
-     # Meta Object declaration structure
-     # <Object>
-     #   :query_mapping        List of keypath mapped.
-     #     <keypath> = <keypath mapped>
-     #   :lambdas:
-     #     :create_e:          function to call at 'Create' task
-     #     :delete_e:          function to call at 'Delete' task
-     #     :update_e:          function to call at 'Update' task
-     #     :get_e:             function to call at 'Get'    task
-     #     :query_e:           function to call at 'Query'  task
-     #   :value_mapping:       Define list of Object's key values mapping.
-     #     <keypath>           key value mapping lists
-     #       <value> = <map>   Define the value mapping.
-     #   :returns
-     #     <keypath>           key value to extract from controller object.
-     #   :params:              Defines CloudData (:data) or CloudObj (:CloudObj) needs by the <Object>
-     #     :keys:              Contains keys in a tree of hash.
-     #       <keypath>:        String. One element (string with : and /) of :list defining the key
-     #         :type:          :data or :CloudObj
-     #         :for:           Array of events which requires the data or CloudObj to work.
-     #         :mapping:       To automatically create a provider hash data mapped (hdata).
-     #         :required:      True if this parameter is required.
-     #         :extract_from:  Array. Build the keypath value from another hParams value.
-     #                         Ex: This example will extract :id from :security_groups object
-     #                             :extract_from => [:security_groups, :id]
-     #
-     @@meta_obj =  {}
+    # Process declaration
+    # Set obj_needs requirement setting to True
+    #
+    def self.obj_needs_requires
+      PrcLib.model.heap true
+      PrcLib.model.needs_optional false
+    end
 
-     # meta data are defined in defaults.yaml and loaded in Lorj::Default class definition
-     # Cloud provider can redefine ForjData defaults and add some extra parameters.
-     # To get Application defaults, read defaults.yaml, under :sections:
-     # <Section>:
-     #   <Data>:               Required. Symbol/String. default: nil
-     #                         => Data name. This symbol must be unique, across sections.
-     #     :desc:              Required. String. default: nil
-     #                         => Description
-     #     :explanation:  |-   Print a multiline explanation before ask the key value.
-     #                         ERB template enable. To get config data, type <%= config[...] %>
-     #     :readonly:          Optional. true/false. Default: false
-     #                         => oForjConfig.set() will fail if readonly is true.
-     #                            Can be set, only thanks to oForjConfig.setup()
-     #                            or using private oForjConfig._set()
-     #     :account_exclusive: Optional. true/false. Default: false
-     #                         => Only oConfig.account_get/set() can handle the value
-     #                            oConfig.set/get cannot.
-     #     :account:           Optional. default: False
-     #                         => setup will configure the account with this <Data>
-     #     :ask_sort:          Number which represents the ask order in the step group. (See /:setup/:ask_step for details)
-     #     :after:  <Data>     Name of the previous <Data> to ask before the current one.
-     #     :depends_on:
-     #                         => Identify :data type required to be set before the current one.
-     #     :default_value:     Default value at setup time. This is not necessarily the Application default value (See /:default)
-     #     :validate:          Regular expression to validate end user input during setup.
-     #     :value_mapping:     list of values to map as defined by the controller
-     #       :controller:      mapping for get controller value from process values
-     #         <value> : <map> value map equivalence. See data_value_mapping function
-     #       :process:         mapping for get process value from controller values
-     #         <value> : <map> value map equivalence. See data_value_mapping function
-     #     :defaut:            Default value
-     #     :list_values:       Defines a list of valid values for the current data.
-     #       :query_type       :controller_call to execute a function defined in the controller object.
-     #                         :process_call to execute a function defined in the process object.
-     #                         :values to get list of values from :values.
-     #       :object           Object to load before calling the function.  Only :query_type = :*_call
-     #       :query_call       Symbol. function name to call.               Only :query_type = :*_call
-     #                         function must return an Array.
-     #       :query_params     Hash. Controler function parameters.         Only :query_type = :*_call
-     #       :validate         :list_strict. valid only if value is one of those listed.
-     #       :values:
-     #                         to retrieve from.
-     #                         otherwise define simply a list of possible values.
-     #       :ask_step:        Step number. By default, setup will determine the step, thanks to meta lorj object dependencies tree.
-     #                         This number start at 0. Each step can be defined by /:setup/:ask_step/<steps> list.
-     #
-     # :setup:                  This section describes group of fields to ask, step by step.
-     #     :ask_step:           Define an Array of setup steps to ask to the end user. The step order is respected, and start at 0
-     #     -  :desc:            Define the step description. ERB template enable. To get config data, type config[...]
-     #        :explanation:  |- Define a multiline explanation. This is printed out in brown color.
-     #                          ERB template enable. To get config data, type <%= config[...] %>
-     #        :add:             Define a list of additionnal fields to ask.
-     #        - <Data>          Data to ask.
-     #
-     # :default:                List of <Data> application default values.
-     #     <Data> :             Value to use at the config application level.
-     @@meta_data = {}
-
-     # The Generic Process can pre-define some data and value (function predefine_data)
-     # The Generic Process (and external framework call) only knows about Generic data.
-     # information used
-     #
-     @@meta_predefined_values = {}
-
-     # <Data>:                  Data name
-     #   :values:               List of possible values
-     #      <Value>:            Value Name attached to the data
-     #        options:          Options
-     #          :desc:          Description of that predefine value.
-
-     @@Context = {
-       oCurrentObj: nil, # Defines the Current Object to manipulate
-       needs_optional: nil, # set optional to true for any next needs declaration
-       ClassProcess: nil  # Current Process Class declaration
-     }
-
-     # Available functions for:
-     # - BaseDefinition class declaration
-     # - Controler (derived from BaseDefinition) class declaration
-
-     @@query_auto_map = false
-
-     def self.current_process (cProcessClass)
-       @@Context[:ClassProcess] = cProcessClass
-     end
-
-     def self.obj_needs_optional
-       @@Context[:needs_optional] = true
-     end
-
-     def self.obj_needs_requires
-       @@Context[:needs_optional] = false
-     end
-
-     def self.process_default(hOptions)
-       aSupportedOptions = [:use_controller]
-       unless hOptions.nil?
-         hOptions.each_key do | key |
-           case key
-              when :use_controller
-                value = Lorj.rhGet(hOptions, :use_controller)
-                next unless value.is_a?(TrueClass) || value.is_a?(FalseClass)
-                Lorj.rhSet(@@Context, hOptions[key], :options, key)
-              else
-                raise Lorj::PrcError.new, "Unknown default process options '%s'. Supported are '%s'" % [key, aSupportedOptions.join(',')]
-           end
-         end
-       end
-     end
-
-     # Defines Object and connect to functions events
-     def self.define_obj(sCloudObj, hParam = nil)
-       return nil if not sCloudObj
-       return nil if not [String, Symbol].include?(sCloudObj.class)
-
-       aCaller = caller
-       aCaller.pop
-
-       sCloudObj = sCloudObj.to_sym if sCloudObj.class == String
-       @@Context[:oCurrentObj] = sCloudObj
-       @@Context[:needs_optional] = false
-       @@Context[:needs_setup] = false
-       bController = Lorj.rhGet(@@Context, :options, :use_controller)
-       bController = true if bController.nil?
-
-       if not [Hash].include?(hParam.class)
-         if Lorj.rhExist?(@@meta_obj, sCloudObj) != 1
-           raise Lorj::PrcError.new, "New undefined object '%s' requires at least one handler. Ex: define_obj :%s, :create_e => myhandler " % [sCloudObj, sCloudObj]
-         end
-         hParam = {}
-       end
-
-       oCloudObj = Lorj.rhGet(@@meta_obj, sCloudObj)
-       if not oCloudObj
-         oCloudObj = {
-           lambdas: {create_e: nil, delete_e: nil, update_e: nil, get_e: nil, query_e: nil, get_attr_e: nil},
-           params: {},
-           options: {controller: bController },
-           query_mapping: { ":id" => ":id", ":name" => ":name"},
-           returns: {":id" => ":id", ":name" => ":name"}
-         }
-         msg = nil
-       else
-         msg = ""
-       end
-
-       sObjectName = "'%s.%s'" %  [self.class, sCloudObj]
-
-       # Checking hParam data
-       if not Lorj.rhGet(hParam, :nohandler)
-         hParam.each_key do | key |
-           raise Lorj::PrcError.new, "'%s' parameter is invalid. Use '%s'" % [key, oCloudObj[:lambdas].keys.join(', ')], aCaller if Lorj.rhExist?(oCloudObj, :lambdas, key)!= 2
-         end
-         msg = "%-28s object declared." %  [sObjectName] if not msg
-       else
-         msg = "%-28s meta object declared." %  [sObjectName] if not msg
-       end
-       Lorj.debug(2, msg) if msg != ""
-
-       # Setting procs
-       Lorj.rhGet(oCloudObj, :lambdas).each_key do |key|
-         next if not hParam.key?(key)
-
-         if not @@Context[:ClassProcess].instance_methods.include?(hParam[key])
-           raise Lorj::PrcError.new, "'%s' parameter requires a valid instance method '%s' in the process '%s'." % [key, hParam[key], @@Context[:ClassProcess]], aCaller
-         end
-         if hParam[key] == :default
-           # By default, we use the event name as default function to call.
-           # Those function are predefined in ForjController
-           # The Provider needs to derive from ForjController and redefine those functions.
-           oCloudObj[:lambdas][key] = key
-         else
-           # If needed, ForjProviver redefined can contains some additionnal functions
-           # to call.
-           oCloudObj[:lambdas][key] = hParam[key]
-         end
-       end
-       Lorj.rhSet(@@meta_obj, oCloudObj, sCloudObj)
-     end
-
-     def self.def_query_attribute(key)
-       self.query_mapping(key, key)
-     end
-
-     def self.query_mapping(key, map)
-       return nil if not [String, Symbol].include?(key.class)
-       return nil if not [NilClass, Symbol, String].include?(map.class)
-
-       aCaller = caller
-       aCaller.pop
-
-       raise Lorj::PrcError.new, "%s: No Object defined. Missing define_obj?" % [ self.class], aCaller if @@Context[:oCurrentObj].nil?
-
-       sCloudObj = @@Context[:oCurrentObj]
-       oKeyPath = KeyPath.new(key)
-       oMapPath = KeyPath.new(map)
-
-       @@Context[:oCurrentKey] = oKeyPath
-
-       Lorj.rhSet(@@meta_obj, oMapPath.sFullPath, sCloudObj, :query_mapping, oKeyPath.sFullPath)
-     end
-
-     # Available functions exclusively for Controler (derived from BaseDefinition) class declaration
-
-     # Following functions are related to Object Attributes
-     # ----------------------------------------------------
-
-     # Defines Object CloudData/CloudObj dependency
-     def self.obj_needs(sType, sParam, hParams = {})
-       return nil if not [String, Symbol].include?(sType.class)
-       return nil if not [String, Symbol, Array].include?(sParam.class)
-
-       hParams = {} if not hParams
-
-       hParams[:required] = not(@@Context[:needs_optional]) if Lorj.rhExist?(hParams, :required) != 1
-
-       aCaller = caller
-       aCaller.pop
-
-       raise Lorj::PrcError.new, "%s: No Object defined. Missing define_obj?" % [ self.class], aCaller if @@Context[:oCurrentObj].nil?
-
-       sCloudObj = @@Context[:oCurrentObj]
-
-       aForEvents = Lorj.rhGet(@@meta_obj, sCloudObj, :lambdas).keys
-       hParams = hParams.merge( for: aForEvents) if not hParams.key?(:for)
-       sType = sType.to_sym if sType.class == String
-
-       raise Lorj::PrcError.new, "%s: '%s' not declared. Missing define_obj(%s)?" % [ self.class, sCloudObj, sCloudObj], aCaller if Lorj.rhExist?(@@meta_obj, sCloudObj) != 1
-
-       oObjTopParam = Lorj.rhGet(@@meta_obj, sCloudObj, :params)
-       if not oObjTopParam.key?(:keys)
-         # Initialize top structure
-
-         oObjTopParam.merge!( keys: {} )
-       end
-
-       oKeyPath = KeyPath.new(sParam)
-       sKeyAccess = oKeyPath.sFullPath
-
-       @@Context[:oCurrentKey] = oKeyPath
-
-       oCloudObjParam = Lorj.rhGet(oObjTopParam, :keys, sKeyAccess)
-       if oCloudObjParam.nil?
-         sMsgAction = "New"
-         oObjTopParam[:keys][sKeyAccess] = {}
-         oCloudObjParam = oObjTopParam[:keys][sKeyAccess]
-       else
-         sMsgAction = "Upd"
-       end
-       sObjectName = "'%s.%s'" %  [self.class, sCloudObj]
-       case sType
-          when :data
-            if Lorj::Default.meta_exist?(sParam)
-              Lorj.debug(2, "%-28s: %s predefined config '%s'." % [sObjectName, sMsgAction, sParam])
-            else
-              Lorj.debug(2, "%-28s: %s runtime    config '%s'." % [sObjectName, sMsgAction, sParam])
-            end
-            oCloudObjParam.merge!( hParams.merge(type: sType) ) # Merge from predefined params, but ensure type is never updated.
-          when :CloudObject
-            raise Lorj::PrcError.new, "%s: '%s' not declared. Missing define_obj(%s)?" % [self.class, sParam, sParam], aCaller if not @@meta_obj.key?(sParam)
-            oCloudObjParam.merge!( hParams.merge(type: sType) ) # Merge from predefined params, but ensure type is never updated.
+    # Process declaration
+    # Defines default process options
+    #
+    # parameters:
+    # - +options+ : Supported options are:
+    #   - use_controller : Boolean. True if the model require a controller
+    #                      False otherwise. Default is true.
+    #
+    def self.process_default(hOptions)
+      PrcLib.model.heap true
+      supported_options = [:use_controller]
+      unless hOptions.nil?
+        hOptions.each_key do | key |
+          case key
+          when :use_controller
+            value = hOptions.rh_get(:use_controller)
+            next unless value.boolean?
+            PrcLib.model[key] = hOptions[key]
           else
-            raise Lorj::PrcError.new, "%s: Object parameter type '%s' unknown." % [ self.class, sType ], aCaller
-       end
-     end
+            PrcLib.dcl_fail("Unknown default process options '%s'. "\
+                            "Supported are '%s'",
+                            key, supported_options.join(','))
+          end
+        end
+      end
+    end
+  end
 
-     # Define the hdata values to build for the controller automatically
-     # Input:
-     # - sParam: Data name to add in hdata controller.
-     # - hParams: supports following hash values:
-     #   - :mapping (merged in @@meta_obj://<Object>/:params/:keys/<keypath>/:mapping)
-     #
+  # Base definition class for Process declaration
+  class BaseDefinition
+    # Application process or controller to defines an object.
+    #
+    # The context will be set by this definition for next declaration.
+    # Depending on the context, define_obj is not used identically:
+    #
+    # *Context* : Application Process
+    # 'define_obj' is the first object declaration. It sets the object context
+    # for next declaration.
+    # At least it needs to create an handler or define it with :nohandler: true
+    #
+    # Usually, this definition is followed by:
+    # - def_attribute      : Object attribute list
+    # - obj_needs          : Handler parameters needs
+    # - undefine_attribute : Remove predefined attributes.
+    # - def_query_attribute: Query attribute definition
+    #
+    # *Context*: Controller
+    #
+    # A controller uses define_obj to update an existing object.
+    # A controller can create a new object, only if the controller
+    # defines specific process.
+    #
+    # Usually, this definition is followed by:
+    # - query_mapping     : Adapt query attribute to match controller query
+    #                       settings
+    # - obj_needs         : Adapt needed parameters, and/or set mapping.
+    # - def_hdata         : Define Controller Hash parameter, for handlers.
+    # - def_attr_mapping  : Define object attribute mapping.
+    # - data_value_mapping: Define Data model values mapping.
+    #
+    def self.define_obj(obj_type_name, handlers = nil)
+      return nil unless [NilClass, String, Symbol].include?(obj_type_name.class)
+      PrcLib.model.heap true
 
-     def self.set_hdata(sParam, hParams = {})
-       return nil if not [String, Symbol, Array].include?(sParam.class)
+      obj_type_name = obj_type_name.to_sym if obj_type_name.is_a?(String)
 
-       hParams = {} if not hParams
+      handlers = {} unless handlers.is_a?(Hash)
 
-       aCaller = caller
-       aCaller.pop
+      lorj_object = PrcLib.model.meta_obj.rh_get(obj_type_name)
 
-       raise Lorj::PrcError.new, "%s: No Object defined. Missing define_obj?" % [ self.class], aCaller if @@Context[:oCurrentObj].nil?
-       sCloudObj = @@Context[:oCurrentObj]
+      # Checking handlers_options data
+      handlers = _verify_handlers(obj_type_name, lorj_object, handlers)
 
-       raise Lorj::PrcError.new, "%s: '%s' not declared. Missing define_obj(%s)?" % [ self.class, sCloudObj, sCloudObj], aCaller if Lorj.rhExist?(@@meta_obj, sCloudObj) != 1
+      if lorj_object.nil?
+        lorj_object = _define_obj_initialize(obj_type_name, handlers)
+        PrcLib.model.meta_obj.rh_set(lorj_object, obj_type_name)
+      end
 
-       oKeyPath = KeyPath.new(sParam)
-       sKeyAccess = oKeyPath.sFullPath
+      PrcLib.model.object_context(:object => obj_type_name)
 
-       # @@meta_obj://<Object>/:params/:keys/<keypath> must exist.
-       oCloudObjParam = Lorj.rhGet(@@meta_obj, sCloudObj, :params, :keys, sKeyAccess)
+      _handler_settings(lorj_object, handlers)
 
-       sMapping = sParam
-       sMapping = hParams[:mapping] unless hParams[:mapping].nil?
-       oCloudObjParam[:mapping] = sMapping
+      nil
+    end
 
-       sObjectName = "'%s.%s'" %  [self.class, sCloudObj]
-       Lorj.debug(2, "%-28s: hdata set '%s' => '%s'" % [sObjectName, sParam, sMapping])
-     end
+    # Application process to defines query attributes.
+    def self.def_query_attribute(key)
+      PrcLib.model.heap true
+      query_mapping(key, key)
+    end
 
-     def self.attr_value_mapping(value, map)
-       return nil if not [String, Symbol].include?(value.class)
-       return nil if not [NilClass, Symbol, String].include?(map.class)
+    # Available functions exclusively for Controller (derived from
+    # BaseDefinition) class declaration
 
-       aCaller = caller
-       aCaller.pop
+    # Following functions are related to Object Attributes
+    # ----------------------------------------------------
 
-       sCloudObj = @@Context[:oCurrentObj]
-       raise Lorj::PrcError.new, "attr_value_mapping: mapping '%s' needs object context definition. You need to call define_obj to get the context." % value if sCloudObj.nil?
+    # Function to declare handlers data/object needs.
+    # Used by application process declaration and controller declaration
+    # to defines the object data needs or sub-object dependency.
+    #
+    # The application process declare global objects/data dependency
+    # while the controller can complete it with any needed other object/data
+    # as required by the controller code.
+    #
+    # Ex: A process can define a generic connection object.
+    #     define_obj :connection
+    #     obj_needs :data, :user,   :for => [:create_e]
+    #     obj_needs :data, :passwd, :for => [:create_e]
+    #
+    #     The controller can add several other needs, specifically
+    #     to this controller.
+    #
+    #     define_obj :connection
+    #     obj_needs :data, :user,   mapping => :username
+    #     obj_needs :data, :uri
+    #
+    # Requires Object context
+    #
+    # parameters:
+    # - +type+    : :data or :object requirement
+    # - +name+    : Name of the data or the object.
+    # - +options+ : Possible options
+    #   - :for    : Array: requirement for a limited list of handler.
+    #               By default, all handlers requires this data or object.
+    def self.obj_needs(type, name, options = {})
+      return nil unless [String, Symbol].include?(type.class)
+      return nil unless [String, Symbol, Array].include?(name.class)
+      PrcLib.model.heap true
 
-       oKeypath = @@Context[:oCurrentKey]
-       raise Lorj::PrcError.new, "attr_value_mapping: mapping '%s' needs object data context definition. You need to call define_obj, then obj_needs to get the context." % value if oKeypath.nil?
+      type = type.to_sym if type.is_a?(String)
 
-       keypath = oKeypath.sFullPath
-       Lorj.debug(2, "%s-%s: Value mapping definition '%s' => '%s'" % [sCloudObj, oKeypath.to_s, value, map])
-       Lorj.rhSet(@@meta_obj, map, sCloudObj, :value_mapping, keypath, value)
-     end
+      options = {} unless options.is_a?(Hash)
 
-     def self.def_attribute(key, options = nil)
-       self.get_attr_mapping(key, options)
-       # ~ self.def_query_attribute(key) unless options and options.key?(:not_queriable) and  options[:not_queriable]== true
-     end
+      unless options.key?(:required)
+        options[:required] = !PrcLib.model.needs_optional
+      end
 
-     # Function used by the controler to define mapping.
-     # By default, any attributes are queriable as well. No need to call
-     # query_mapping
-     def self.get_attr_mapping(key, map = nil, options = nil)
-       return nil if not [String, Symbol].include?(key.class)
-       return nil if not [NilClass, Symbol, String, Array].include?(map.class)
+      _configure_options_handlers(options)
 
-       aCaller = caller
-       aCaller.pop
+      params = PrcLib.model.meta_obj.rh_get(PrcLib.model.object_context,
+                                            :params)
 
-       raise Lorj::PrcError.new, "%s: No Object defined. Missing define_obj?" % [ self.class], aCaller if @@Context[:oCurrentObj].nil?
+      _define_object_needs(params, type,
+                           _initialize_object_needs(name), options)
+    end
 
-       sCloudObj = @@Context[:oCurrentObj]
-       oKeyPath = KeyPath.new(key)
+    # Function used by the Process to define Model Object attributes.
+    # By default, any attributes are queriable as well. No need to call
+    # query_mapping
+    #
+    # parameters:
+    # - +key+    : name of the default object attribute
+    # - +options+: optional.
+    def self.def_attribute(key, options = {})
+      PrcLib.model.heap true
 
-       if map.nil?
-         oMapPath = oKeyPath
-         map = oMapPath.sKey
-       else
-         oMapPath = KeyPath.new(map)
-       end
+      key_path = _set_attr_mapping(key, key, options)[0]
 
-       Lorj.rhSet(@@meta_obj, oMapPath.sFullPath, sCloudObj, :returns, oKeyPath.sFullPath)
-       @@Context[:oCurrentKey] = oKeyPath
-       if oMapPath == oKeyPath
-         Lorj.debug(4, "%s: Defining object attribute '%s'" % [sCloudObj, oKeyPath.sFullPath])
-       else
-         Lorj.debug(4, "%s: Defining object attribute mapping '%s' => '%s'" % [sCloudObj, oKeyPath.sFullPath, oMapPath.sFullPath])
-       end
+      Lorj.debug(4, "%s: Defining object attribute '%s'",
+                 PrcLib.model.object_context, key_path)
+    end
 
-       self.query_mapping(key, map) unless options && options.key?(:not_queriable) &&  options[:not_queriable]== true
-     end
+    # Process to undeclare default lorj object attributes
+    # By default, while process declares a new lorj object,
+    # :id and :name are predefined.
+    # If the model of this lorj object do not have any ID or Name
+    # the process will needs to undeclare it.
+    #
+    # The Controller can undeclare some attribute defined by the
+    # Application process model. But it requires the controller to
+    # re-define any object handler which can use those attributes.
+    #
+    # parameters:
+    # - +key+ : Attribute name to undeclare.
+    def self.undefine_attribute(key)
+      return nil unless [String, Symbol].include?(key.class)
+      PrcLib.model.heap true
 
-     def self.undefine_attribute(key)
-       return nil if not [String, Symbol].include?(key.class)
+      PrcLib.dcl_fail('%s: No Object defined. Missing define_obj?',
+                      self.class) if PrcLib.model.object_context.nil?
 
-       aCaller = caller
-       aCaller.pop
+      key_path = KeyPath.new(key)
 
-       raise Lorj::PrcError.new, "%s: No Object defined. Missing define_obj?" % [ self.class], aCaller if @@Context[:oCurrentObj].nil?
+      PrcLib.model.meta_obj.rh_set(nil, PrcLib.model.object_context,
+                                   :returns, key_path.sFullPath)
+      PrcLib.model.attribute_context key_path
+      Lorj.debug(4, "%s: Undefining attribute mapping '%s'",
+                 PrcLib.model.object_context, key_path.sFullPath)
 
-       sCloudObj = @@Context[:oCurrentObj]
-       oKeyPath = KeyPath.new(key)
+      _query_mapping(key, nil)
+    end
 
-       Lorj.rhSet(@@meta_obj, nil, sCloudObj, :returns, oKeyPath.sFullPath)
-       @@Context[:oCurrentKey] = oKeyPath
-       Lorj.debug(4, "%s: Undefining attribute mapping '%s'" % [sCloudObj, oKeyPath.sFullPath])
+    # Process or controller to defines or update data model options
+    # Possible data model options are defined definition under <section>/<data>
+    # of defaults.yaml
+    #
+    # Parameters:
+    # - +data+    : String/Symbol. Name of the data
+    # - +options+ : Hash. List of options
+    def self.define_data(data, options)
+      return nil unless [String, Symbol].include?(data.class)
+      return nil if options.class != Hash
+      PrcLib.model.heap true
 
-       self.query_mapping(key, nil)
-     end
+      data = data.to_sym if data.class == String
+      PrcLib.dcl_fail("%s: Config data '%s' unknown",
+                      self.class, data) unless Lorj.defaults.meta_exist?(data)
 
-     # Defines/update CloudData parameters
-     def self.define_data(sData, hMeta)
-       return nil if not sData or not hMeta
-       return nil if not [String, Symbol].include?(sData.class)
-       return nil if hMeta.class != Hash
+      PrcLib.model.data_context data
 
-       aCaller = caller
-       aCaller.pop
+      section = _section_from(data)
 
-       sData = sData.to_sym if sData.class == String
-       raise Lorj::PrcError.new, "%s: Config data '%s' unknown" % [self.class, sData], aCaller if not Lorj::Default.meta_exist?(sData)
+      cur_options = PrcLib.model.meta_data.rh_get(section, data)
+      return cur_options.merge!(options) if cur_options
+      PrcLib.model.meta_data.rh_set(options, section, data)
+    end
 
-       @@Context[:oCurrentData] = sData
+    # Controller to declare a model Data value mapping
+    #
+    # Parameters:
+    # - +value+ : Value to map
+    # - +map+   : Value mapped
+    def self.data_value_mapping(value, map)
+      return nil unless _decl_data_valid?(value, map)
+      PrcLib.model.heap true
 
-       section = Lorj::Default.get_meta_section(sData)
-       section = :runtime if section.nil?
+      data = PrcLib.model.data_context
 
-       if Lorj.rhExist?(@@meta_data, section, sData) == 2
-         Lorj.rhGet(@@meta_data, section, sData).merge!(hMeta)
-       else
-         Lorj.rhSet(@@meta_data, hMeta, section, sData)
-       end
-     end
+      section = _section_from(data)
 
-     def self.data_value_mapping(value, map)
-       return nil if not [String, Symbol].include?(value.class)
-       return nil if not [NilClass, Symbol, String].include?(map.class)
+      Lorj.debug(2, format("%s/%s: Define config data value mapping: '%s' => "\
+                           "'%s'", section, data, value, map))
+      PrcLib.model.meta_data.rh_set(map, section, data,
+                                    :value_mapping,  :controller, value)
+      PrcLib.model.meta_data.rh_set(value, section, data,
+                                    :value_mapping,  :process, map)
+    end
 
-       aCaller = caller
-       aCaller.pop
-       sData = @@Context[:oCurrentData]
-       raise Lorj::PrcError.new, "Config data context not set. at least, you need to call define_data before." if sData.nil?
+    def self.defined?(objType)
+      PrcLib.model.heap true
+      @obj_type.include?(objType)
+    end
 
-       section = Lorj::Default.get_meta_section(sData)
-       section = :runtime if section.nil?
+    # Internal BaseDefinition function
 
-       Lorj.debug(2, "%s/%s: Define config data value mapping: '%s' => '%s'" % [section, sData, value, map])
-       Lorj.rhSet(@@meta_data, map, section, sData, :value_mapping,  :controller, value)
-       Lorj.rhSet(@@meta_data, value, section, sData, :value_mapping,  :process, map)
-     end
+    def self.predefine_data_value(data, hOptions)
+      PrcLib.model.heap true
+      # Refuse to run if not a
+      return nil if self.class != BaseDefinition
+      # BaseDefinition call
+      return nil unless [String, Symbol].include?(value.class)
+      return nil unless [NilClass, Symbol, String].include?(map.class)
 
-     def self.provides(aObjType)
-       @aObjType = aObjType
-     end
+      key_path = PrcLib.model.attribute_context
 
-     def self.defined?(objType)
-       @aObjType.include?(objType)
-     end
+      value = { data => { :options => hOptions } }
 
-     # Internal BaseDefinition function
+      PrcLib.model.predefine_data_value.rh_set(value,
+                                               key_path.sFullPath, :values)
+    end
 
-     def self.predefine_data_value(data, hOptions)
-       return nil if self.class != BaseDefinition # Refuse to run if not a BaseDefinition call
-       return nil if not [String, Symbol].include?(value.class)
-       return nil if not [NilClass, Symbol, String].include?(map.class)
+    # function to interpret a template data, and use ERBConfig as data context.
+    # ERBConfig contains config object only.
+    def erb(str)
+      ERB.new(str).result(@erb_config.get_binding)
+    end
+  end
 
-       aCaller = caller
-       aCaller.pop
+  ##############################################################
+  # Completing BaseDefinition with Exclusive controller functions
+  class BaseDefinition
+    attr_writer :obj_type
 
-       oKeyPath = @@Context[:oCurrentKey]
+    # Controller declaration to map an query attribute
+    # By default, def_attribute configure those attributes as queriable.
+    # The controller can redefine the query part.
+    def self.query_mapping(key, map)
+      PrcLib.model.heap true
+      _query_mapping(key, map)
+    end
 
-       value = {data => {options: hOptions} }
+    # Function used by the controler to define mapping.
+    # By default, any attributes are queriable as well. No need to call
+    # query_mapping
+    #
+    # parameters:
+    # - +key+    : name of the default object attribute
+    # - +map+    : optional.
+    # - +options+: optional.
+    def self.def_attr_mapping(key, map, options = {})
+      PrcLib.model.heap true
+      key_paths = _set_attr_mapping(key, map, options)
 
-       Lorj.rhSet(@@predefine_data_value, value, oKeyPath.sFullPath, :values)
-     end
+      Lorj.debug(4, "%s: Defining object attribute mapping '%s' => '%s'",
+                 PrcLib.model.object_context, key_paths[0], key_paths[1])
+    end
 
-     # function to interpret a template data, and use ERBConfig as data context.
-     # ERBConfig contains config object only.
-     def erb(str)
-       ERB.new(str).result(@oERBConfig.get_binding)
-     end
+    # Controller to declare an lorj object attribute data mapping.
+    #
+    # You need to define object and attribute context before attr_value_mapping
+    #
+    # parameters:
+    # - +value+ : name of the default object attribute
+    # - +map+   : Map a predefined object attribute value.
+    #
+    # Ex: If the application model has defined:
+    #     :server[:status] = [:create, :boot, :active]
+    #
+    #  define_obj :server # Required to set object context
+    #  get_attr_mapping :status, :state # set attribute mapping and context.
+    #  attr_value_mapping :create, 'BUILD'
+    #  attr_value_mapping :boot,   :boot
+    #  attr_value_mapping :active, 'ACTIVE'
+    #
+    def self.attr_value_mapping(value, map)
+      PrcLib.model.heap true
+
+      return nil unless _decl_data_valid?(value, map)
+
+      object_type = PrcLib.model.object_context(fct_context)
+
+      key_path = PrcLib.model.attribute_context __callee__
+
+      keypath = key_path.sFullPath
+      Lorj.debug(2, "%s-%s: Attribute value mapping '%s' => '%s'",
+                 object_type, key_path.to_s, value, map)
+      PrcLib.model.meta_obj.rh_set(map,
+                                   object_type, :value_mapping, keypath, value)
+    end
+
+    # Controller to declare predefined Hash options for controller wrapper code.
+    #
+    # When a controller wrapper code is called to execute a function,
+    # the controller may/should provides some options.
+    #
+    # lorj framework can simplify the way to call this function
+    # and provide a predefined options list, prepared by lorj.
+    #
+    # Ex: If you are calling a connection function, which requires one
+    #     or more parameters passed as an Hash:
+    # wrapper code without using :hdata:
+    #   def connect(params)
+    #      options = { :hp_access_key => params[:account_id],
+    #                  :hp_secret_key => params[:account_key]
+    #                  :hp_auth_uri => params[:auth_uri]
+    #                  :hp_tenant_id => params[:tenant]
+    #                  :hp_avl_zone => params[:network]
+    #      }
+    #      Fog::HP::Network.new(options)
+    #   end
+    #
+    # wrapper code  using :hdata and def_hdata:
+    #   def connect(params)
+    #      Fog::HP::Network.new(params[:hdata])
+    #   end
+    #
+    # def_hdata requires the object context.
+    # Ex:
+    #   define_obj(:student)
+    #   def_hdata :first_name
+    #   def_hdata :last_name
+    #   def_hdata :course,      mapping: :training
+    #
+    # parameters:
+    # - +attr_name+ : Attribute name to add in :hdata Hash
+    #                 as hdata[attr_name] = value.
+    # - +options+: Possible options:
+    #   - :mapping : map name to use mapping instead of attr_name.
+    #                hdata[map_name] = value
+    #
+    #
+    def self.def_hdata(attr_name, options = {})
+      PrcLib.model.heap true
+      fct_context = { :function_name => __callee__ }
+      return nil unless [String, Symbol, Array].include?(attr_name.class)
+
+      options = {} unless options.is_a?(Hash)
+
+      object_type = PrcLib.model.object_context(fct_context)
+
+      key_access = KeyPath.new(attr_name).sFullPath
+
+      # PrcLib.model.meta_obj://<Object>/:params/:keys/<keypath> must exist.
+      object_param = PrcLib.model.meta_obj.rh_get(object_type,
+                                                  :params, :keys, key_access)
+
+      object_param[:mapping] = attr_name
+      object_param[:mapping] = options[:mapping] unless options[:mapping].nil?
+
+      Lorj.debug(2, "%-28s: hdata set '%s' => '%s'",
+                 _object_name(object_type), attr_name, object_param[:mapping])
+
+      # Internally, lorj stores this declaration in
+      # PrcLib.model.meta_obj://<Object>/:params/:keys/<keypath>/:mapping)
+    end
+  end
+
+  ##############################################################
+  # Completing BaseDefinition with internal functions
+  class BaseDefinition
+    # Internal function
+    def self._query_mapping(key, map)
+      return nil unless [String, Symbol].include?(key.class)
+      return nil unless [NilClass, Symbol, String].include?(map.class)
+
+      object_type = PrcLib.model.object_context
+      key_path = KeyPath.new(key)
+      map_path_obj = KeyPath.new(map)
+
+      PrcLib.model.attribute_context key_path
+
+      PrcLib.model.meta_obj.rh_set(map_path_obj.sFullPath, object_type,
+                                   :query_mapping, key_path.sFullPath)
+    end
+
+    # Internal function to store object attribute and mapping information
+    # parameters:
+    # - +key+    : KeyPath. key object
+    # - +map+    : KeyPath. map object
+    # - +options+: Hash. Options to set.
+    def self._set_attr_mapping(key, map, options)
+      return nil unless _decl_object_attr_valid?(key, map, options)
+
+      object_type = PrcLib.model.object_context
+      key_path_obj = KeyPath.new(key)
+
+      map_path_obj = KeyPath.new(map)
+
+      PrcLib.model.meta_obj.rh_set(map_path_obj.sFullPath, object_type,
+                                   :returns, key_path_obj.sFullPath)
+
+      PrcLib.model.attribute_context key_path_obj
+
+      return if options[:not_queriable] == true
+      query_mapping(key, map)
+      [key_path_obj.sFullPath, map_path_obj.sFullPath]
+    end
+
+    # Internal section detection
+    def self._section_from(data)
+      section = Lorj.defaults.get_meta_section(data)
+      section = :runtime if section.nil?
+
+      section
+    end
+
+    # Internal model data validation
+    # return true if valid. false otherwise.
+    def self._decl_object_attr_valid?(key, map, options)
+      return false unless [String, Symbol].include?(key.class)
+      return false unless options.is_a?(Hash)
+      return false unless [Symbol, String, Array].include?(map.class)
+
+      true
+    end
+
+    # Internal model data validation
+    # return true if valid. false otherwise.
+    def self._decl_data_valid?(value, map)
+      return false if [String, Symbol].include?(value.class)
+      return false if [NilClass, Symbol, String].include?(map.class)
+      true
+    end
+
+    # Internal function to get the object_name as class.object
+    #
+    # return formated string.
+    def self._object_name(name)
+      format("'%s.%s'", self.class, name)
+    end
+
+    # Internal function for obj_needs
+    # Initialize :params/:keys/
+    def self._initialize_object_needs(name)
+      top_param_obj = PrcLib.model.meta_obj.rh_get(PrcLib.model.object_context,
+                                                   :params)
+
+      PrcLib.model.attribute_context KeyPath.new(name)
+      key_access = PrcLib.model.attribute_context.sFullPath
+
+      unless top_param_obj[:keys].key?(key_access)
+        top_param_obj[:keys][key_access] = {}
+        return 'New'
+      end
+
+      'Upd'
+    end
+
+    # Internal function
+    def self._define_object_needs(params, type, msg_action, options)
+      attribute = PrcLib.model.attribute_context
+
+      case type
+      when :data
+        return _obj_needs_data(params[:keys][attribute.sFullPath],
+                               msg_action, options)
+      when :CloudObject, :object
+        return _obj_needs_object(params[:keys][attribute.sFullPath],
+                                 options)
+      end
+      PrcLib.dcl_fail("%s: Object parameter type '%s' unknown.",
+                      self.class, type)
+    end
+
+    # Internal function
+    def self._configure_options_handlers(options)
+      for_events = PrcLib.model.meta_obj.rh_get(PrcLib.model.object_context,
+                                                :lambdas).keys
+      options.merge(:for => for_events) unless options.key?(:for)
+    end
+  end
+
+  ##############################################################
+  # Completing BaseDefinition with internal functions for obj_needs
+  class BaseDefinition
+    # Internal function
+    def self._obj_needs_data(object_attr, msg_action, new_params)
+      attr_name = PrcLib.model.attribute_context
+      if Lorj.defaults.meta_exist?(attr_name)
+        Lorj.debug(2, "%-28s: %s predefined config '%s'.",
+                   _object_name(PrcLib.model.object_context),
+                   msg_action, attr_name)
+      else
+        Lorj.debug(2, "%-28s: %s runtime    config '%s'.",
+                   _object_name(PrcLib.model.object_context),
+                   msg_action, attr_name)
+      end
+      # Merge from predefined params, but ensure type is never updated.
+      object_attr.merge!(new_params.merge(:type => :data))
+    end
+
+    # Internal function
+    def self._obj_needs_object(object_attr, new_params)
+      attr_name = PrcLib.model.attribute_context
+      unless PrcLib.model.meta_obj.key?(attr_name.key)
+        PrcLib.dcl_fail("%s: '%s' not declared. Missing define_obj(%s)?",
+                        self.class,
+                        attr_name,
+                        attr_name)
+      end
+      # Merge from predefined params, but ensure type is never updated.
+      object_attr.merge!(new_params.merge(:type => :CloudObject))
+    end
+
+    # Internal function
+    def self._define_obj_initialize(obj_type_name, handlers)
+      use_controller = PrcLib.model[:use_controller]
+
+      if use_controller.nil?
+        PrcLib.model.options :use_controller => true
+        use_controller = true
+      end
+
+      # TODO: Cleanup un-used 2 levels :params/:keys by single :params
+      object = { :lambdas => { :create_e => nil, :delete_e => nil,
+                               :update_e => nil, :get_e => nil,
+                               :query_e => nil, :get_attr_e => nil },
+                 :params =>  { :keys => {} },
+                 :options => { :controller => use_controller },
+                 :query_mapping => { ':id' => ':id', ':name' => ':name' },
+                 :returns => { ':id' => ':id', ':name' => ':name' }
+               }
+
+      PrcLib.dcl_fail("A new declared object '%s' requires at "\
+                      'least one handler. Ex: define_obj :%s, '\
+                      'create_e: myhandler or nohandler: true',
+                      obj_type_name,
+                      obj_type_name) if handlers.length == 0
+
+      if !handlers.rh_get(:nohandler)
+        msg = '%-28s object declared.'
+      else
+        msg = '%-28s meta object declared.'
+      end
+      Lorj.debug(2, msg, _object_name(obj_type_name))
+      object
+    end
+
+    # Internal function for define_obj
+    # Check handler options.
+    # Return the list of handlers set if handler list is ok (exist 1 at least)
+    # return false if no handler is set.
+    def self._verify_handlers(type_name, object, handlers)
+      return false if handlers.rh_get(:nohandler)
+
+      PrcLib.dcl_fail("A new declared object '%s' requires at "\
+                      'least one handler. Ex: define_obj :%s, '\
+                      'create_e: myhandler or nohandler: true',
+                      type_name, type_name) if object.nil? &&
+                                               handlers.length == 0
+
+      return handlers if object.nil?
+
+      handlers_list = object[:lambdas].keys.join(', ')
+      handlers.each_key do | key |
+        next if lorj_object.rh_exist?(:lambdas, key)
+
+        PrcLib.dcl_fail("'%s' parameter is invalid. Use '%s'",
+                        key, handlers_list)
+      end
+      handlers
+    end
+
+    # Setting procs
+    def self._handler_settings(object, handlers_options)
+      handlers_dcl = object[:lambdas]
+      process_context = PrcLib.model.process_context
+
+      handlers_dcl.each_key do |key|
+        next unless handlers_options.key?(key)
+
+        unless process_context.instance_methods.include?(handlers_options[key])
+          PrcLib.dcl_fail("'%s' parameter requires a valid instance method"\
+                          " '%s' in the process '%s'.",
+                          key, handlers_options[key], process_context)
+        end
+        if handlers_options[key] == :default
+          # By default, we use the event name as default function to call.
+          # Those function are predefined in ForjController
+          # The Provider needs to derive from ForjController and redefine those
+          # functions.
+          object[:lambdas][key] = key
+        else
+          # If needed, ForjProviver redefined can contains some additionnal
+          # functions to call.
+          object[:lambdas][key] = handlers_options[key]
+        end
+      end
+    end
   end
 end

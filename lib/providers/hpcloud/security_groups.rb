@@ -14,13 +14,14 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+# HPCloud security groups
 module HPSecurityGroups
   def self.query_sg(oNetworkConnect, sQuery)
     oNetworkConnect.security_groups.all(sQuery)
   end
 
   def self.create_sg(oNetwork, name, description)
-    params = { name: name }
+    params = { :name => name }
     params[:description] = description if description
     oNetwork.security_groups.create(params)
   end
@@ -38,30 +39,30 @@ module HPSecurityGroups
   end
 end
 
+# HPCloud keypairs
 module HPKeyPairs
   def self.query_keypair(oComputeConnect, sQuery)
-    cKeyPairs = oComputeConnect.key_pairs.all
-    aResults = []
-    cKeyPairs.each do |sElem|
-      bSelect = true
+    keypairs = oComputeConnect.key_pairs.all
+    results = []
+    keypairs.each do |sElem|
+      is_selected = true
       attributes = sElem.instance_variable_get(:@attributes)
       sQuery.each do | key, value |
         if attributes[key] != value
-          bSelect = false
+          is_selected = false
           break
         end
       end
-      aResults.push sElem if bSelect
+      results.push sElem if is_selected
     end
-    aResults
+    results
   end
 
   def self.get_keypair(oComputeConnect, sId)
-    # byebug
     oComputeConnect.key_pairs.get(sId)
   end
 
   def self.create_keypair(oComputeConnect, name, pubkey)
-    oComputeConnect.key_pairs.create(name: name, public_key: pubkey)
+    oComputeConnect.key_pairs.create(:name => name, :public_key => pubkey)
   end
 end

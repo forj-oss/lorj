@@ -16,319 +16,279 @@
 #    limitations under the License.
 
 module Lorj
+  # Class Definition internal function.
   class BaseDefinition
     private
 
-     # ------------------------------------------------------
-     # Class Definition internal function.
-     # ------------------------------------------------------
+    # return Object data meta data.
+    def _get_meta_data(key)
+      meta_default = Lorj.defaults.get_meta(key)
+      return nil if meta_default.nil?
+      meta_default = meta_default.clone
 
-     def _ask_encrypted(sDesc, sDefault)
-       # Checking key file used to encrypt/decrypt passwords
-       key_file = File.join($FORJ_CREDS_PATH, '.key')
-       if !File.exist?(key_file)
-         # Need to create a random key.
-         entr = {
-           key: rand(36**10).to_s(36),
-           salt: Time.now.to_i.to_s,
-           iv: Base64.strict_encode64(OpenSSL::Cipher::Cipher.new('aes-256-cbc').random_iv)
-         }
+      section = Lorj.defaults.get_meta_section(key)
+      return meta_default if section.nil?
+      meta = PrcLib.model.meta_data.rh_get(section, key)
+      return meta_default if meta.nil?
 
-         Lorj.debug(2, "Writing '%s' key file" % key_file)
-         File.open(key_file, 'w') do |out|
-           out.write(Base64.encode64(entr.to_yaml))
-         end
-       else
-         Lorj.debug(2, "Loading '%s' key file" % key_file)
-         encoded_key = IO.read(key_file)
-         entr = YAML.load(Base64.decode64(encoded_key))
-       end
+      meta_default.merge!(meta)
+    end
 
-       enc_value = sDefault
+    # internal runtime function for process call
+    # Get the controller result and map controller object data to
+    # lorj object attributes, using controller mapping function.
+    #
+    # *parameters*:
+    #   - +object_type+       : object_type to map
+    #   - +oControlerObject+  : Controller object
+    #
+    # *return*:
+    # - value : Hash. return the parameter value.
+    #
+    # *raise*:
+    #
+    def _return_map(object_type, oControlerObject)
+      return nil if oControlerObject.nil?
 
-       if !enc_value.nil?
-         begin
-           value_hidden = '*' * Encryptor.decrypt(
-              value: Base64.strict_decode64(enc_value),
-              key: entr[:key],
-              iv: Base64.strict_decode64(entr[:iv]),
-              salt: entr[:salt]
-           ).length
-        rescue => e
-          Lorj.error('Unable to decrypt your %s. You will need to re-enter it.' % sDesc)
-          enc_value = ''
-         else
-           value_hidden = '[%s]' % value_hidden
-           PrcLib.message('%s is already set. If you want to keep it, just press Enter' %  [sDesc])
-         end
-       else
-         value_hidden = ''
-       end
+      attr_value = {}
 
-       value_free = ''
-       while value_free == ''
-         # ask for encrypted data.
-         value_free = ask('Enter %s: [%s]' % [sDesc, value_hidden]) do |q|
-           q.echo = '*'
-         end
-         if value_free == '' && enc_value
-           value_free = Encryptor.decrypt(
-              value: Base64.strict_decode64(enc_value),
-              key: entr[:key],
-              iv: Base64.strict_decode64(entr[:iv]),
-              salt: entr[:salt]
-           )
-         else
-           PrcLib.message('%s cannot be empty.' % sDesc) if value_free == ''
-         end
-       end
-       enc_value = Base64.strict_encode64(
-          Encryptor.encrypt(
-             value: value_free,
-             key: entr[:key],
-             iv: Base64.strict_decode64(entr[:iv]),
-             salt: entr[:salt]
-          )
-       )
-     end
+      map_handler = _map_identify_mapping_handler(object_type)
+      return nil if map_handler.nil?
 
-     def _ask(sDesc, sDefault, rValidate, bEncrypted, bRequired)
-       if bEncrypted
-         value = _ask_encrypted(sDesc, sDefault)
-         if bRequired && value == ''
-           say '%sThis information is required!%s' % [ANSI.bold, ANSI.clear]
-           while value == ''
-             value = _ask_encrypted(sDesc, sDefault)
-           end
-         end
-       else
-         value = ask('Enter %s:' % [sDesc]) do |q|
-           q.default = sDefault unless sDefault.nil?
-           q.validate = rValidate unless rValidate.nil?
-         end
-         if bRequired && value == ''
-           say '%sThis information is required!%s' % [ANSI.bold, ANSI.clear]
-           while value == ''
-             value = ask('Enter %s:[%s]' % [sDesc, sDefault]) do |q|
-               q.default = sDefault unless sDefault.nil?
-               q.validate = rValidate unless rValidate.nil?
-             end
-           end
-         end
-       end
-       value.to_s
-     end
+      object_opts = PrcLib.model.meta_obj.rh_get(object_type)
 
-     # return Object data meta data.
-     def _get_meta_data(sKey)
-       hMetaDefault = Lorj::Default.get_meta(sKey)
-       return nil if hMetaDefault.nil?
-       hMetaDefault = hMetaDefault.clone
+      maps = object_opts[:returns]
+      maps.each do |key, map|
+        next unless map
 
-       sSection = Lorj::Default.get_meta_section(sKey)
-       return hMetaDefault if sSection.nil?
-       hMeta = Lorj.rhGet(@@meta_data, sSection, sKey)
-       return hMetaDefault if hMeta.nil?
+        key_obj = KeyPath.new(key)
+        map_obj = KeyPath.new(map)
 
-       hMetaDefault.merge!(hMeta)
-     end
+        value = _call_controller_map(map_handler, oControlerObject,
+                                     map_obj.tree)
+        value = _mapping_data(object_type, key_obj, object_opts, value)
+        attr_value.rh_set(value, key_path.tree)
+      end
+      attr_value
+    end
 
-     def _return_map(sCloudObj, oControlerObject)
-       return nil if oControlerObject.nil?
+    # internal runtime function for process call
+    # Get the object controller mapping method and method origin.
+    #
+    # If the object is fully managed by the process, ie no controller
+    # object is attached to it, the process will own the mapping method.
+    #
+    # *parameters*:
+    #   - +object_type+       : object_type to map
+    #
+    # *return*:
+    # - map_method    : return the parameter value.
+    # - method_name   : Name of the map method.
+    # - is_controller : true if the map method is owned by the controller
+    #                   false if the map method is owned by the process.
+    # - class owner   : Class owner of the map method.
+    #
+    # *raise*:
+    #
+    def _map_identify_mapping_handler(object_type)
+      proc_name = PrcLib.model.meta_obj.rh_get(object_type,
+                                               :lambdas, :get_attr_e)
 
-       attr_value = {}
+      is_controller = PrcLib.model.meta_obj.rh_get(object_type,
+                                                   :options, :controller)
 
-       pProc = Lorj.rhGet(@@meta_obj, sCloudObj, :lambdas, :get_attr_e)
-       bController = Lorj.rhGet(@@meta_obj, sCloudObj, :options, :controller)
-       return nil if !pProc && !bController
+      return nil if !proc_name && !is_controller
 
-       hMap = Lorj.rhGet(@@meta_obj, sCloudObj, :returns)
-       hMap.each do |key, map|
-         oKeyPath = KeyPath.new(key)
-         oMapPath = KeyPath.new(map)
-         next unless map
-         if pProc
-           Lorj.debug(4, "Calling process function '%s' to retrieve/map Controller object '%s' data " % [pProc, sCloudObj])
-           controller_attr_value = @oForjProcess.method(pProc).call(sCloudObj, oControlerObject)
-         else
-           Lorj.debug(4, "Calling controller function 'get_attr' to retrieve/map Controller object '%s' data " % [sCloudObj])
-           controller_attr_value = @oProvider.get_attr(oControlerObject, oMapPath.aTree) if bController
-         end
+      if proc_name
+        map_handler = [@process.method(proc_name), proc_name, false]
+        map_handler << @process.class
+        return map_handler
+      end
 
-         hValueMapping = Lorj.rhGet(@@meta_obj, sCloudObj, :value_mapping, oKeyPath.sFullPath)
-         if hValueMapping && !controller_attr_value.nil?
-           hValueMapping.each do | map_key, map_value |
-             if controller_attr_value == map_value
-               Lorj.rhSet(attr_value, map_key, oKeyPath.aTree)
-               Lorj.debug(5, "Object '%s' value mapped '%s': '%s' => '%s'" % [sCloudObj, oKeyPath.aTree, controller_attr_value, map_value])
-               break
-             end
-           end
-           fail Lorj::PrcError.new, "'%s.%s': No controller value mapping for '%s'." % [sCloudObj, oKeyPath.sKey, controller_attr_value] if attr_value.nil?
-         else
-           Lorj.debug(5, "Object '%s' value '%s' extracted: '%s'" % [sCloudObj, oKeyPath.aTree, controller_attr_value])
-           Lorj.rhSet(attr_value, controller_attr_value, oKeyPath.aTree)
-         end
-       end
-       attr_value
-     end
+      [@controller.method(:get_attr), :get_attr, true, @controller.class]
+    end
 
-     def _build_data(sCloudObj, oParam, oKeyPath, hParams, bController = false)
-       sKey = oKeyPath.sKey
-       sDefault = Lorj.rhGet(hParams, :default_value)
-       if Lorj.rhExist?(hParams, :extract_from) == 1
-         value = oParam[hParams[:extract_from]]
-       end
-       value = @oForjConfig.get(sKey, sDefault) unless value
+    # internal runtime function for process call
+    # Call the mapping method to get the controller attribute data.
+    #
+    #
+    # *parameters*:
+    #   - +map_handler+    : map array returned by _map_identify_mapping_handler
+    #   - +controller_obj+ : Controller object
+    #   - +attr_tree+      : Array of attribute tree to get the controller data.
+    #
+    # *return*:
+    # - controller data.
+    #
+    # *raise*:
+    #
+    def _call_controller_map(map_handler, oControlerObject, attr_tree)
+      if map_handler[2]
+        type = 'controller'
+      else
+        type = 'process'
+      end
+      Lorj.debug(4, "Calling '%s.%s' to retrieve/map %s object '%s' data ",
+                 map_handler[3], map_handler[1], type, attr_tree)
 
-       if bController
-         hValueMapping = Lorj.rhGet(@@meta_obj, sCloudObj, :value_mapping, oKeyPath.sFullPath)
+      map_handler[0].call(oControlerObject, attr_tree)
+    end
 
-         # Mapping from Object/data definition
-         if hValueMapping
-           fail Lorj::PrcError.new, "'%s.%s': No value mapping for '%s'" % [sCloudObj, sKey, value] if Lorj.rhExist?(hValueMapping, value) != 1
-           value = hValueMapping[value]
-           # Will be moved to the setup section or while setting it for a controller attached account.
-           # ~ else
-           # ~ # Or mapping from Config/data definition
-           # ~ section = Lorj::Default.get_meta_section(sKey)
-           # ~ section = :runtime if section.nil?
-           # ~ hValueMapping = Lorj::rhGet(@@meta_data, section, sKey, :value_mapping)
-           # ~ if hValueMapping
-           # ~ raise PrcError.new(), "'%s.%s': No Config value mapping for '%s'" % [section, sKey, value] if Lorj::rhExist?(hValueMapping, value) != 1
-           # ~ value = hValueMapping[value]
-           # ~ end
-         end
-         if Lorj.rhExist?(hParams, :mapping) == 1
-           # NOTE: if mapping is set, the definition subtree
-           # is ignored.
-           # if key map to mykey
-           # [:section1][subsect][key] = value
-           # oParam => [:hdata][mykey] = value
-           # not oParam => [:hdata][:section1][subsect][mykey] = value
-           Lorj.rhSet(oParam[:hdata], value, Lorj.rhGet(hParams, :mapping))
-         end
-       end
-       oParam[oKeyPath.aTree] = value
-     end
+    # internal runtime function for process call
+    # Do the mapping of the value as defined by obj_needs options:
+    # :value_mapping => (Array of attribute tree)
+    #
+    # *parameters*:
+    #   - +object_type+ : Object type to get data mapped.
+    #   - +key_obj+     : Attribute to map
+    #   - +object_opts+ : Attribute options.
+    #   - +value+       : Controller value to map.
+    #
+    # *return*:
+    # - controller data.
+    #
+    # *raise*:
+    #
+    def _mapping_data(object_type, key_obj, object_opts, value)
+      value_mapping = object_opts.rh_get(:value_mapping, key_obj.fpath)
+      if value_mapping && !value.nil?
+        value_mapping.each do | map_key, map_value |
+          next unless value == map_value
+          Lorj.debug(5, "Object '%s' value mapped '%s': '%s' => '%s'",
+                     object_type, key_obj.tree,
+                     value, map_value)
+          return map_key
+        end
+        runtime_fail("'%s.%s': No controller value mapping for '%s'.",
+                     object_type, key_obj.tree, value)
+      end
 
-     def _get_object_params(sCloudObj, sEventType, fname, bController = false)
-       oParams = ObjectData.new(notbController) # hdata is built for controller. ie, ObjectData is NOT internal.
+      Lorj.debug(5, "Object '%s' value '%s' extracted: '%s'",
+                 object_type, key_obj.tree, value)
+      value
+    end
 
-       hTopParams = Lorj.rhGet(@@meta_obj, sCloudObj, :params)
-       hkeyPaths = Lorj.rhGet(hTopParams, :keys)
-       fail Lorj::PrcError.new, "'%s' Object data needs not set. Forgot obj_needs?" % [sCloudObj] if hkeyPaths.nil?
+    # internal runtime function for process call
+    # Check object needs list, to report missing required data.
+    # raise a runtime error if at least, one data is not set.
+    # It returns a list "missing objects".
+    #
+    # *parameters*:
+    #   - +object_missing+ : Array of missing object for process caller.
+    #   - +attr_name+      : attribute/data name
+    #   - +attr_options+   : attribute options
+    #   - +fname+          : caller function
+    #
+    # *return*:
+    # - Array : missing objects.
+    #
+    # *raise*:
+    # - runtime error if required data is not set. (empty or nil)
+    #
+    def _check_required(object_type, sEventType, fname)
+      object_missing = []
 
-       if sEventType == :delete_e
-         if @ObjectData.exist?(sCloudObj)
-           oParams.add(@ObjectData[sCloudObj, :ObjectData])
-         end
-       end
+      attr_paths = PrcLib.model.meta_obj.rh_get(object_type,
+                                                :params, :keys)
+      PrcLib.runtime_fail("'%s' Object data needs not set. Forgot "\
+                          'obj_needs?', object_type) if attr_paths.nil?
 
-       hkeyPaths.each do | sKeypath, hParams|
-         next unless hParams[:for].include?(sEventType)
-         oKeyPath = KeyPath.new(sKeypath)
-         sKey = oKeyPath.sKey
-         case hParams[:type]
-            when :data
-              _build_data(sCloudObj, oParams, oKeyPath, hParams, bController)
-            when :CloudObject
-              # ~ if hParams[:required] and Lorj::rhExist?(@CloudData, sKey, :object) != 2
-              if hParams[:required] && @ObjectData.type?(sKey) != :DataObject
-                fail Lorj::PrcError.new, "Object '%s/%s' is not defined. '%s' requirement failed." % [self.class, sKey, fname]
-              end
-              if @ObjectData.exist?(sKey)
-                oParams.add(@ObjectData[sKey, :ObjectData])
-              else
-                Lorj.debug(2, "The optional '%s' was not loaded" % sKey)
-              end
-            else
-              fail Lorj::PrcError.new, "Undefined ObjectData '%s'." % [hParams[:type]]
-         end
-       end
-       oParams
-     end
+      if sEventType == :delete_e &&
+         @object_data.type?(object_type) != :DataObject
+        object_missing << object_type
+      end
 
-     def _get_controller_map_value(keypath, sProcessValue)
-       section = Lorj::Default.get_meta_section(sData)
-       section = :runtime if section.nil?
-       oKeypath = KeyPath.new(keypath)
-       sKeyPath = oKeypath.sKeyPath
-       return nil if Lorj.rhExist?(@@meta_data, section, sKeyPath, :controller, sProcessValue) != 4
-       Lorj.rhGet(@@meta_data, section, sKeyPath, :controller, sProcessValue)
-     end
+      attr_paths.each do | _attr_path, attr_options|
+        next if attr_options[:for] && !attr_options[:for].include?(sEventType)
+        _check_required_attr(object_missing, attr_name, attr_options, fname)
+      end
+      object_missing
+    end
 
-     def _get_process_map_value(keypath, sControllerValue)
-       section = Lorj::Default.get_meta_section(sData)
-       section = :runtime if section.nil?
-       oKeypath = KeyPath.new(keypath)
-       sKeyPath = oKeypath.sKeyPath
-       return nil if Lorj.rhExist?(@@meta_data, section, sKeyPath, :process, sControllerValue) != 4
-       Lorj.rhGet(@@meta_data, section, sKeyPath, :process, sControllerValue)
-     end
+    # internal runtime function
+    # Check while the attribute data or object is required, if it is set.
+    # raise a runtime error if data is not set.
+    # add object in the missing object Array if object is not set.
+    #
+    # *parameters*:
+    #   - +object_missing+ : Array of missing object for process caller.
+    #   - +attr_name+      : attribute/data name
+    #   - +attr_options+   : attribute options
+    #   - +fname+          : caller function
+    #
+    # *return*:
+    #
+    # *raise*:
+    # - runtime error if required data is not set. (empty or nil)
+    #
+    def _check_required_attr(object_missing, attr_name, attr_options, fname)
+      attr_obj = KeyPath.new(attr_path)
 
-     def _check_required(sCloudObj, sEventType, fname)
-       aCaller = caller
-       aCaller.pop
+      attr_name = attr_obj.key
+      case attr_options[:type]
+      when :data
+        _check_required_attr_data(attr_name, attr_options, fname)
+      when :CloudObject
+        if attr_options[:required] &&
+           @object_data.type?(attr_name) != :DataObject
+          object_missing << attr_name
+        end
+      end
+    end
 
-       oObjMissing = []
+    # internal runtime function
+    # Check while the attribute data is required, if data is not set
+    # raise a runtime error if not.
+    #
+    # *parameters*:
+    #   - +attr_name+    : attribute/data name
+    #   - +attr_options+ : attribute options
+    #   - +fname+        : caller function
+    #
+    # *return*:
+    #
+    # *raise*:
+    # - runtime error if required data is not set. (empty or nil)
+    #
+    def _check_required_attr_data(attr_name, attr_options, fname)
+      default = attr_options.rh_get(:default_value)
 
-       hTopParams = Lorj.rhGet(@@meta_obj, sCloudObj, :params)
-       hkeyPaths = Lorj.rhGet(hTopParams, :keys)
-       fail Lorj::PrcError.new, "'%s' Object data needs not set. Forgot obj_needs?" % [sCloudObj] if hkeyPaths.nil?
+      return unless attr_options[:required]
 
-       if sEventType == :delete_e
-         if @ObjectData.type?(sCloudObj) != :DataObject
-           oObjMissing << sCloudObj
-         end
-       end
+      if attr_options.key?(:extract_from)
+        unless @object_data.exist?(attr_options[:extract_from])
+          PrcLib.runtime_fail("key '%s' was not extracted from '%s'"\
+                              ". '%s' requirement failed.",
+                              attr_name, attr_options[:extract_from], fname)
+        end
+      elsif @config.get(attr_name, default).nil?
+        section = Lorj.defaults.get_meta_section(attr_name)
+        section = 'runtime' unless section
+        PrcLib.runtime_fail("key '%s/%s' is not set. '%s' requirement"\
+                            ' failed.', section, attr_name, fname)
+      end
+    end
 
-       hkeyPaths.each do | sKeypath, hParams|
-         next unless hParams[:for].include?(sEventType)
-         oKeyPath = KeyPath.new(sKeypath)
+    # Obsolete function
+    #
+    # *parameters*:
+    #   -
 
-         sKey = oKeyPath.sKey
-         case hParams[:type]
-            when :data
-              sDefault = Lorj.rhGet(hParams, :default_value)
-              if hParams[:required]
-                if hParams.key?(:extract_from)
-                  unless @ObjectData.exist?(hParams[:extract_from])
-                    fail Lorj::PrcError.new, "key '%s' was not extracted from '%s'. '%s' requirement failed." % [sKey, hParams[:extract_from], fname], aCaller
-                  end
-                elsif @oForjConfig.get(sKey, sDefault).nil?
-                  sSection = Lorj::Default.get_meta_section(sKey)
-                  sSection = 'runtime' unless sSection
-                  fail Lorj::PrcError.new, "key '%s/%s' is not set. '%s' requirement failed." % [sSection, sKey, fname], aCaller
-                end
-              end
-            when :CloudObject
-              # ~ if hParams[:required] and Lorj::rhExist?(@CloudData, sKey, :object) != 2
-              if hParams[:required] && @ObjectData.type?(sKey) != :DataObject
-                oObjMissing << sKey
-              end
-         end
-       end
-       oObjMissing
-     end
-
-     def _identify_data(sCloudObj, sEventType, sObjectType = :data)
-       aCaller = caller
-       aCaller.pop
-
-       aData = []
-
-       hTopParams = Lorj.rhGet(@@meta_obj, sCloudObj, :params)
-       hkeyPaths = Lorj.rhGet(hTopParams, :keys)
-       fail Lorj::PrcError.new, "'%s' Object data needs not set. Forgot obj_needs?" % [sCloudObj] if hkeyPaths.nil?
-
-       hkeyPaths.each do | sKeypath, hParams|
-         next unless hParams[:for].include?(sEventType)
-         oKeyPath = KeyPath.new(sKeypath)
-
-         aData << oKeyPath.aTree if hParams[:type] == sObjectType
-       end
-       aData
-     end
+    #  def _identify_data(object_type, sEventType, data_type = :data)
+    #  data_array = []
+    #
+    # key_paths = PrcLib.model.meta_obj.rh_get(object_type,
+    #                         :params, :keys)
+    #  runtime_fail("'%s' Object data needs not set. Forgot obj_needs?",
+    #  object_type) if key_paths.nil?
+    #
+    #  key_paths.each do | sKeypath, hParams|
+    #  next if hParams[:for] && !hParams[:for].include?(sEventType)
+    #  key_path = KeyPath.new(sKeypath)
+    #
+    #  data_array << key_path.tree if hParams[:type] == data_type
+    #  end
+    #  data_array
+    #  end
   end
 end

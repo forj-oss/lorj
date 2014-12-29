@@ -23,21 +23,63 @@ require 'lorj/version'
 
 # To use it, add require 'lorj'
 
-require 'prc.rb'           # Load PrcLib Base module
-require 'prc-logging.rb'   # Load class PrcLib::Logging
-require 'prc-config.rb'    # Load class Lorj::Config
-require 'prc-account.rb'   # Load class Lorj::Account
+require 'prc.rb'                   # PrcLib Base module
+require 'rh.rb'                    # recursive Hash
+require 'logging.rb'               # class PrcLib::Logging
+require 'prc_base_config.rb'       # PRC::BaseConfig class
+require 'prc_section_config.rb'    # PRC::SectionConfig class
+require 'prc_core_config.rb'       # PRC::CoreConfig class
+require 'lorj_defaults.rb'         # PRC::Defaults class - Application defaults
+require 'lorj_config.rb'           # Lorj::Config class -
+require 'lorj_account.rb'          # Lorj::Account class  - account config
 
-require 'core/core'                 # Lorj Core classes
-require 'core/lorj-data'            # Lorj Lorj::Data object
-require 'core/lorj-basedefinition'  # Lorj Lorj::BaseDefinition object
-require 'core/lorj-baseprocess'     # Lorj Lorj::BaseProcess object
-require 'core/lorj-basecontroller'  # Lorj Lorj::BaseController object
-require 'core/lorj-keypath'         # Lorj Lorj::BaseDefinition object
-require 'core/definition'           # Lorj Process definition
-require 'core/definition_internal'  # Lorj internal functions
+require 'core/core_internal'       # Lorj Core class private init. functions
+require 'core/core'                # Lorj Core class
+require 'core/core_model'          # Lorj Model class
+require 'core/core_process'        # Lorj core process functions
+require 'core/core_controller'     # Lorj core controller functions
+require 'core/core_object_data'    # Lorj ObjectData class
+require 'core/lorj_data'           # Lorj Lorj::Data object
+require 'core/lorj_basedefinition' # Lorj Lorj::BaseDefinition object
+require 'core/lorj_baseprocess'    # Lorj Lorj::BaseProcess object
+require 'core/lorj_basecontroller' # Lorj Lorj::BaseController object
+require 'core/lorj_keypath'        # Lorj Lorj::BaseDefinition object
+require 'core/definition'          # Lorj Process definition
+require 'core/definition_internal' # Lorj internal functions
 
+# lorj module
 module Lorj
+  # Internal Lorj function to debug lorj.
+  #
+  # * *Args* :
+  #   - +iLevel+ : value between 1 to 5. Setting 5 is the most verbose!
+  #   - +sMsg+   : Array of string or symbols. keys tree to follow and check
+  #                existence in yVal.
+  #
+  # * *Returns* :
+  #   - nothing
+  #
+  # * *Raises* :
+  #   No exceptions
+  def self::debug(iLevel, sMsg, *p)
+    if iLevel <= PrcLib.core_level
+      message = format('-%s- %s', iLevel, sMsg)
+
+      PrcLib.debug(format(message, *p))
+    end
+  end
+
+  # Internal PrcError class object derived from RuntimeError.
+  # Internally used with raise.
+  # Used to identify the error origin, while an error is thrown.
+  class PrcError < RuntimeError
+    attr_reader :lorg_message
+
+    def initialize(message = nil)
+      @lorj_message = message
+    end
+  end
+
   slib_forj = File.dirname(__FILE__)
 
   PrcLib.lib_path = File.expand_path(File.join(File.dirname(slib_forj), 'lib'))

@@ -14,6 +14,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+# HPcloud network class
 module HPNetwork
   # Network driver
   def self.query_network(oNetworkConnect, sQuery)
@@ -21,7 +22,7 @@ module HPNetwork
   end
 
   def self.create_network(oNetworkConnect, name)
-    oNetworkConnect.networks.create(name: name)
+    oNetworkConnect.networks.create(:name => name)
   end
 
   def self.delete_network(oNetworkConnect, oNetwork)
@@ -35,10 +36,10 @@ module HPNetwork
 
   def self.create_subnetwork(oNetworkConnect, oNetwork, name)
     oNetworkConnect.subnets.create(
-       network_id: oNetwork.id,
-       name: name,
-       cidr: get_next_subnet(oNetworkConnect),
-       ip_version: '4'
+       :network_id => oNetwork.id,
+       :name => name,
+       :cidr => get_next_subnet(oNetworkConnect),
+       :ip_version => '4'
     )
   end
 
@@ -77,15 +78,15 @@ module HPNetwork
     end
 
     if gap
-      new_cidr = '10.0.%s.0/24' % [count]
+      new_cidr = format('10.0.%s.0/24', count)
     else
       max_value = range_used.max
       new_subnet = max_value.to_i + 1
-      new_cidr  = '10.0.%s.0/24' % [new_subnet]
+      new_cidr  = format('10.0.%s.0/24', new_subnet)
     end
     new_cidr
  rescue => e
-   Logging.error("%s\n%s" % [e.message, e.backtrace.join("\n")])
+   Logging.error("%s\n%s", e.message, e.backtrace.join("\n"))
   end
 
   # router driver

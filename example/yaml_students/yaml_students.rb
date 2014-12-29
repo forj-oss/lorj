@@ -19,31 +19,32 @@
 
 require 'yaml'
 
+# Simple School class saving data in a yaml file.
 class YamlSchool
-  attr_accessor :sFile
-  attr_accessor :hData
+  attr_accessor :file
+  attr_accessor :data
 
-  def initialize(sFile)
-    @hData = { students: [] }
-    @sFile = sFile
+  def initialize(file)
+    @data = { :students => [] }
+    @file = file
     load_data
   end
 
   def load_data
-    if File.exist?(@sFile)
-      @hData = YAML.load_file(@sFile)
-      @hData = { students: [] } unless @hData
-      @hData[:students] = [] unless @hData.key?(:students)
-    end
+    return false unless File.exist?(@file)
+
+    @data = YAML.load_file(@file)
+    @data = { :students => [] } unless @data
+    @data[:students] = [] unless @data.key?(:students)
   end
 
   def save_data
     begin
-      File.open(@sFile, 'w') do |out|
-        YAML.dump(@hData, out)
+      File.open(@file, 'w') do |out|
+        YAML.dump(@data, out)
       end
    rescue => e
-     Lorj.error("%s\n%s" % [e.message, e.backtrace.join("\n")])
+     Lorj.error(format("%s\n%s", e.message, e.backtrace.join("\n")))
      return false
     end
     true
@@ -51,60 +52,77 @@ class YamlSchool
 
   def create_student(name, fields)
     if fields[:first_name].nil? || fields[:last_name].nil?
-      puts 'YAML API: Unable to create a student. :first_name and :last_name required.'
+      puts 'YAML API: Unable to create a student. '\
+           ':first_name and :last_name required.'
       return nil
     end
 
-    result = fields.clone
-    result[:name] = name
-    result[:name] = '%s %s' % [result[:first_name], result[:first_name]] if name.nil?
-    result[:status] = :active
-
-    @hData[:students] << result
-
-    result[:id] = @hData[:students].length - 1
+    result = create_data(name, fields)
 
     save_data
     result
   end
 
-  def delete_student(sId)
-    return false unless File.exist?(sFile)
+  def create_data(name, fields)
+    result = fields.clone
+    result[:name] = name
+    if name.nil?
+      result[:name] = format('%s %s', result[:first_name], result[:first_name])
+    end
+    result[:status] = :active
 
-    @hData[:students].each do | value |
-      hElem = value
-      if value[:id] == sId
-        @hData[:students][sId][:status] = :removed
-        save_data
-        return 1
-      end
+    @data[:students] << result
+
+    result[:id] = @data[:students].length - 1
+    result
+  end
+
+  def delete_student(sId)
+    return false unless File.exist?(file)
+
+    @data[:students].each do | value |
+      next unless value[:id] == sId
+
+      @data[:students][sId][:status] = :removed
+      save_data
+      return 1
     end
     0
   end
 
-  def query_student(sQuery)
+  def query_student(hQuery)
     result = []
 
-    @hData[:students].each do | value |
-      hElem = value
-      sQuery.each do | query_key, query_value |
-        hElem = nil if (
-           value.key?(:status) &&
-           value[:status] != :active &&
-           !sQuery.key?(:status)) ||
-                       !value.key?(query_key) ||
-                       value[query_key] != query_value
+    @data[:students].each do | hValue |
+      elem = hValue
+      hQuery.each do | query_key, query_value |
+        elem = nil if not_in_query?(hQuery, hValue, query_key, query_value)
       end
-      result << hElem if hElem
+      result << elem if elem
     end
     result
   end
 
+  # check query field and data value.
+  # Return true if the query do not match the current data
+  def not_in_query?(hQuery, hValue, query_key, query_value)
+    return true unless valid_status?(hQuery, hValue)
+    return true unless hValue.key?(query_key)
+    return true if hValue[query_key] != query_value
+    false
+  end
+
+  # check if status field is queried. if not consider status != :active.
+  # return true if status
+  def valid_status?(hQuery, hValue)
+    return false if hValue.key?(:status) && hValue[:status] != :active &&
+                    !hQuery.key?(:status)
+    true
+  end
+
   def update_student(_sId, fields)
-    aList = query_student(id: Id)
-    if aList.length == 1
-      aList[0].merge(fields)
-    end
+    list = query_student(:id => Id)
+    list[0].merge(fields) if list.length == 1
     save_data
   end
 end

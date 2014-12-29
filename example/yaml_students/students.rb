@@ -19,59 +19,60 @@
 require 'rubygems'
 require 'ansi'
 
-$APP_PATH = File.dirname(__FILE__)
+app_path = File.expand_path(File.dirname(__FILE__))
 
-require File.join($APP_PATH, 'yaml_students.rb')
+require File.join(app_path, 'yaml_students.rb')
 
 school = YamlSchool.new('/tmp/students.yaml')
 
 puts ANSI.bold('Create 1st student:')
-if school.query_student(name: 'Robert Redford').length == 0
+if school.query_student(:name => 'Robert Redford').length == 0
   school.create_student('Robert Redford',
-                        first_name: 'Robert',
-                        last_name:  'Redford',
-                        training:   'Art Comedy'
+                        :first_name => 'Robert',
+                        :last_name => 'Redford',
+                        :training => 'Art Comedy'
   )
 end
 
 puts ANSI.bold('Create 2nd student:')
-if school.query_student(name: 'Anthony Hopkins').length == 0
+if school.query_student(:name => 'Anthony Hopkins').length == 0
   school.create_student('Anthony Hopkins',
-                        first_name: 'Anthony',
-                        last_name:  'Hopkins',
-                        training:   'Art Drama'
+                        :first_name => 'Anthony',
+                        :last_name => 'Hopkins',
+                        :training => 'Art Drama'
   )
 end
 
 puts ANSI.bold('Create 3rd student:')
-if school.query_student(name: 'Marilyn Monroe').length == 0
+if school.query_student(:name => 'Marilyn Monroe').length == 0
   school.create_student('Marilyn Monroe',
-                        first_name: 'Marilyn',
-                        last_name:  'Mistake',
-                        training:   'Art Drama'
+                        :first_name => 'Marilyn',
+                        :last_name => 'Mistake',
+                        :training => 'Art Drama'
   )
 end
 
 puts ANSI.bold('Create mistake')
-oStudent = school.create_student('Anthony Mistake',
-                                 first_name: 'Anthony',
-                                 last_name:  'Mistake',
-                                 training:   'what ever you want!!!'
+student = school.create_student('Anthony Mistake',
+                                :first_name => 'Anthony',
+                                :last_name => 'Mistake',
+                                :training => 'what ever you want!!!'
 )
 
-puts "Student created: '%s'" % oStudent
+puts format("Student created: '%s'", student)
 
 puts ANSI.bold('Remove mistake')
-result = school.query_student(name: 'Anthony Mistake')
+result = school.query_student(:name => 'Anthony Mistake')
 if result.length > 0
-  result.each { | student |
-    puts 'Wrong student to remove: %s = %s' % [student[:id], student[:name]]
-    school.delete_student(student[:id])
-  }
+  result.each do | a_student |
+    puts format('Wrong student to remove: %s = %s',
+                a_student[:id], a_student[:name])
+    school.delete_student(a_student[:id])
+  end
 end
 
 puts ANSI.bold("List of students for 'Art Drama':")
-puts school.query_student(training: 'Art Drama')
+puts school.query_student(:training => 'Art Drama')
 
 puts ANSI.bold('Deleted students:')
-puts school.query_student(status: :removed)
+puts school.query_student(:status => :removed)

@@ -14,6 +14,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+# Defined HPCloud controller.
 module HPCompute
   def self.get_server(oComputeConnect, sId)
     oComputeConnect.servers.get(sId)
@@ -38,21 +39,10 @@ module HPCompute
     oComputeConnect.flavors.all(sQuery)
   end
 
-  def self.create_server(oComputeConnect,
-                              sServerName, oSecurity_groups,
-                              oImage,      oNetwork,
-                              oFlavor,     oKeypairs,
-                              oUser_data,  oMeta_data)
-
-    options = {
-      name: sServerName,
-      flavor_id: oFlavor.id,
-      image_id: oImage.id,
-      key_name: oKeypairs.name,
-      security_groups: [oSecurity_groups.name],
-      networks: [oNetwork.id]
-    }
-    options[:user_data_encoded] = Base64.strict_encode64(oUser_data) if oUser_data
+  def self.create_server(oComputeConnect, options, oUser_data, oMeta_data)
+    if oUser_data
+      options[:user_data_encoded] = Base64.strict_encode64(oUser_data)
+    end
     options[:metadata] = oMeta_data if oMeta_data
     server = oComputeConnect.servers.create(options)
     HPCompute.get_server(oComputeConnect, server.id) if server
@@ -63,49 +53,49 @@ module HPCompute
     # Following is the translation to get the public IPs for the server
 
     result = []
-    oAddresses = oComputeConnect.addresses.all
-    oAddresses.each do | oElem |
-      bFound = true
+    addresses = oComputeConnect.addresses.all
+    addresses.each do | oElem |
+      is_found = true
       sQuery.each do | key, value |
         if !oElem.attributes.key?(key) || oElem.attributes[key] != value
-          bFound = false
+          is_found = false
           break
         end
       end
-      result << oElem if bFound
+      result << oElem if is_found
     end
     result
   end
 
-  def self.server_assign_address(oComputeConnect, oServer)
-    while oServer.state != 'ACTIVE'
+  def self.server_assign_address(oComputeConnect, server)
+    while server.state != 'ACTIVE'
       sleep(5)
-      oServer = oComputeConnect.servers.get(oServer.id)
+      server = oComputeConnect.servers.get(server.id)
     end
 
-    oAddresses = oComputeConnect.addresses.all
-    oAddress = nil
+    addresses = oComputeConnect.addresses.all
+    address = nil
     # Search for an available IP
-    oAddresses.each do | oElem |
+    addresses.each do | oElem |
       if oElem.fixed_ip.nil?
-        oAddress = oElem
+        address = oElem
         break
       end
     end
 
-    if oAddress.nil?
+    if address.nil?
       # Create a new public IP to add in the pool.
-      oAddress = oComputeConnect.addresses.create
+      address = oComputeConnect.addresses.create
     end
-    fail "No Public IP to assign to server '%s'" % oServer.name if oAddress.nil?
-    oAddress.server = oServer # associate the server
-    oAddress.reload
+    fail "No Public IP to assign to server '%s'", server.name if address.nil?
+    address.server = server # associate the server
+    address.reload
     # This function needs to returns a list of object.
     # This list must support the each function.
-    oAddress
+    address
   end
 
-  def self.delete_server(oComputeConnect, oServer)
-    oComputeConnect.servers.get(oServer.id).destroy
+  def self.delete_server(oComputeConnect, server)
+    oComputeConnect.servers.get(server.id).destroy
   end
 end

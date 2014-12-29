@@ -15,13 +15,13 @@
 #    limitations under the License.
 
 # This file is given as an example.
-
-class Mycloud # This class is automatically derived from ForjCloudBase and ForjProcess
+# This class is automatically derived from ForjCloudBase and ForjProcess
+class Mycloud
   def provider_compute_new
     # My fog connection
     # hget_cloudObjMapping() is a ForjCloudBase function which will build a
     # hash from data required with needed mapped keys(see core.rb)
-    Fog::Compute.new({ provider: :mycloud }.merge(hget_cloudObjMapping))
+    Fog::Compute.new({ :provider => :mycloud }.merge(hget_cloudObjMapping))
 
     # If you do not want to get data mapped automatically, you can use
     # @oForjAccount.get()
@@ -29,12 +29,12 @@ class Mycloud # This class is automatically derived from ForjCloudBase and ForjP
     # obj_needs(:data, :<CloudDataKey},{:mapping => :<MyCloudKeyMapped>})
     # can be updated by removing the mapping => <Value>
     Fog::Compute.new(
-       provider: :mycloud,
-       user: @oForjAccount.get(:account_id),
-       pwd: @oForjAccount.get(:account_key),
-       auth_uri: @oForjAccount.get(:auth_uri),
-       project: @oForjAccount.get(:tenant),
-       compute_service: @oForjAccount.get(:compute)
+       :provider => :mycloud,
+       :user => @oForjAccount.get(:account_id),
+       :pwd => @oForjAccount.get(:account_key),
+       :auth_uri => @oForjAccount.get(:auth_uri),
+       :project => @oForjAccount.get(:tenant),
+       :compute_service => @oForjAccount.get(:compute)
        )
   end
 end

@@ -153,14 +153,14 @@ Currently, this model do nothing except printing out.
 #####typical output
 
     $ example/students_1/students.rb
-    WARNING: PrcLib.app_defaults is not set. Application defaults won't be loaded. 
+    WARNING: PrcLib.app_defaults is not set. Application defaults won't be loaded.
     Running creation process for object 'student' = 'Robert Redford'
     WARNING: 'create_student' has returned no data for object Lorj::Data 'student'!
 
-There is 2 warnings. 
+There is 2 warnings.
 
 * **PrcLib.app_defaults** represents the application name. It is used to keep your application configuration data in ~/.{PrcLib.app_defaults}/ directory. Defining this data in your main, will eliminate this warning.
-* **create_student** function in your process has returned nothing. while lorj is called to create an object, it assumes to get the object data created. Lorj keep those data in a cache. In this example, **create_student** returned nil, and lorj raise a warning about that. 
+* **create_student** function in your process has returned nothing. while lorj is called to create an object, it assumes to get the object data created. Lorj keep those data in a cache. In this example, **create_student** returned nil, and lorj raise a warning about that.
 
 ---
 #### Writing student version 2
@@ -235,7 +235,7 @@ The update your main and add those lines. In the following, we create 3 students
 #####typical output:
 
     $ example/students_2/students.rb
-    WARNING: PrcLib.app_defaults is not set. Application defaults won't be loaded. 
+    WARNING: PrcLib.app_defaults is not set. Application defaults won't be loaded.
     2 students found
     0: Robert Redford
     1: Robert Redford
@@ -515,11 +515,14 @@ We need to write the controller part, now. As I said, it is like a wrapper. Let'
           # extract the information requested by the framework.
           # Those data will be mapped to the process data model.
           # The key is an array, to get data from a level tree.
-          # [data_l1, data_l2, data_l3] => should retrieve data from structure like data[ data_l2[ data_l3 ] ]
+          # [data_l1, data_l2, data_l3] => should retrieve data from structure
+          #                                like data[ data_l2 [ data_l3 ] ]
           begin
              attributes = oControlerObject
-             raise "get_attr: attribute '%s' is unknown in '%s'. Valid one are : '%s'" % [key[0], oControlerObject.class, @@valid_attributes ] unless @@valid_attributes.include?(key[0])
-             Lorj::rhGet(attributes, key)
+             raise "get_attr: attribute '%s' is unknown in '%s'. Valid one are : '%s'",
+                   key[0], oControlerObject.class,
+                   @@valid_attributes unless @@valid_attributes.include?(key[0])
+             Lorj::rh_get(attributes, key)
           rescue => e
              Error "get_attr: Unable to map '%s'. %s" % [key, e.message]
           end
@@ -528,8 +531,10 @@ We need to write the controller part, now. As I said, it is like a wrapper. Let'
        def set_attr(oControlerObject, key, value)
           begin
              attributes = oControlerObject
-             raise "set_attr: attribute '%s' is unknown in '%s'. Valid one are : '%s'" % [key[0], oControlerObject.class, @@valid_attributes ] unless @@valid_attributes.include?(key[0])
-             Lorj::rhSet(attributes, value, key)
+             raise "set_attr: attribute '%s' is unknown in '%s'. Valid one are : '%s'",
+                   key[0], oControlerObject.class,
+                   @@valid_attributes  unless @@valid_attributes.include?(key[0])
+             Lorj::rh_set(attributes, value, key)
           rescue => e
              Error "set_attr: Unable to map '%s' on '%s'" % [key, sObjectType]
           end
@@ -575,11 +580,11 @@ And we need to write some mapping stuff to the controller. We have to add this
        define_obj(:connection,{
         :create_e => :controller_create # Nothing complex to do. So, simply call the controller create.
        })
-    
+
        obj_needs   :data,   :connection_string,  :mapping => :file_name
        undefine_attribute :id    # Do not return any predefined ID
        undefine_attribute :name  # Do not return any predefined NAME
-    
+
        # The student model have to be expanded.
        define_obj(:student)
        # It requires to create a connection to the data, ie opening the yaml file.
@@ -587,18 +592,18 @@ And we need to write some mapping stuff to the controller. We have to add this
        # This connection will be loaded in the memory and provided to the controller
        # when needed.
        obj_needs   :CloudObject,              :connection
-    
+
        # To simplify controller wrapper, we use hdata built by lorj, and passed to the API
        # This hdata is a hash containing mapped data, thanks to set_hdata.
        set_hdata :first_name
        set_hdata :last_name
        # Instead of 'course', the yaml API uses 'training'
        set_hdata :course, :mapping => :training
-        
+
        get_attr_mapping :course, :training
        # instead of 'student_name', the yaml API uses 'name'
        get_attr_mapping :student_name, :name
-    
+
        # This controller will know how to manage a student file with those data.
        # But note that the file can have a lot of more data than what the process
        # usually manage. It is up to you to increase your process to manage more data.
@@ -609,8 +614,8 @@ And we need to write some mapping stuff to the controller. We have to add this
 That's it!
 
 #####typical output:
-    $ example/students_3/students.rb 
-    WARNING: PrcLib.app_defaults is not set. Application defaults won't be loaded. 
+    $ example/students_3/students.rb
+    WARNING: PrcLib.app_defaults is not set. Application defaults won't be loaded.
     Create 1st student:
     Create 2nd student:
     Create 3rd student:
@@ -623,7 +628,7 @@ That's it!
     {:id=>2, :course=>"Art Drama", :student_name=>"Marilyn Monroe", :first_name=>"Marilyn", :last_name=>"Monroe", :status=>:active}
     Deleted students:
     {:id=>3, :course=>"what ever you want!!!", :student_name=>"Anthony Mistake", :first_name=>"Anthony", :last_name=>"Mistake", :status=>:removed}
-    
+
 ## What next?
 
 Check the code in the `examples/students_3/`. It provides a little more than is written here.

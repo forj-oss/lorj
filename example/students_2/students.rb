@@ -1,36 +1,59 @@
 #!/usr/bin/env ruby
+# encoding: UTF-8
 
-$APP_PATH = File.dirname(__FILE__)
+# (c) Copyright 2014 Hewlett-Packard Development Company, L.P.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+
+app_path = File.dirname(__FILE__)
+
+if ENV['LORJ_DEV']
+  require 'byebug'
+  lib_path = File.expand_path(File.join(app_path, '..', '..', 'lib'))
+  $LOAD_PATH << lib_path
+end
+
 require 'lorj'
 
-# If you want to see what is happening in the framework, uncomment debug settings.
-# PrcLib.level = Logger::DEBUG # Printed out to your console.
-# PrcLib.core_level = 3 # framework debug levels.
+# If you want to see what is happening in the framework, uncomment debug
+# settings.
+PrcLib.level = Logger::DEBUG # Printed out to your console.
+PrcLib.core_level = 3 # framework debug levels.
 
 # Initialize the framework
-hProcesses = [File.join($APP_PATH, 'process', 'Students.rb')]
+processes = [File.join(app_path, 'process', 'students.rb')]
 
-oStudentCore = Lorj::Core.new(nil, hProcesses, :mock)
+student_core = Lorj::Core.new(nil, processes, :mock)
 
 # Ask the framework to create the object student 'Robert Redford'
-oStudentCore.Create(:student, student_name: 'Robert Redford')
+student_core.create(:student, :student_name => 'Robert Redford')
 
 # Want to create a duplicated student 'Robert Redford'?
-oStudentCore.Create(:student)
+student_core.create(:student)
 # no problem. The key is the key in the Mock controller array.
 
-oStudentCore.Create(:student, student_name: 'Anthony Hopkins')
+student_core.create(:student, :student_name => 'Anthony Hopkins')
 
 # Let's create a third different student.
-oStudents = oStudentCore.Query(:student,  name: 'Robert Redford')
+students = student_core.query(:student,  :name => 'Robert Redford')
 
-puts '%s students found' % oStudents.length
+puts format('%s students found', students.length)
 
-oStudents.each { | oStudent |
-  puts '%s: %s' % [oStudent[:id], oStudent[:name]]
-}
+students.each do | a_student |
+  puts format('%s: %s', a_student[:id], a_student[:name])
+end
 
 # let's check the get function, who is the ID 2?
-oStudent = oStudentCore.Get(:student, 2)
+student = student_core.get(:student, 2)
 
-puts 'The student ID 2 is %s' % oStudent[:name]
+puts format('The student ID 2 is %s', student[:name])
