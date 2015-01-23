@@ -32,3 +32,5 @@ RuboCop::RakeTask.new(:lint) do |task|
   task.verbose = true
   task.fail_on_error = true
 end
+
+task :build => [:lint, :spec]
