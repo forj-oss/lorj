@@ -142,19 +142,19 @@ module PrcLib
 
     # Log to STDOUT and Log file and INFO class message
     def info(message)
-      @out_logger.info(message + ANSI.clear_line)
+      @out_logger.info(message + ANSI.clear_eol)
       @file_logger.info(message)
     end
 
     # Log to STDOUT and Log file and DEBUG class message
     def debug(message)
-      @out_logger.debug(message + ANSI.clear_line)
+      @out_logger.debug(message + ANSI.clear_eol)
       @file_logger.debug(message)
     end
 
     # Log to STDOUT and Log file and ERROR class message
     def error(message)
-      @out_logger.error(message + ANSI.clear_line)
+      @out_logger.error(message + ANSI.clear_eol)
       @file_logger.error(message)
     end
 
@@ -163,17 +163,16 @@ module PrcLib
     # the exception class is given.
     # The exception class should provide message and backtrace.
     def fatal(message, e = nil)
-      @out_logger.fatal(message + ANSI.clear_line)
-      @file_logger.fatal(format("%s\n%s\n%s",
-                                message,
-                                e.message,
-                                e.backtrace.join("\n"))) if e
+      @out_logger.fatal(message + ANSI.clear_eol)
+      return @file_logger.fatal(format("%s\n%s\n%s",
+                                       message, e.message,
+                                       e.backtrace.join("\n"))) if e
       @file_logger.fatal(message)
     end
 
     # Log to STDOUT and Log file and WARNING class message
     def warn(message)
-      @out_logger.warn(message + ANSI.clear_line)
+      @out_logger.warn(message + ANSI.clear_eol)
       @file_logger.warn(message)
     end
 
@@ -186,7 +185,7 @@ module PrcLib
     # Print out a message, not logged in the log file. This message is printed
     # out systematically as not taking care of logger level.
     def unknown(message)
-      @out_logger.unknown(message + ANSI.clear_line)
+      @out_logger.unknown(message + ANSI.clear_eol)
     end
 
     private
@@ -274,7 +273,8 @@ module PrcLib
       p.pop
     end
     log_object.fatal(format(message, *p), e)
-    puts 'Issues found. Please fix it and retry. Process aborted.'
+    puts format('Issues found. Please fix it and retry. Process aborted. '\
+         "See details in log file '%s'.", PrcLib.log_file)
     exit rc
   end
 
@@ -283,16 +283,16 @@ module PrcLib
     nil
   end
 
+  # Print the message to the same line.
   def state(message, *p)
-    print(format("%s ...%s\r",
-                 format(message, *p),
-                 ANSI.clear_line)) if log_object.level <= Logger::INFO
+    print(format("%s%s ...\r", ANSI.clear_line,
+                 format(message, *p))) if log_object.level <= Logger::INFO
     nil
   end
 
   # Not DEBUG and not INFO. Just printed to the output.
-  def high_level_msg(message)
-    print(format('%s', message)) if log_object.level > 1
+  def high_level_msg(message, *p)
+    print(format(message, *p)) if log_object.level > 1
     nil
   end
 end
