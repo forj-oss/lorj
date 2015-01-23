@@ -382,7 +382,7 @@ module PRC
     def _do_where?(config_layers, keys, options, data_opts)
       layer_indexes = []
       config_layers.each_index do | index |
-        config = @config_layers[index][:config]
+        config = config_layers[index][:config]
 
         data_options = options.clone
         data_options.delete_if do |key|
@@ -391,7 +391,7 @@ module PRC
         data_options.merge!(data_opts[index]) if data_opts[index].is_a?(Hash)
 
         config.data_options(data_options)
-        layer_indexes << @config_layers[index][:name] if config.exist?(keys)
+        layer_indexes << config_layers[index][:name] if config.exist?(keys)
       end
       return layer_indexes if layer_indexes.length > 0
       false

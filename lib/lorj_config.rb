@@ -118,8 +118,6 @@ module Lorj
       # runtime Config layer
       config_layers << define_runtime_layer
 
-      Lorj.defaults.load # Loading global application defaults
-
       if PrcLib.data_path.nil?
         PrcLib.fatal(1, 'Internal PrcLib.data_path was not set.')
       end
@@ -169,6 +167,7 @@ module Lorj
     def initialize_local_filename(config_name = nil)
       config_default_name = 'config.yaml'
 
+      config_name = nil unless config_name.is_a?(String)
       if config_name
         if File.dirname(config_name) == '.'
           config_name = File.join(PrcLib.data_path, config_name)

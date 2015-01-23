@@ -126,8 +126,6 @@ module Lorj
       # runtime Config layer
       config_layers << define_runtime_layer
 
-      Lorj.defaults.load # Loading global application defaults
-
       if PrcLib.data_path.nil?
         PrcLib.fatal(1, 'Internal PrcLib.data_path was not set.')
       end
@@ -168,8 +166,10 @@ module Lorj
       options = { :keys => [key], :section => section }
 
       indexes = _identify_indexes(options, exclusive?(key, section))
+      names = []
+      indexes.each { |index| names << @config_layers[index][:name] }
 
-      options[:data_options] = _set_data_options_per_indexes(indexes)
+      options[:data_options] = _set_data_options_per_names(names)
 
       return _get(options) if _exist?(options)
 
@@ -186,31 +186,38 @@ module Lorj
     # otherwise, search in all layers.
     #
     # * *Args*    :
-    #   - +key+     : key name. It do not support it to be a key tree (Arrays of
-    #                 keys).
-    #   - +default+ : default value, if not found.
+    # - +key+     : key name. It do not support it to be a key tree (Arrays of
+    #               keys).
+    # - +options+ : possible options:
+    #   - +:section+ : Force to use a specific section name.
+    #   - +:name+    : layer to exclusively get data.
+    #   - +:indexes+ : layer index to exclusively get data.
+    #                  If neither :name or :index is set, get will search
+    #                  data on all predefined layers, first found, first listed.
     # * *Returns* :
     #   - key value.
     # * *Raises* :
     #   Nothing
-    def where?(key, section = nil)
+    def where?(key, options = {})
       key = key.to_sym if key.class == String
+      options = {} unless options.is_a?(Hash)
 
+      section = options[:section]
       section = Lorj.defaults.get_meta_section(key) if section.nil?
 
-      options = { :keys => [key], :section => section }
+      indexes = _identify_array_indexes(options, exclusive?(key, section))
 
-      account_exclusive = exclusive?(key, section)
-      if account_exclusive
-        indexes = [0, 1]
-        options[:indexes] = indexes
-      else
-        indexes = [0, 1, 2, 3]
-      end
+      names = []
+      indexes.each { |index| names << @config_layers[index][:name] }
 
-      options[:data_options] = _set_data_options_per_indexes(indexes)
+      where_options = {
+        :keys => [key],
+        :section => section,
+        :indexes => indexes,
+        :data_options => _set_data_options_per_names(names)
+      }
 
-      _where?(options)
+      _where?(where_options)
     end
 
     # check key/value existence in config layers
@@ -244,7 +251,10 @@ module Lorj
 
       indexes = _identify_indexes(options, exclusive?(key, section))
 
-      options[:data_options] = _set_data_options_per_indexes(indexes)
+      names = []
+      indexes.each { |index| names << @config_layers[index][:name] }
+
+      options[:data_options] = _set_data_options_per_names(names)
 
       _exist?(options)
     end
@@ -456,35 +466,62 @@ module Lorj
 
     private
 
+    def _identify_array_indexes(options, account_exclusive)
+      def_indexes = options[:indexes] if options.key?(:indexes)
+      if options[:names].is_a?(Array)
+        def_indexes = layers_indexes(options[:names])
+      end
+
+      indexes = exclusive_indexes(account_exclusive)
+      options[:indexes] = indexes
+
+      return indexes if def_indexes.nil? || def_indexes.length == 0
+
+      def_indexes.delete_if { |index| !indexes.include?(index) }
+
+      def_indexes
+    end
+
+    def layers_indexes(names)
+      return nil unless names.is_a?(Array)
+
+      indexes = [] if names.is_a?(Array)
+      names.each do |name|
+        indexes << layer_index(name) if name.is_a?(String)
+      end
+      indexes
+    end
+
+    def exclusive_indexes(account_exclusive)
+      return [0, 1] if account_exclusive
+      [0, 1, 2, 3]
+    end
+
     def _identify_indexes(options, account_exclusive)
       index = options[:index] if options.key?(:index)
       index = layer_index(options[:name]) if options.key?(:name)
 
-      if account_exclusive
-        indexes = [0, 1]
-        options[:indexes] = indexes
-      else
-        indexes = [0, 1, 2, 3]
-      end
+      indexes = exclusive_indexes(account_exclusive)
+      options[:indexes] = indexes
 
       indexes = [index] if !index.nil? && indexes.include?(index)
       indexes
     end
 
-    def _set_data_options_per_indexes(indexes)
+    def _set_data_options_per_names(names)
       data_options = []
 
-      indexes.each { |index| data_options <<  _data_options_per_layer(index) }
+      names.each { |name| data_options <<  _data_options_per_layer(name) }
 
       data_options
     end
 
     # This internal function defines default section name per config index.
     # TODO: Change local and default way to get default values, not in /:default
-    def _data_options_per_layer(layer_index)
+    def _data_options_per_layer(layer_name)
       # runtime and local and default uses :default section
-      case layer_index
-      when 2, 3
+      case layer_name
+      when 'local', 'default'
         # local & default are SectionConfig and is forced to use :default as
         # section name for each data.
         { :section => :default }

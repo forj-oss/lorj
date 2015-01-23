@@ -73,6 +73,37 @@ describe 'class: Lorj::Account,' do
       expect(@account.where?(:keypair_name)).to eq(%w(local default))
     end
 
+    it 'account.where?(:keypair_name, :names => %w(default)) '\
+       'return %w(default)' do
+      expect(@account.where?(:keypair_name,
+                             :names => %w(default))).to eq(%w(default))
+    end
+
+    it 'account.where?(:keypair_name, :names => %w(runtime account)) '\
+       'return false' do
+      expect(@account.where?(:keypair_name,
+                             :names => %w(runtime account))).to equal(false)
+    end
+
+    it 'account.where?(:keypair_name, :names => %w(default runtime default)) '\
+       'return %w(default default)' do
+      expect(@account.where?(:keypair_name,
+                             :names => %w(default runtime
+                                          default))).to eq(%w(default default))
+    end
+
+    it 'account.where?(:keypair_name, :names => %w(default runtime)) '\
+       'return %w(default)' do
+      expect(@account.where?(:keypair_name,
+                             :names => %w(default runtime))).to eq(%w(default))
+    end
+
+    it 'account.where?(:keypair_name, :names => %w(runtime default)) '\
+       'return %w(default)' do
+      expect(@account.where?(:keypair_name,
+                             :names => %w(runtime default))).to eq(%w(default))
+    end
+
     it "after account.local_del(:keypair_name) value is 'default_key'" do
       expect(@account.local_del(:keypair_name)).to eq('nova_local')
       expect(@account.where?(:keypair_name)).to eq(%w(default))

@@ -119,7 +119,7 @@ module PrcLib
   def app_defaults=(v)
     return if @app_defaults
 
-    v = File.join(File.dirname(__FILE__), v) unless v[0] == '/'
+    v = File.join(File.dirname(__FILE__), v) unless v.include?('/')
 
     @app_defaults = File.expand_path(v)
   end
