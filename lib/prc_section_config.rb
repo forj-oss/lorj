@@ -30,26 +30,31 @@ module PRC
     # * *Raises* :
     #   Nothing
     def [](*keys)
+      return nil if keys.length == 0
       return _get(:default, *keys) if @data_options[:section].nil?
       _get(@data_options[:section], *keys)
     end
 
     def []=(*keys, value)
+      return nil if keys.length == 0
       return _set(:default, *keys, value) if @data_options[:section].nil?
       _set(@data_options[:section], *keys, value)
     end
 
     def exist?(*keys)
+      return nil if keys.length == 0
       return _exist?(:default, *keys) if @data_options[:section].nil?
       _exist?(@data_options[:section], *keys)
     end
 
     def where?(*keys)
+      return nil if keys.length == 0
       return _exist?(:default, *keys) if @data_options[:section].nil?
       _where?(@data_options[:section], *keys)
     end
 
     def del(*keys)
+      return nil if keys.length == 0
       return _del(:default, *keys) if @data_options[:section].nil?
       _del(@data_options[:section], *keys)
     end
