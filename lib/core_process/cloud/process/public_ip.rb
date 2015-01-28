@@ -44,8 +44,9 @@ class CloudProcess
         :more => "Found several %s. Searching for '%s'.",
         :items => :public_ip
       }
-      list = controller_query(sCloudObj, sQuery)
-      query_single(sCloudObj, list, sQuery, server_name, info)
+      #  list = controller_query(sCloudObj, sQuery)
+      #  query_single(sCloudObj, list, sQuery, server_name, info)
+      query_single(sCloudObj, sQuery, server_name, info)
     rescue => e
       retry unless ssl_error_obj.error_detected(e.message, e.backtrace, e)
     end

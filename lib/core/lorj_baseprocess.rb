@@ -30,7 +30,7 @@ module Lorj
   # with controller calls
   class BaseProcess
     def initialize
-      @definition = nil
+      @base_object = nil
     end
 
     # Simply raise an error
@@ -43,39 +43,45 @@ module Lorj
     #  - Lorj::PrcError
     def process_error(msg, *p)
       msg = format(msg, *p)
-      runtime_fail '%s: %s', self.class, msg
+      fail Lorj::PrcError.new, format('%s: %s', self.class, msg)
     end
 
     attr_writer :base_object
 
-    def controller_connect(sObjectType, hParams = {})
-      fail Lorj::PrcError.new, 'No Controler object loaded.' unless @definition
-      @definition.controller_connect(sObjectType, hParams)
+    def controller_connect(sObjectType, params = nil)
+      process_error 'No Controler object loaded.' unless @base_object
+      params = nil unless params.is_a?(Hash)
+      @base_object.controller_connect(sObjectType, params)
     end
 
-    def controller_create(sObjectType, hParams = {})
-      fail Lorj::PrcError.new, 'No Controler object loaded.' unless @definition
-      @definition.controller_create(sObjectType, hParams)
+    def controller_create(sObjectType, params = nil)
+      process_error 'No Controler object loaded.' unless @base_object
+      params = nil unless params.is_a?(Hash)
+      @base_object.controller_create(sObjectType, params)
     end
 
-    def controller_query(sObjectType, sQuery, hParams = {})
-      fail Lorj::PrcError.new, 'No Controler object loaded.' unless @definition
-      @definition.controller_query(sObjectType, sQuery, hParams)
+    def controller_query(sObjectType, sQuery, params = nil)
+      process_error 'No Controler object loaded.' unless @base_object
+      params = nil unless params.is_a?(Hash)
+      @base_object.controller_query(sObjectType, sQuery, params)
     end
 
-    def controller_update(sObjectType, hParams = {})
-      fail Lorj::PrcError.new, 'No Controler object loaded.' unless @definition
-      @definition.controller_update(sObjectType, hParams)
+    def controller_update(sObjectType, params = nil)
+      process_error 'No Controler object loaded.' unless @base_object
+      params = nil unless params.is_a?(Hash)
+      @base_object.controller_update(sObjectType, params)
     end
 
-    def controller_delete(sObjectType, hParams = {})
-      fail Lorj::PrcError.new, 'No Controler object loaded.' unless @definition
-      @definition.controller_delete(sObjectType, hParams)
+    def controller_delete(sObjectType, params = nil)
+      process_error 'No Controler object loaded.' unless @base_object
+      params = nil unless params.is_a?(Hash)
+      @base_object.controller_delete(sObjectType, params)
     end
 
-    def controller_get(sObjectType, sId, hParams = {})
-      fail Lorj::PrcError.new, 'No Controler object loaded.' unless @definition
-      @definition.controller_get(sObjectType, sId, hParams)
+    def controller_get(sObjectType, sId, params = nil)
+      process_error 'No Controler object loaded.' unless @base_object
+      params = nil unless params.is_a?(Hash)
+      @base_object.controller_get(sObjectType, sId, params)
     end
   end
 
@@ -83,28 +89,28 @@ module Lorj
   # with process calls
   class BaseProcess
     def process_create(sObjectType)
-      fail Lorj::PrcError.new, 'No Base object loaded.' unless @definition
-      @definition.process_create(sObjectType)
+      process_error 'No Base object loaded.' unless @base_object
+      @base_object.process_create(sObjectType)
     end
 
     def process_query(sObjectType, sQuery)
-      fail Lorj::PrcError.new, 'No Base object loaded.' unless @definition
-      @definition.process_query(sObjectType, sQuery)
+      process_error 'No Base object loaded.' unless @base_object
+      @base_object.process_query(sObjectType, sQuery)
     end
 
     def process_update(sObjectType)
-      fail Lorj::PrcError.new, 'No Base object loaded.' unless @definition
-      @definition.process_update(sObjectType)
+      process_error 'No Base object loaded.' unless @base_object
+      @base_object.process_update(sObjectType)
     end
 
     def process_get(sObjectType, sId)
-      fail Lorj::PrcError.new, 'No Base object loaded.' unless @definition
-      @definition.process_get(sObjectType, sId)
+      process_error 'No Base object loaded.' unless @base_object
+      @base_object.process_get(sObjectType, sId)
     end
 
     def process_delete(sObjectType)
-      fail Lorj::PrcError.new, 'No Base object loaded.' unless @definition
-      @definition.process_delete(sObjectType)
+      process_error 'No Base object loaded.' unless @base_object
+      @base_object.process_delete(sObjectType)
     end
   end
 
@@ -114,62 +120,62 @@ module Lorj
     private
 
     def query_cache_cleanup(sObjectType)
-      fail Lorj::PrcError.new, 'No Base object loaded.' unless @definition
-      @definition.query_cleanup(sObjectType)
+      fail Lorj::PrcError.new, 'No Base object loaded.' unless @base_object
+      @base_object.query_cleanup(sObjectType)
     end
 
     def object_cache_cleanup(sObjectType)
-      fail Lorj::PrcError.new, 'No Base object loaded.' unless @definition
-      @definition.object_cleanup(sObjectType)
+      fail Lorj::PrcError.new, 'No Base object loaded.' unless @base_object
+      @base_object.object_cleanup(sObjectType)
     end
 
     def controler
       PrcLib.warning('controler object call is obsolete. Please update your'\
                      " code. Use controller_<action> instead.\n%s", caller)
-      fail Lorj::PrcError.new, 'No Controler object loaded.' unless @definition
-      @definition
+      PrcLib.runtime_fail 'No Controler object loaded.' unless @base_object
+      @base_object
     end
 
     def object
       PrcLib.warning('object call is obsolete. Please update your code.'\
                      "Use <Action> instead.\n%s", caller)
-      fail Lorj::PrcError.new, 'No Base object loaded.' unless @definition
-      @definition
+      PrcLib.runtime_fail 'No Base object loaded.' unless @base_object
+      @base_object
     end
 
     def format_object(sObjectType, oMiscObj)
-      fail Lorj::PrcError.new, 'No Base object loaded.' unless @definition
-      @definition.format_object(sObjectType, oMiscObj)
+      PrcLib.runtime_fail 'No Base object loaded.' unless @base_object
+      @base_object.format_object(sObjectType, oMiscObj)
     end
 
     def format_query(sObjectType, oMiscObj, hQuery)
-      fail Lorj::PrcError.new, 'No Base object loaded.' unless @definition
-      @definition.format_list(sObjectType, oMiscObj, hQuery)
+      PrcLib.runtime_fail 'No Base object loaded.' unless @base_object
+      @base_object.format_list(sObjectType, oMiscObj, hQuery)
     end
 
     def data_objects(sObjectType, *key)
-      fail Lorj::PrcError.new, 'No Base object loaded.' unless @definition
-      @definition.data_objects(sObjectType, *key)
+      PrcLib.runtime_fail 'No Base object loaded.' unless @base_object
+      @base_object.data_objects(sObjectType, *key)
     end
 
     def get_data(oObj, *key)
       PrcLib.warning('get_data call is obsolete. Please update your code. '\
                      "Use [] instead.\n%s", caller)
-      fail Lorj::PrcError.new, 'No Base object loaded.' unless @definition
-      @definition.get_data(oObj, :attrs, key)
+      PrcLib.runtime_fail 'No Base object loaded.' unless @base_object
+      @base_object.get_data(oObj, :attrs, key)
     end
 
     def register(oObject, sObjectType = nil)
-      fail Lorj::PrcError.new, 'No Base object loaded.' unless @definition
-      @definition.register(oObject, sObjectType)
+      PrcLib.runtime_fail 'No Base object loaded.' unless @base_object
+      @base_object.register(oObject, sObjectType)
     end
 
     def config
-      fail Lorj::PrcError.new, 'No Base object loaded.' unless @definition
-      @definition.config
+      PrcLib.runtime_fail 'No Base object loaded.' unless @base_object
+      @base_object.config
     end
 
-    def query_single(sCloudObj, list, sQuery, name, sInfoMsg = {})
+    def query_single(sCloudObj, sQuery, name, sInfoMsg = {})
       list = controller_query(sCloudObj, sQuery)
 
       info = _qs_info_init(sInfoMsg)
@@ -214,22 +220,40 @@ module Lorj
   class BaseProcess
     private
 
+    # Internal Function to printout a format string
+    #
+    # *Args*
+    # - list : ObjectData
+    # - items: Symbol or Array of symbols
+    # - items_format : String format supported by format function
+    #
+    # *return:
+    # - formated string thanks to data extracted from list.
+    #   If the key is not found (or value nil) from list,
+    #   an error message is return to the formated string
+    #   with the wrong key.
+    #
     def _qs_info(list, items, items_form)
       items_built = []
       if items.is_a?(Array)
-        items.each do | key |
-          items_built << list[0, key]
+        items.each do |key|
+          items_built << _qs_value(list, 0, key)
         end
       else
-        items_built << list[0, items]
+        items_built << _qs_value(list, 0, items)
       end
-      format(items_form, items_built)
+      format(items_form, *items_built)
+    end
+
+    def _qs_value(list, index, key)
+      value = list[index, key]
+      (value.nil? ? format("\"key '%s' unknown\"", key) : value)
     end
 
     def _qs_check_match(list, sQuery)
-      list.each do | oElem |
+      list.each do |oElem|
         is_found = true
-        sQuery.each do | key, value |
+        sQuery.each do |key, value|
           if oElem[key] != value
             is_found = false
             break

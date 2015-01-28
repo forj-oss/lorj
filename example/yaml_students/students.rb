@@ -64,7 +64,7 @@ puts format("Student created: '%s'", student)
 puts ANSI.bold('Remove mistake')
 result = school.query_student(:name => 'Anthony Mistake')
 if result.length > 0
-  result.each do | a_student |
+  result.each do |a_student|
     puts format('Wrong student to remove: %s = %s',
                 a_student[:id], a_student[:name])
     school.delete_student(a_student[:id])

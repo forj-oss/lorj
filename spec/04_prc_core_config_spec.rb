@@ -79,5 +79,57 @@ describe 'class: PRC::CoreConfig,' do
       expect(@config.del(:test)).to eq(:where)
       expect(@config[:test]).to equal(:found_local)
     end
+
+    it 'PRC::CoreConfig.define_layer(...) return a valid standalone layer' do
+      config = PRC::BaseConfig.new
+      layer = PRC::CoreConfig.define_layer(:name => 'instant',
+                                           :config => config)
+      expect(layer).to be
+      expect(layer[:name]).to eq('instant')
+      expect(layer[:config]).to eq(config)
+      expect(layer[:set]).to equal(true)
+      expect(layer[:load]).to equal(false)
+      expect(layer[:save]).to equal(false)
+      expect(layer[:file_set]).to equal(false)
+    end
+
+    it "config.layer_add(:name => 'instant') return true if layer is added" do
+      layer = PRC::CoreConfig.define_layer(:name => 'instant')
+      expect(@config.layer_add layer).to equal(true)
+    end
+
+    it 'config.layers return %w(instant runtime local)' do
+      expect(@config.layers).to eq(%w(instant runtime local))
+    end
+
+    it 'config.layer_add(layer) return nil if layer name already exist '\
+       'in layers' do
+      config = PRC::BaseConfig.new
+      layer = PRC::CoreConfig.define_layer(:name => 'instant',
+                                           :config => config)
+      expect(@config.layers).to eq(%w(instant runtime local))
+      expect(@config.layer_add layer).to equal(nil)
+      expect(@config.layers).to eq(%w(instant runtime local))
+    end
+
+    it "config['test'] = 'toto' is added in the 'instant' layer" do
+      @config['test'] = 'toto'
+      expect(@config.where?('test')).to eq(%w(instant))
+    end
+
+    it "config.layer_remove(:name => 'instant') return true" do
+      expect(@config.layer_remove(:name => 'instant')).to equal(true)
+    end
+
+    it "config.where?('test') return false - The layer is inexistent." do
+      expect(@config.where?('test')).to equal(false)
+    end
+
+    it "config.layer_remove(:name => 'runtime') return nil"\
+       ' - Unable to remove a layer not added at runtime' do
+      expect(@config.layers).to eq(%w(runtime local))
+      expect(@config.layer_remove(:name => 'runtime')).to equal(nil)
+      expect(@config.layers).to eq(%w(runtime local))
+    end
   end
 end

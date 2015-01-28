@@ -31,37 +31,37 @@ module Lorj
     # Default handlers which needs to be defined by the controller,
     # called by BaseDefinition Create functions.
     def connect(_sObjectType, _hParams)
-      process_error 'connect has not been redefined by the controller.'
+      controller_error 'connect has not been redefined by the controller.'
     end
 
     # Default handlers which needs to be defined by the controller,
     # called by BaseDefinition Create functions.
     def create(_sObjectType, _hParams)
-      process_error 'create_object has not been redefined by the controller.'
+      controller_error 'create_object has not been redefined by the controller.'
     end
 
     # Default handlers which needs to be defined by the controller,
     # called by BaseDefinition Delete functions.
     def delete(_sObjectType, _hParams)
-      process_error 'delete_object has not been redefined by the controller.'
+      controller_error 'delete_object has not been redefined by the controller.'
     end
 
     # Default handlers which needs to be defined by the controller,
     # called by BaseDefinition Get functions.
     def get(_sObjectType, _sUniqId, _hParams)
-      process_error 'get_object has not been redefined by the controller.'
+      controller_error 'get_object has not been redefined by the controller.'
     end
 
     # Default handlers which needs to be defined by the controller,
     # called by BaseDefinition Query functions.
     def query(_sObjectType, _sQuery, _hParams)
-      process_error 'query_object has not been redefined by the controller.'
+      controller_error 'query_object has not been redefined by the controller.'
     end
 
     # Default handlers which needs to be defined by the controller,
     # called by BaseDefinition Update functions.
     def update(_sObjectType, _oObject, _hParams)
-      process_error 'update_object has not been redefined by the controller.'
+      controller_error 'update_object has not been redefined by the controller.'
     end
 
     # Simply raise an error
@@ -74,7 +74,7 @@ module Lorj
     #  - Lorj::PrcError
     def controller_error(msg, *p)
       msg = format(msg, *p)
-      runtime_fail '%s: %s', self.class, msg
+      fail Lorj::PrcError.new, format('%s: %s', self.class, msg)
     end
 
     # check if required data is loaded. raise an error if not
@@ -89,7 +89,7 @@ module Lorj
     def required?(oParams, *key)
       return if oParams.exist?(key)
 
-      runtime_fail '%s: %s is not set.', self.class, key
+      controller_error '%s is not set.', key
     end
   end
 end

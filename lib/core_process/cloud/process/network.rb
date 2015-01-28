@@ -37,7 +37,7 @@ class CloudProcess
     end
 
     # object.Create(:subnetwork)
-    Create(:subnetwork)
+    process_create(:subnetwork)
 
     network
   end
@@ -100,8 +100,9 @@ class CloudProcess
   # nil or Provider Object
   def find_network(sCloudObj, hParams)
     query = { :name => hParams[:network_name] }
-    list = controller_query(sCloudObj, query)
-    query_single(sCloudObj, list, query, hParams[:network_name])
+    #  list = controller_query(sCloudObj, query)
+    #  query_single(sCloudObj, list, query, hParams[:network_name])
+    query_single(sCloudObj, query, hParams[:network_name])
  rescue => e
    PrcLib.error("%s\n%s", e.message, e.backtrace.join("\n"))
   end

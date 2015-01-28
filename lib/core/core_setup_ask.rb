@@ -54,6 +54,10 @@ module Lorj
 
         @config.set(data, value)
 
+        section = _get_account_section(data)
+        @config.set(data, value, :name =>
+                    'account', :section => section) unless section.nil?
+
         break if options[:post_step_function].nil?
 
         proc = options[:post_step_function]
@@ -89,8 +93,9 @@ module Lorj
       when :process_call
         result = _setup_list_from_process_call(obj_to_load, list_options)
       else
-        runtime_fail "'%s' invalid. %s/list_values/values_type supports '%s'.",
-                     list_options[:values_type], data, [:provider_function]
+        PrcLib.runtime_fail "%s: '%s' invalid query type. valid is: '%s'.",
+                            obj_to_load, list_options[:values_type],
+                            [:controller_call, :query_call, :process_call]
       end
       result
     end
@@ -158,7 +163,7 @@ module Lorj
       say_msg = format("Select '%s' from the list:", desc)
       say_msg += format(' |%s|', default) unless default.nil?
       say(say_msg)
-      value = choose do | q |
+      value = choose do |q|
         q.choices(*list)
         q.default = default if default
       end
@@ -187,23 +192,27 @@ module Lorj
       default = options[:default_value] if default.nil?
       default = @config.get(data, default)
 
-      validate_proc = options[:validate_function]
+      # validate_proc = options[:validate_function]
       proc_ask = options[:ask_function]
 
       if proc_ask.nil?
-        proc_method = _ask
+        # proc_method = _ask(desc, default, valid_regex,
+        #                    is_encrypted, is_required)
+        value = _ask(desc, default, valid_regex,
+                     is_encrypted, is_required)
       else
-        proc_method = @process.method(proc_ask)
+        # proc_method = @process.method(proc_ask)
+        value = @process.method(proc_ask)
       end
 
-      loop do
-        value = proc_method.call(desc, default, valid_regex,
-                                 is_encrypted, is_required)
-        break if validate_proc.nil?
+      # loop do
+      #   value = proc_method.call(desc, default, valid_regex,
+      #                            is_encrypted, is_required)
+      #   break if validate_proc.nil?
 
-        validate_method = @process.method(validate_proc)
-        break if validate_method.call(value)
-      end
+      #   validate_method = @process.method(validate_proc)
+      #   break if validate_method.call(value)
+      # end
       value
     end
 
@@ -223,11 +232,12 @@ module Lorj
     # *raise*:
     #
     def _ask(sDesc, default, rValidate, bEncrypted, bRequired)
+      value = nil
       loop do
         if bEncrypted
           value = _ask_encrypted(sDesc, default)
         else
-          value = ask(format('Enter %s:[%s]', sDesc, default)) do |q|
+          value = ask(format('Enter %s:', sDesc)) do |q|
             q.default = default unless default.nil?
             q.validate = rValidate unless rValidate.nil?
           end

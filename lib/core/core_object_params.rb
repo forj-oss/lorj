@@ -27,27 +27,33 @@ module Lorj
     #   - +new_params+        : Parameters ObjectData
     #   - +param_object+      : parameter object
     #   - +param_options+     : parameter options
-    #   - +predefined_params+ : predefined parameters.
     #
     # *return*:
-    # - value : return the parameter value.
+    # - value : return the parameter value added.
+    #           The value comes :
+    #   - from an existing param value if the param_options defines
+    #     :extract_from
+    #   - from config layers if exist
+    #   - from param_option[:default_value] if set
+    # OR
+    # - nil   : if not found
     #
     # *raise*:
     #
-    def _build_data(new_params, param_obj, param_options, predefined_value)
+    def _build_data(new_params, param_obj, param_options)
       param_name = param_obj.key
-      value = nil
 
-      default = param_options.rh_get(:default_value)
-
-      if param_options[:extract_from]
+      unless param_options[:extract_from].nil?
         value = new_params[param_options[:extract_from]]
+        new_params[param_obj.tree] = value
+        return value
       end
 
-      return predefined_value if predefined_value && value.nil?
+      return nil unless param_options.key?(:default_value) ||
+                        @config.exist?(param_name)
 
-      value = @config.get(param_name, default) if value.nil?
-
+      default = param_options.rh_get(:default_value)
+      value = @config.get(param_name, default)
       new_params[param_obj.tree] = value
 
       value
@@ -76,10 +82,10 @@ module Lorj
       attr_name = param_obj.key
 
       # Mapping from Object/data definition
-      if value_mapping
-        runtime_fail("'%s.%s': No value mapping for '%s'",
-                     object_type, attr_name,
-                     value) if Lorj.rhExist?(value_mapping, value) != 1
+      if value_mapping.is_a?(Hash)
+        PrcLib.runtime_fail("'%s.%s': No value mapping for '%s'",
+                            object_type, attr_name,
+                            value) unless value_mapping.key?(value)
         value = value_mapping[value]
       end
 
@@ -102,7 +108,6 @@ module Lorj
     #   - +new_params+        : ObjectData. Parameters ObjectData
     #   - +param_path+        : Symbol. parameter name
     #   - +param_options+     : Hash. parameter options
-    #   - +predefined_params+ : Hash. predefined parameters.
     #
     #
     # *return*:
@@ -110,21 +115,18 @@ module Lorj
     #
     # *raise*:
     #
-    def _build_param(new_params,
-                     param_obj, param_options, predefined_value)
-
+    def _build_param(new_params, param_obj, param_options)
       param_name = param_obj.key
 
       case param_options[:type]
       when :data
-        return _build_data(new_params, param_obj, param_options,
-                           predefined_value)
+        return _build_data(new_params, param_obj, param_options)
       when :CloudObject
         if param_options[:required] &&
            @object_data.type?(param_name) != :DataObject
-          fail Lorj::PrcError.new,
-               format("Object '%s/%s' is not defined. '%s' requirement "\
-                      'failed.', self.class, param_name, fname)
+          PrcLib.runtime_fail "Object '%s/%s' is not defined. '%s' "\
+                               'requirement failed.',
+                              self.class, param_name, fname
         end
         if @object_data.exist?(param_name)
           new_params.add(@object_data[param_name, :ObjectData])
@@ -138,14 +140,12 @@ module Lorj
     end
 
     # internal runtime function for process call
-    # Build a process/controller parameters object (ObjectData)
+    # Build a process parameters object (ObjectData)
     #
     # *parameters*:
     #   - +object_type+       : object type requiring parameters.
     #   - +sEventType+        : event type used to call the process
     #   - +fname+             : caller function
-    #   - +as_controller+     : attribute options
-    #   - +predefined_params+ : pre-defined parameters values.
     #
     # *return*:
     # - ObjectData : list of data and objects wanted by the process or
@@ -155,26 +155,67 @@ module Lorj
     # *raise*:
     # - runtime error if required data is not set. (empty or nil)
     #
-    def _get_object_params(object_type, sEventType, _fname,
-                           as_controller = false, predefined_params = {})
+    def _get_process_params(object_type, sEventType, fname)
+      _get_object_params(object_type, sEventType, fname, false)
+    end
+
+    # internal runtime function for process call
+    # Build a controller parameters object (ObjectData)
+    #
+    # *parameters*:
+    #   - +object_type+       : object type requiring parameters.
+    #   - +sEventType+        : event type used to call the process
+    #   - +fname+             : caller function
+    #
+    # *return*:
+    # - ObjectData : list of data and objects wanted by the process or
+    #                the controller. In case of the controller, hdata
+    #                controller map is also added.
+    #
+    # *raise*:
+    # - runtime error if required data is not set. (empty or nil)
+    #
+    def _get_controller_params(object_type, sEventType, fname)
+      _get_object_params(object_type, sEventType, fname, true)
+    end
+
+    # internal runtime function for process call
+    # Build a process/controller parameters object (ObjectData)
+    #
+    # *parameters*:
+    #   - +object_type+       : object type requiring parameters.
+    #   - +sEventType+        : event type used to call the process
+    #   - +fname+             : caller function
+    #   - +as_controller+     : true to store parameters for controller.
+    #                           false to store parameters for process.
+    #
+    # *return*:
+    # - ObjectData : list of data and objects wanted by the process or
+    #                the controller. In case of the controller, hdata
+    #                controller map is also added.
+    #
+    # *raise*:
+    # - runtime error if required data is not set. (empty or nil)
+    #
+    def _get_object_params(object_type, sEventType, fname, as_controller)
       # Building handler parameters
       # hdata is built for controller. ie, ObjectData is NOT internal.
 
       obj_params = PrcLib.model.meta_obj.rh_get(object_type, :params, :keys)
 
-      fail Lorj::PrcError.new, "'%s' Object data needs not set. Forgot "\
-                               'obj_needs?', object_type if obj_params.nil?
+      PrcLib.runtime_fail "%s:'%s' Object data needs not set. Forgot "\
+                           'obj_needs?', fname, object_type if obj_params.nil?
 
       new_params = _obj_param_init(object_type, sEventType, as_controller)
 
-      obj_params.each do | param_path, param_options|
-        next if Lorj.rhExist?(param_options, :for, sEventType) == 2
+      obj_params.each do |param_path, param_options|
+        if param_options.key?(:for)
+          next unless param_options[:for].include?(sEventType)
+        end
 
         param_obj = KeyPath.new(param_path)
-        param_name = param_obj.key
 
-        value = _build_param(new_params, param_path, param_options,
-                             predefined_params[param_name])
+        value = _build_param(new_params, param_obj, param_options)
 
         if as_controller && !value.nil?
           _build_hdata(object_type, new_params, param_obj, param_options, value)

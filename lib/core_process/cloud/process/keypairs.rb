@@ -76,8 +76,9 @@ class CloudProcess
     key_name = hParams[:keypair_name]
     ssl_error_obj = SSLErrorMgt.new
     begin
-      list = controller_query(sCloudObj, sQuery)
-      query_single(sCloudObj, list, sQuery, key_name)
+      #  list = controller_query(sCloudObj, sQuery)
+      #  query_single(sCloudObj, list, sQuery, key_name)
+      query_single(sCloudObj, sQuery, key_name)
     rescue => e
       retry unless ssl_error_obj.error_detected(e.message, e.backtrace, e)
     end
@@ -139,7 +140,7 @@ class CloudProcess
       priv_key_exist = true
       priv_key_name = key_basename + private_key_ext
     else
-      files.each do | temp_file |
+      files.each do |temp_file|
         PrcLib.warning('keypair_detect: Private key file name detection has '\
                        "detected '%s' as a directory. Usually, it should be a "\
                        'private key file. Please check.',
@@ -163,7 +164,7 @@ class CloudProcess
   def _check_key_file(key_path, key_basename, extensions)
     found_ext = nil
     files = []
-    extensions.each do | ext |
+    extensions.each do |ext|
       temp_file = File.join(key_path, key_basename + ext)
       if File.exist?(temp_file) && !File.directory?(temp_file)
         found_ext = ext

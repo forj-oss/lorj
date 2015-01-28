@@ -19,12 +19,12 @@ class StudentsProcess
   def create_student(sObjectType, hParams)
     PrcLib.state(format("Running creation process for object '%s' = '%s'",
                         sObjectType, hParams[:student_name]))
-
+    #  byebug if ENV['BYEBUG'] # rubocop: disable Debugger
     object = controller_create(sObjectType)
-    fail format("Student '%s' not created.",
-                hParams[:student_name]) if object.nil?
-    PrcLib.info(format("'%s': '%s' created with id %s",
-                       sObjectType, hParams[:student_name],  object[:id]))
+    PrcLib.runtime_fail "Student '%s' not created.",
+                        hParams[:student_name] if object.nil?
+    PrcLib.info("'%s': '%s' created with id %s",
+                sObjectType, hParams[:student_name], object[:id])
     object
   end
 end

@@ -44,8 +44,9 @@ class CloudProcess
   # Should return 1 or 0 flavor.
   def query_flavor(sCloudObj, sQuery, hParams)
     flavor_name = hParams[:flavor_name]
-    list = forj_query_flavor(sCloudObj, sQuery, hParams)
-    query_single(sCloudObj, list, sQuery, flavor_name)
+    #  list = forj_query_flavor(sCloudObj, sQuery, hParams)
+    #  query_single(sCloudObj, list, sQuery, flavor_name)
+    query_single(sCloudObj, sQuery, flavor_name)
   end
 
   # Should return 1 or 0 flavor.

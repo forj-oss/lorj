@@ -52,13 +52,13 @@ module Lorj
   #
   #   oCloud = Lorj::CloudCore.new(oConfig, 'myhpcloud')
   #   oConfig.set(:server_name,'myservername')
-  #   oCloud.Create(:server)
+  #   oCloud.create(:server)
   #
   # Another basic example (See example directory)
   #
   #   oConfig = Lorj::Account.new()
   #   oPrc = Lorj::Core.new(oConfig, 'mySqlAccount')
-  #   oCloud.Create(:student, { :student_name => "Robert Redford"})
+  #   oCloud.create(:student, { :student_name => "Robert Redford"})
   #
   # See BaseProcess to check how you can write a process and what kind of
   # functions are available for your process to be kept controller independant.
@@ -116,7 +116,7 @@ module Lorj
     # * *Raises* :
     #   No exceptions
 
-    def connect(oCloudObj, hConfig = {})
+    def connect(oCloudObj, hConfig = nil)
       return nil if !oCloudObj || !@core_object
       @core_object.process_create(oCloudObj, hConfig)
     end
@@ -144,7 +144,7 @@ module Lorj
     #
     # * *Raises* :
     #   No exceptions
-    def create(oCloudObj, hConfig = {})
+    def create(oCloudObj, hConfig = nil)
       return nil if !oCloudObj || !@core_object
       @core_object.process_create(oCloudObj, hConfig)
     end
@@ -164,7 +164,7 @@ module Lorj
     # * *Raises* :
     #   No exceptions
 
-    def get_or_create(oCloudObj, hConfig = {})
+    def get_or_create(oCloudObj, hConfig = nil)
       return nil if !oCloudObj || !@core_object
       @core_object.process_create(oCloudObj, hConfig)
     end
@@ -186,7 +186,7 @@ module Lorj
     # * *Raises* :
     #   No exceptions
 
-    def delete(oCloudObj, hConfig = {})
+    def delete(oCloudObj, hConfig = nil)
       return nil if !oCloudObj || !@core_object
 
       @core_object.process_delete(oCloudObj, hConfig)
@@ -208,7 +208,7 @@ module Lorj
     # * *Raises* :
     #   No exceptions
 
-    def query(oCloudObj, sQuery, hConfig = {})
+    def query(oCloudObj, sQuery, hConfig = nil)
       return nil if !oCloudObj || !@core_object
 
       @core_object.process_query(oCloudObj, sQuery, hConfig)
@@ -231,7 +231,7 @@ module Lorj
     # * *Raises* :
     #   No exceptions
 
-    def get(oCloudObj, sId, hConfig = {})
+    def get(oCloudObj, sId, hConfig = nil)
       return nil if !oCloudObj || !@core_object || sId.nil?
 
       @core_object.process_get(oCloudObj, sId, hConfig)
@@ -258,7 +258,7 @@ module Lorj
     # * *Raises* :
     #   No exceptions
 
-    def update(oCloudObj, hConfig = {})
+    def update(oCloudObj, hConfig = nil)
       return nil if !oCloudObj || !@core_object
 
       @core_object.process_update(oCloudObj, hConfig)
@@ -324,8 +324,8 @@ module Lorj
       # Load Application processes
       init_processes(model, the_process_class)
 
-      fail Lorj::PrcError.new, 'Lorj::Core: No valid process loaded. '\
-                               'Aborting.' if model[:process_class].nil?
+      PrcLib.runtime_fail 'Lorj::Core: No valid process loaded. '\
+                           'Aborting.' if model[:process_class].nil?
 
       # Load Controller and Controller processes.
       init_controller(model, controller_class) if controller_class
@@ -342,11 +342,11 @@ module Lorj
     def initialize(oConfig, sAccount = nil, aProcesses = [])
       config_account = init_config(oConfig, sAccount)
 
-      process_list = [:CloudProcess]
+      process_list = [:cloud_process]
 
       controller_mod = config_account.get(:provider_name)
-      fail Lorj::PrcError.new, 'Provider_name not set. Unable to create'\
-                               ' instance CloudCore.' if controller_mod.nil?
+      PrcLib.runtime_fail 'Provider_name not set. Unable to create'\
+                           ' instance CloudCore.' if controller_mod.nil?
 
       init_controller_mod(process_list, controller_mod)
 
@@ -356,7 +356,7 @@ module Lorj
     private
 
     def init_config(oConfig, sAccount)
-      if !oConfig.is_a?(Lorj::Account)
+      if oConfig.is_a?(Lorj::Account)
         config_account = oConfig
       else
         config_account = Lorj::Account.new(oConfig)

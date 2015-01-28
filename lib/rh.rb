@@ -66,9 +66,10 @@ class Hash
   #   yVal.rh_lexist? => 0
 
   def rh_lexist?(*p)
+    p = p.flatten
+
     return 0 if p.length == 0
 
-    p = p.flatten
     if p.length == 1
       return 1 if self.key?(p[0])
       return 0
@@ -212,9 +213,9 @@ class Hash
   #   # yVal  = {:test2 => {:test5 => :test, 'text' => 'blabla'},
   #              :test5 => :test }
   def rh_set(value, *p)
+    p = p.flatten
     return nil if p.length == 0
 
-    p = p.flatten
     if p.length == 1
       self[p[0]] = value
       return value
@@ -260,9 +261,10 @@ class Hash
   #   # yVal = {:test2 => {} }
   #
   def rh_del(*p)
+    p = p.flatten
+
     return nil if p.length == 0
 
-    p = p.flatten
     return delete(p[0]) if p.length == 1
 
     return nil if self[p[0]].nil?
@@ -294,7 +296,7 @@ class Hash
 
   def rh_key_to_symbol(levels = 1)
     result = {}
-    each do | key, value |
+    each do |key, value|
       new_key = key
       new_key = key.to_sym if key.is_a?(String)
       if value.is_a?(Hash) && levels > 1
@@ -325,7 +327,7 @@ class Hash
   #  rh_key_to_symbol?(3) return true
   #  rh_key_to_symbol?(4) return true
   def rh_key_to_symbol?(levels = 1)
-    each do | key, value |
+    each do |key, value|
       return true if key.is_a?(String)
 
       res = false

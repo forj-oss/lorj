@@ -251,7 +251,7 @@ describe 'class: Lorj::Config,' do
         # The defaults.yaml MUST have data exclusive set to true
         expect(@default.rh_get(:sections, :credentials, :data,
                                :account_exclusive)).to equal(true)
-        @config.meta_each do | section, key, value |
+        @config.meta_each do |section, key, value|
           expect(@default.rh_exist?(:sections, section, key)).to equal(true)
           expect(@default.rh_get(:sections, section, key)).to equal(value)
           expect([section, key,

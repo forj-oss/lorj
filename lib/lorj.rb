@@ -35,9 +35,16 @@ require 'lorj_account.rb'          # Lorj::Account class  - account config
 
 require 'core/core_internal'       # Lorj Core class private init. functions
 require 'core/core'                # Lorj Core class
+require 'core/core_object_params'  # Lorj Internal core class
 require 'core/core_model'          # Lorj Model class
 require 'core/core_process'        # Lorj core process functions
+require 'core/core_process_setup'  # Lorj core process setup
+require 'core/core_setup_ask'      # Lorj core setup ask functions
+require 'core/core_setup_encrypt'  # Lorj core setup encrypt functions
+require 'core/core_setup_init'     # Lorj core setup init functions
+require 'core/core_setup_list'     # Lorj core setup list functions
 require 'core/core_controller'     # Lorj core controller functions
+
 require 'core/core_object_data'    # Lorj ObjectData class
 require 'core/lorj_data'           # Lorj Lorj::Data object
 require 'core/lorj_basedefinition' # Lorj Lorj::BaseDefinition object

@@ -36,10 +36,10 @@ module HPNetwork
 
   def self.create_subnetwork(oNetworkConnect, oNetwork, name)
     oNetworkConnect.subnets.create(
-       :network_id => oNetwork.id,
-       :name => name,
-       :cidr => get_next_subnet(oNetworkConnect),
-       :ip_version => '4'
+      :network_id => oNetwork.id,
+      :name => name,
+      :cidr => get_next_subnet(oNetworkConnect),
+      :ip_version => '4'
     )
   end
 

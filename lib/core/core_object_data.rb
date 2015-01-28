@@ -133,10 +133,10 @@ module Lorj
     #   nothing
     def add(oDataObject)
       # Requires to be a valid framework object.
-      fail Lorj::PrcError.new,
-           format("Invalid Framework object type '%s'.",
-                  oDataObject.class) unless oDataObject.is_a?(Lorj::Data)
-
+      unless oDataObject.is_a?(Lorj::Data)
+        PrcLib.runtime_fail "Invalid Framework object type '%s'.",
+                            oDataObject.class
+      end
       object_data_add(oDataObject)
       oDataObject.register
     end
@@ -185,10 +185,10 @@ module Lorj
     # * *Raises* :
     #   PrcError
     def exist?(*key) # rubocop: disable Metrics/MethodLength
-      fail Lorj::PrcError.new, 'ObjectData: key is not list of values '\
-      '(string/symbol or array)' unless [Array, String,
-                                         Symbol].include?(key.class)
-
+      unless [Array, String, Symbol].include?(key.class)
+        PrcLib.runtime_fail 'ObjectData: key is not list of values '\
+                            '(string/symbol or array)'
+      end
       key = [key] if key.is_a?(Symbol) || key.is_a?(String)
 
       key = key.flatten
@@ -200,7 +200,7 @@ module Lorj
         object_data_exist?(object, key)
       else
         # By default true if found key hierarchy
-        @params.rh_exist?(key)
+        @params.rh_exist?(*key)
       end
     end
 
@@ -222,11 +222,12 @@ module Lorj
       :DataObject if @params[key].type == :object
     end
 
-    # cObj was an old way to get the internal data :object.
-    # Replaced by get(:object)
-    # def cobj(*key)
-    #   @params.rh_get(key, :object) if @params.rh_exist?(key, :object)
-    # end
+    def to_s
+      str = "-- Lorj::ObjectData --\n"
+      str += "Usage internal\n" if @internal
+      @params.each { |key, data| str += format("%s:\n%s\n", key, data.to_s) }
+      str
+    end
 
     private
 
@@ -304,10 +305,9 @@ module Lorj
     # * *Raises* :
     #   nothing
     def object_data_delete(obj)
-      fail Lorj::PrcError.new,
-           format('ObjectData: delete error. obj is not a'\
-                  " framework data Object. Is a '%s'",
-                  obj.class) unless obj.is_a?(Lorj::Data)
+      PrcLib.runtime_fail 'ObjectData: delete error. obj is not a'\
+                           " framework data Object. Is a '%s'",
+                          obj.class unless obj.is_a?(Lorj::Data)
       if obj.type == :list
         @params.rh_set(nil, :query, obj.object_type?)
       else

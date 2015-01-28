@@ -35,12 +35,14 @@ module Lorj
     # parameters:
     # - +object_type+: Lorj object type to use for the connection.
     # - +params+     : Parameters to use for connection.
-    def controller_connect(sObjectType, params = {})
-      controller_params = _get_object_params(sObjectType, :create_e, :connect,
-                                             true, params)
+    def controller_connect(sObjectType, params = nil)
+      _add_instant_config(params)
+
+      controller_params = _get_controller_params(sObjectType,
+                                                 :create_e, :connect)
       controller_obj = @controller.connect(sObjectType, controller_params)
       data_obj = Lorj::Data.new
-      data_obj.set(controller_obj, sObjectType) do | sObjType, oObject |
+      data_obj.set(controller_obj, sObjectType) do |sObjType, oObject|
         begin
           _return_map(sObjType, oObject)
        rescue => e
@@ -57,14 +59,16 @@ module Lorj
     # parameters:
     # - +object_type+: Lorj object type to use for the creation.
     # - +params+     : Parameters to use for creation.
-    def controller_create(sObjectType, params = {})
+    def controller_create(sObjectType, params = nil)
+      _add_instant_config(params)
+
       # The process ask the controller to create the object.
       # controller_params have to be fully readable by the controller.
-      controller_params = _get_object_params(sObjectType, :create_e, :create,
-                                             true, params)
+      controller_params = _get_controller_params(sObjectType,
+                                                 :create_e, :create)
       controller_obj = @controller.create(sObjectType, controller_params)
       data_obj = Lorj::Data.new
-      data_obj.set(controller_obj, sObjectType) do | sObjType, oObject |
+      data_obj.set(controller_obj, sObjectType) do |sObjType, oObject|
         begin
           _return_map(sObjType, oObject)
        rescue => e
@@ -73,6 +77,8 @@ module Lorj
         end
       end
       @object_data.add data_obj
+
+      _remove_instant_config(params)
 
       data_obj
     end
@@ -86,14 +92,19 @@ module Lorj
     #
     # returns:
     # - The controller must return true to inform about the real deletion
-    def controller_delete(sObjectType, params = {})
-      controller_params = _get_object_params(sObjectType, :delete_e, :delete,
-                                             true, params)
+    def controller_delete(sObjectType, params = nil)
+      _add_instant_config(params)
+
+      controller_params = _get_controller_params(sObjectType,
+                                                 :delete_e, :delete)
       PrcLib.runtime_fail "delete Controller - %s: Object '%s' is not loaded.",
                           @controller.class,
                           key unless controller_params.exist?(sObjectType)
       state = @controller.delete(sObjectType, controller_params)
       @object_data.delete(sObjectType) if state
+
+      _remove_instant_config(params)
+
       state
     end
 
@@ -105,13 +116,15 @@ module Lorj
     #
     # returns:
     # - Return a Lorj::Data representing the data retrieved by the controller.
-    def controller_get(sObjectType, sUniqId, params = {})
-      controller_params = _get_object_params(sObjectType, :get_e, :get,
-                                             true, params)
+    def controller_get(sObjectType, sUniqId, params = nil)
+      _add_instant_config(params)
+
+      controller_params = _get_controller_params(sObjectType,
+                                                 :get_e, :get)
 
       controller_obj = @controller.get(sObjectType, sUniqId, controller_params)
       data_obj = Lorj::Data.new
-      data_obj.set(controller_obj, sObjectType) do | sObjType, oObject |
+      data_obj.set(controller_obj, sObjectType) do |sObjType, oObject|
         begin
           _return_map(sObjType, oObject)
        rescue => e
@@ -120,6 +133,8 @@ module Lorj
         end
       end
       @object_data.add data_obj
+
+      _remove_instant_config(params)
 
       data_obj
     end
@@ -132,7 +147,9 @@ module Lorj
     #
     # returns:
     # - Returns a Lorj::Data object, containing a list of Lorj::Data element.
-    def controller_query(sObjectType, hQuery, params = {})
+    def controller_query(sObjectType, hQuery, params = nil)
+      _add_instant_config(params)
+
       # Check if we can re-use a previous query
       list = @object_data[:query, sObjectType]
       unless list.nil?
@@ -143,8 +160,8 @@ module Lorj
         end
       end
 
-      controller_params = _get_object_params(sObjectType, :query_e, :query,
-                                             true, params)
+      controller_params = _get_controller_params(sObjectType,
+                                                 :query_e, :query)
       controller_query = _query_map(sObjectType, hQuery)
 
       controller_obj = @controller.query(sObjectType, controller_query,
@@ -152,7 +169,7 @@ module Lorj
 
       data_obj = Lorj::Data.new :list
       data_obj.set(controller_obj,
-                   sObjectType, hQuery) do | sObjType, key |
+                   sObjectType, hQuery) do |sObjType, key|
         begin
           _return_map(sObjType, key)
        rescue => e
@@ -165,6 +182,9 @@ module Lorj
                  sObjectType, data_obj.length)
 
       @object_data.add data_obj
+
+      _remove_instant_config(params)
+
       data_obj
     end
 
@@ -176,19 +196,21 @@ module Lorj
     #
     # returns:
     # - The controller must return true to inform about the real deletion
-    def controller_update(sObjectType, params = {})
+    def controller_update(sObjectType, params = NIL)
+      _add_instant_config(params)
+
       # Need to detect data updated and update the Controler object with the
       # controler
 
-      controller_params = _get_object_params(sObjectType, :update_e, :update,
-                                             true, params)
+      controller_params = _get_controller_params(sObjectType,
+                                                 :update_e, :update)
 
       data_obj = @object_data[sObjectType, :ObjectData]
       controller_obj = data_obj[:object]
 
       is_updated = false
       attributes = data_obj[:attrs]
-      attributes.each do |key, value |
+      attributes.each do |key, value|
         attribute_obj = KeyPath.new(key)
 
         attribute_map = PrcLib.model.meta_obj.rh_get(sObjectType, :returns,
@@ -213,7 +235,7 @@ module Lorj
 
       Lorj.debug(1, '%s.%s - updated.',
                  @process.class, sObjectType) if is_done
-      data_obj.set(controller_obj, sObjectType) do | sObjType, an_object |
+      data_obj.set(controller_obj, sObjectType) do |sObjType, an_object|
         begin
           _return_map(sObjType, an_object)
        rescue => e
@@ -221,6 +243,9 @@ module Lorj
                              @process.class, sObjectType, e.message
         end
       end
+
+      _remove_instant_config(params)
+
       is_done
     end
   end

@@ -502,9 +502,9 @@ module Lorj
       index = layer_index(options[:name]) if options.key?(:name)
 
       indexes = exclusive_indexes(account_exclusive)
-      options[:indexes] = indexes
-
       indexes = [index] if !index.nil? && indexes.include?(index)
+
+      options[:indexes] = indexes
       indexes
     end
 
@@ -553,7 +553,7 @@ module Lorj
 
     def index_to_update(layer_name, key, section)
       indexes = [0] # choose runtime by default.
-      indexes = _layer_indexes([layer_name]) unless layer_name.nil?
+      indexes = layer_indexes([layer_name]) unless layer_name.nil?
 
       if layer_name.nil?
         # Return runtime layer, if layer requested is not updatable.

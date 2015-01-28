@@ -21,9 +21,9 @@
 
 # declare yaml student API to the controller
 yaml_students_file = File.expand_path(
-                      File.join(
-                        File.dirname(__FILE__),
-                        '..', '..', 'yaml_students', 'yaml_students.rb'))
+  File.join(
+    File.dirname(__FILE__),
+    '..', '..', 'yaml_students', 'yaml_students.rb'))
 require yaml_students_file
 
 # The controller is a combination of 2 elements:
@@ -47,6 +47,8 @@ class YamlStudentsController
   def create(sObjectType, hParams)
     case sObjectType
     when :connection
+      byebug if ENV['BYEBUG'] # rubocop: disable Debugger
+
       required?(hParams, :hdata, :file_name)
       YamlSchool.new(hParams[:hdata, :file_name])
     when :student

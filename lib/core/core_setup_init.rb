@@ -37,9 +37,9 @@ module Lorj
     # * *Raises* :
     #
     def _setup_load
-      ask_steps = Lorj.defaults.get[:setup, :ask_step]
+      ask_steps = Lorj.defaults.data.rh_get(:setup, :ask_step)
       setup_steps = []
-      ask_steps.each do | value |
+      ask_steps.each do |value|
         setup_steps << {
           :desc => value[:desc],
           :explanation => value[:explanation],
@@ -63,12 +63,12 @@ module Lorj
     # * *Raises* :
     #
     def _setup_check_additional(setup_steps)
-      setup_steps.each_index do | step |
+      setup_steps.each_index do |step|
         value = setup_steps[step]
         next unless value.rh_exist?(:add)
 
         datas_to_add = value.rh_get(:add)
-        datas_to_add.each do | data_to_add |
+        datas_to_add.each do |data_to_add|
           order_array = setup_steps[step][:order]
           next if _setup_attr_already_added?(order_array, data_to_add)
 
@@ -145,11 +145,13 @@ module Lorj
       Lorj.debug(2, 'Ask step %s:', step)
       puts ANSI.bold(setup_step[:desc]) unless setup_step[:desc].nil?
       begin
-        erb_msg = ANSI.yellow(erb(setup_step[:explanation]))
+        erb_msg = ANSI.yellow(
+          erb(setup_step[:explanation])
+        ) unless setup_step[:explanation].nil?
       rescue => e
-        PrcLib.Error "setup step '%d/:explanation' : %s", step, e.message
+        PrcLib.error "setup step '%d/:explanation' : %s", step, e.message
       end
-      puts format("%s\n\n", erb_msg) unless setup_step[:explanation].nil?
+      puts format("%s\n\n", erb_msg) unless erb_msg.nil?
     end
 
     # internal setup function to display step information
@@ -172,14 +174,14 @@ module Lorj
                       data,
                       erb(options[:explanation]))
         rescue => e
-          PrcLib.Error "setup key '%s/:explanation' : %s", data, e.message
+          PrcLib.error "setup key '%s/:explanation' : %s", data, e.message
         end
       end
 
       begin
         desc = erb(options[:desc]) unless options[:desc].nil?
       rescue => e
-        PrcLib.Error "setup key '%s/:desc' : %s", data, e.message
+        PrcLib.error "setup key '%s/:desc' : %s", data, e.message
       end
 
       desc
@@ -202,22 +204,24 @@ module Lorj
     #
     def _setup_ask(setup_steps)
       # Ask for user input
-      setup_steps.each_index do | iStep |
-        _setup_display_step(setup_step, iStep)
+      # TODO: Enhance to support section::data to avoid duplicated data name
+      #   against sections.
+      setup_steps.each_index do |iStep|
+        _setup_display_step(setup_steps[iStep], iStep)
 
         order_array = setup_steps[iStep][:order]
 
-        order_array.each_index do | iIndex |
+        order_array.each_index do |iIndex|
           Lorj.debug(2, 'Ask order %s:', iIndex)
-          order_array[iIndex].each do | data |
-            options = _get_meta_data(data)
+          order_array[iIndex].each do |data|
+            options = _get_meta_data_auto(data)
             options = {} if options.nil?
 
             data_desc = _setup_display_data(data, options)
 
             if options[:pre_step_function]
               proc = options[:pre_step_function]
-              next unless @oForjProcess.method(proc).call(data)
+              next unless @process.method(proc).call(data)
             end
 
             _setup_ask_data(data_desc, data, options)

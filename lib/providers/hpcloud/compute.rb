@@ -54,9 +54,9 @@ module HPCompute
 
     result = []
     addresses = oComputeConnect.addresses.all
-    addresses.each do | oElem |
+    addresses.each do |oElem|
       is_found = true
-      sQuery.each do | key, value |
+      sQuery.each do |key, value|
         if !oElem.attributes.key?(key) || oElem.attributes[key] != value
           is_found = false
           break
@@ -76,7 +76,7 @@ module HPCompute
     addresses = oComputeConnect.addresses.all
     address = nil
     # Search for an available IP
-    addresses.each do | oElem |
+    addresses.each do |oElem|
       if oElem.fixed_ip.nil?
         address = oElem
         break

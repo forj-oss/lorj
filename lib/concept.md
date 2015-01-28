@@ -7,7 +7,7 @@ lorj framework model
 
 The framework is built over several pieces:
 
-![](img/forj-lib-concept.png "concept")
+![](../../lib/img/forj-lib-concept.png "concept")
 
 * Main
 
@@ -61,7 +61,7 @@ lorj defines 2 different objects to provide configuration data management. But y
 
 Short summary about Config `get`, `set` and `save`
 
-![](img/config_data_access.png)
+![](../../lib/img/config_data_access.png)
 
 
 * Lorj::Account
@@ -77,7 +77,7 @@ Short summary about Config `get`, `set` and `save`
 
 Short summary about Account `get`, `set` and `save`.
 
-![](img/account_data_access.png)
+![](../../lib/img/account_data_access.png)
 
 ###Application config file : defaults.yaml
 

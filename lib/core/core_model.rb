@@ -293,16 +293,22 @@ module Lorj
     end
 
     # Object Context identifier (get/set)
-    # parameters: (Hash)
-    # - +:object+        : optional. Object to keep in context.
-    # - +:function_name+ : optional. Symbol. Call function name for error report
+    # parameters:
+    # - options: Hash.
+    #   - +:object+        : optional. Object to keep in context.
+    #   - +:function_name+ : optional. Symbol. Call function name for error
+    #                        report
     # return:
     # - string : Object name
     def object_context(options = nil)
-      if options.is_a?(Hash) && options.key?(:object)
-        @context[:oCurrentObj] = options[:object]
-        needs_optional false
-        needs_setup false
+      if options.is_a?(Hash)
+        if options.key?(:object)
+          @context[:oCurrentObj] = options[:object]
+          needs_optional false
+          needs_setup false
+        end
+      else
+        options = {}
       end
 
       msg = ''

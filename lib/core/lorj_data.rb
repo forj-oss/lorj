@@ -155,9 +155,29 @@ module Lorj
         @data[:object] = oObj
         @data[:attrs] = yield(sObjType, oObj)
       when :list
-        list_set(oObj, sObjType, hQuery)
+        list_set(oObj, sObjType, hQuery) do |object_type, object|
+          yield(object_type, object)
+        end
       end
       self
+    end
+
+    def to_s
+      str = format("-- Lorj::Data --\nType: %s\nContent:\n", @type)
+      str += format('%s <= ', @data[:object_type])
+      str += format("(%s) :\n", @data[:object].class)
+      if @type != :list
+        str += @data[:attrs].to_yaml
+        return str
+      end
+      str += format("query:\n%s", @data[:query].to_yaml)
+      str += format("\nlist count: %s\n", @data[:list].length)
+      elem_print = []
+      @data[:list].each do |elem|
+        elem_print << elem.to_s
+      end
+      str += elem_print.to_yaml
+      str
     end
 
     # Set the :object type
@@ -347,25 +367,6 @@ module Lorj
       @data[:object].nil?
     end
 
-    # Redefine nil? Warning! Can be confused. Cannot see if your object is
-    # simply nil or if current object is simply empty.
-    # Use empty? instead.
-    # A warning will be raised soon to ask developer to update it.
-    #
-    # * *Args* :
-    #   No parameters
-    #
-    # * *Returns* :
-    #   - true/false
-    #
-    # * *Raises* :
-    #   No exceptions
-    #
-    def nil?
-      # Obsolete Use empty? instead.
-      @data[:object].nil?
-    end
-
     # return 0, 1 or N if the Lorj::Data object is nil.
     # 0 if no objects stored
     # 1 if an object exist even if type :object or :list
@@ -414,7 +415,7 @@ module Lorj
       end
 
       return if to_remove.length <= 0
-      to_remove.each { | elem | @data[:list].delete(elem) }
+      to_remove.each { |elem| @data[:list].delete(elem) }
     end
 
     # yield loop on a list
@@ -441,7 +442,7 @@ module Lorj
       end
       return if to_remove.length <= 0
 
-      to_remove.each { | elem | @data[:list].delete(elem) }
+      to_remove.each { |elem| @data[:list].delete(elem) }
     end
 
     # A Lorj::Data can be cached by Lorj::ObjectData.
@@ -502,7 +503,7 @@ module Lorj
       return self if oObj.nil?
 
       begin
-        oObj.each do | oElemObject |
+        oObj.each do |oElemObject|
           next if oElemObject.nil?
           begin
             data_obj = Lorj::Data.new(:object)
@@ -511,13 +512,13 @@ module Lorj
             end
             @data[:list] << data_obj
           rescue => e
-            runtime_fail "'%s' Mapping attributes issue.\n%s",
-                         sObjType, e.message
+            PrcLib.runtime_fail "'%s' Mapping attributes issue.\n%s",
+                                sObjType, e.message
           end
         end
       rescue => e
-        runtime_fail "each function is not supported by '%s'.\n%s",
-                     oObj.class, e.message
+        PrcLib.runtime_fail "each function is not supported by '%s'.\n%s",
+                            oObj.class, e.message
       end
       self
     end

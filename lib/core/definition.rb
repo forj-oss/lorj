@@ -68,7 +68,7 @@ module Lorj
       PrcLib.model.heap true
       supported_options = [:use_controller]
       unless hOptions.nil?
-        hOptions.each_key do | key |
+        hOptions.each_key do |key|
           case key
           when :use_controller
             value = hOptions.rh_get(:use_controller)
@@ -127,7 +127,7 @@ module Lorj
       lorj_object = PrcLib.model.meta_obj.rh_get(obj_type_name)
 
       # Checking handlers_options data
-      handlers = _verify_handlers(obj_type_name, lorj_object, handlers)
+      _verify_handlers(obj_type_name, lorj_object, handlers)
 
       if lorj_object.nil?
         lorj_object = _define_obj_initialize(obj_type_name, handlers)
@@ -241,10 +241,10 @@ module Lorj
       key_path = KeyPath.new(key)
 
       PrcLib.model.meta_obj.rh_set(nil, PrcLib.model.object_context,
-                                   :returns, key_path.sFullPath)
+                                   :returns, key_path.fpath)
       PrcLib.model.attribute_context key_path
       Lorj.debug(4, "%s: Undefining attribute mapping '%s'",
-                 PrcLib.model.object_context, key_path.sFullPath)
+                 PrcLib.model.object_context, key_path.fpath)
 
       _query_mapping(key, nil)
     end
@@ -315,7 +315,7 @@ module Lorj
       value = { data => { :options => hOptions } }
 
       PrcLib.model.predefine_data_value.rh_set(value,
-                                               key_path.sFullPath, :values)
+                                               key_path.fpath, :values)
     end
 
     # function to interpret a template data, and use ERBConfig as data context.
@@ -376,11 +376,11 @@ module Lorj
 
       return nil unless _decl_data_valid?(value, map)
 
-      object_type = PrcLib.model.object_context(fct_context)
+      object_type = PrcLib.model.object_context
 
       key_path = PrcLib.model.attribute_context __callee__
 
-      keypath = key_path.sFullPath
+      keypath = key_path.fpath
       Lorj.debug(2, "%s-%s: Attribute value mapping '%s' => '%s'",
                  object_type, key_path.to_s, value, map)
       PrcLib.model.meta_obj.rh_set(map,
@@ -437,7 +437,7 @@ module Lorj
 
       object_type = PrcLib.model.object_context(fct_context)
 
-      key_access = KeyPath.new(attr_name).sFullPath
+      key_access = KeyPath.new(attr_name).fpath
 
       # PrcLib.model.meta_obj://<Object>/:params/:keys/<keypath> must exist.
       object_param = PrcLib.model.meta_obj.rh_get(object_type,
@@ -468,8 +468,8 @@ module Lorj
 
       PrcLib.model.attribute_context key_path
 
-      PrcLib.model.meta_obj.rh_set(map_path_obj.sFullPath, object_type,
-                                   :query_mapping, key_path.sFullPath)
+      PrcLib.model.meta_obj.rh_set(map_path_obj.fpath, object_type,
+                                   :query_mapping, key_path.fpath)
     end
 
     # Internal function to store object attribute and mapping information
@@ -485,14 +485,14 @@ module Lorj
 
       map_path_obj = KeyPath.new(map)
 
-      PrcLib.model.meta_obj.rh_set(map_path_obj.sFullPath, object_type,
-                                   :returns, key_path_obj.sFullPath)
+      PrcLib.model.meta_obj.rh_set(map_path_obj.fpath, object_type,
+                                   :returns, key_path_obj.fpath)
 
       PrcLib.model.attribute_context key_path_obj
 
       return if options[:not_queriable] == true
       query_mapping(key, map)
-      [key_path_obj.sFullPath, map_path_obj.sFullPath]
+      [key_path_obj.fpath, map_path_obj.fpath]
     end
 
     # Internal section detection
@@ -516,8 +516,8 @@ module Lorj
     # Internal model data validation
     # return true if valid. false otherwise.
     def self._decl_data_valid?(value, map)
-      return false if [String, Symbol].include?(value.class)
-      return false if [NilClass, Symbol, String].include?(map.class)
+      return false unless [String, Symbol].include?(value.class)
+      return false unless [NilClass, Symbol, String].include?(map.class)
       true
     end
 
@@ -535,7 +535,7 @@ module Lorj
                                                    :params)
 
       PrcLib.model.attribute_context KeyPath.new(name)
-      key_access = PrcLib.model.attribute_context.sFullPath
+      key_access = PrcLib.model.attribute_context.fpath
 
       unless top_param_obj[:keys].key?(key_access)
         top_param_obj[:keys][key_access] = {}
@@ -551,10 +551,10 @@ module Lorj
 
       case type
       when :data
-        return _obj_needs_data(params[:keys][attribute.sFullPath],
+        return _obj_needs_data(params[:keys][attribute.fpath],
                                msg_action, options)
       when :CloudObject, :object
-        return _obj_needs_object(params[:keys][attribute.sFullPath],
+        return _obj_needs_object(params[:keys][attribute.fpath],
                                  options)
       end
       PrcLib.dcl_fail("%s: Object parameter type '%s' unknown.",
@@ -651,8 +651,8 @@ module Lorj
       return handlers if object.nil?
 
       handlers_list = object[:lambdas].keys.join(', ')
-      handlers.each_key do | key |
-        next if lorj_object.rh_exist?(:lambdas, key)
+      handlers.each_key do |key|
+        next if object.rh_exist?(:lambdas, key)
 
         PrcLib.dcl_fail("'%s' parameter is invalid. Use '%s'",
                         key, handlers_list)

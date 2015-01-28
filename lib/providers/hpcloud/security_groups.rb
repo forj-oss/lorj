@@ -47,7 +47,7 @@ module HPKeyPairs
     keypairs.each do |sElem|
       is_selected = true
       attributes = sElem.instance_variable_get(:@attributes)
-      sQuery.each do | key, value |
+      sQuery.each do |key, value|
         if attributes[key] != value
           is_selected = false
           break

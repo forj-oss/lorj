@@ -88,7 +88,7 @@ module Lorj
       if names.length == 1
         res = config_layers[0][:config].data
       else
-        config_layers.each do | layer |
+        config_layers.each do |layer|
           res[layer[:name]] = layer[:config].data
         end
       end

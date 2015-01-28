@@ -17,7 +17,7 @@
 
 app_path = File.dirname(__FILE__)
 
-if ENV['LORJ_DEV']
+if ENV['BYEBUG']
   require 'byebug'
   lib_path = File.expand_path(File.join(app_path, '..', '..', 'lib'))
   $LOAD_PATH << lib_path
@@ -27,19 +27,19 @@ require 'lorj'
 
 # If you want to see what is happening in the framework, uncomment debug
 # settings.
-PrcLib.level = Logger::DEBUG # Printed out to your console.
-PrcLib.core_level = 3 # framework debug levels.
+#  PrcLib.level = Logger::DEBUG # Printed out to your console.
+#  PrcLib.core_level = 3 # framework debug levels.
 
 # Initialize the framework
 processes = [File.join(app_path, 'process', 'students.rb')]
 
+#  byebug if ENV['BYEBUG'] # rubocop: disable Debugger
 student_core = Lorj::Core.new(nil, processes, :mock)
-
 # Ask the framework to create the object student 'Robert Redford'
 student_core.create(:student, :student_name => 'Robert Redford')
 
 # Want to create a duplicated student 'Robert Redford'?
-student_core.create(:student)
+student_core.create(:student, :student_name => 'Robert Redford')
 # no problem. The key is the key in the Mock controller array.
 
 student_core.create(:student, :student_name => 'Anthony Hopkins')
@@ -49,7 +49,7 @@ students = student_core.query(:student,  :name => 'Robert Redford')
 
 puts format('%s students found', students.length)
 
-students.each do | a_student |
+students.each do |a_student|
   puts format('%s: %s', a_student[:id], a_student[:name])
 end
 

@@ -17,7 +17,7 @@
 # It requires Core objects to be defined + default ForjProcess functions.
 
 # Define framework object on BaseDefinition
-class Lorj
+module Lorj
   # ************************************ SERVER Console Object
   # Object representing the console log attached to a server
   class BaseDefinition

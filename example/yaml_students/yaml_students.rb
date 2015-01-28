@@ -24,12 +24,18 @@ class YamlSchool
   attr_accessor :file
   attr_accessor :data
 
+  # Initiliaze the API with the yaml file loaded.
+  #
+  # *Args*:
+  # - +file+ : File name to load.
   def initialize(file)
     @data = { :students => [] }
     @file = file
     load_data
   end
 
+  # Load data from a yaml file. File name is set at class initialization
+  # To change the file name, update the file attribute
   def load_data
     return false unless File.exist?(@file)
 
@@ -38,6 +44,8 @@ class YamlSchool
     @data[:students] = [] unless @data.key?(:students)
   end
 
+  # Save the data updated in memory.
+  # To change the file name, update the file attribute
   def save_data
     begin
       File.open(@file, 'w') do |out|
@@ -50,6 +58,21 @@ class YamlSchool
     true
   end
 
+  # create_student is a very basic function to create a new record in
+  # the student yaml file.
+  # The student is created in memory.
+  # To save it in the file, use save_data.
+  #
+  # *Args*:
+  # - +name+   : This is a generic name. It can be a surname as well
+  # - +fields+ : Fields is a Hash list of data to add in the student
+  #              It can be any kind of field name. But at least 2 are required:
+  #   - :first_name : First name of the student
+  #   - :last_name  : Last name of the student
+  #
+  # Ex:
+  # create_student('rob', :last_name => 'Redford', :first_name => 'Robert',
+  #                :class_room => 'Art Drama', :comment => 'Is a good student')
   def create_student(name, fields)
     if fields[:first_name].nil? || fields[:last_name].nil?
       puts 'YAML API: Unable to create a student. '\
@@ -63,6 +86,94 @@ class YamlSchool
     result
   end
 
+  # delete_student is a very basic function to delete a record from
+  # the student yaml file.
+  # The student is deleted in memory.
+  # The deletion is simply an update of the :status to :removed
+  # To save it in the file, use save_data.
+  #
+  # *Args*:
+  # - id: If the student ID.
+  #
+  # Ex:
+  # delete_student(2)
+  def delete_student(sId)
+    return false unless File.exist?(file)
+
+    @data[:students].each do |value|
+      next unless value[:id] == sId
+
+      @data[:students][sId][:status] = :removed
+      save_data
+      return 1
+    end
+    0
+  end
+
+  # delete_student is a very basic function to delete a record from
+  # the student yaml file.
+  # The student is deleted in memory.
+  # The deletion is simply an update of the :status to :removed
+  # To save it in the file, use save_data.
+  #
+  # *Args*:
+  # - query: Hash of fields to use for the query
+  #          You can query any fields.
+  #          Standard one are:
+  #   - :id         : Student ID
+  #   - :name       : Student name or surname
+  #   - :first_name : First name of the student.
+  #   - :last_name  : Last name of the student.
+  #
+  # *returns*:
+  # - Array: List of records matching all fields.
+  #          The matching feature is basically limited to field equality.
+  #          if not found, the Array length will equal to 0.
+  #
+  # Ex:
+  # query_student(:id => 2)
+  # query_student(:first_name => 'Robert')
+  # query_student(:class => 'Art Drama')
+  def query_student(hQuery)
+    result = []
+
+    hQuery[:status] = :active unless hQuery.key?(:status)
+
+    @data[:students].each do |hValue|
+      elem = hValue
+      hQuery.each do |query_key, query_value|
+        elem = nil if not_in_query?(hQuery, hValue, query_key, query_value)
+      end
+      result << elem if elem
+    end
+    result
+  end
+
+  # update_student is a very basic function to update a record of
+  # the student yaml file.
+  # The student is updated in memory.
+  # To save it in the file, use save_data.
+  #
+  # *Args*:
+  # - query: Hash of fields to use for the query
+  #          You can query any fields.
+  #          Standard one are:
+  #   - :id         : Student ID
+  #   - :name       : Student name or surname
+  #   - :first_name : First name of the student.
+  #   - :last_name  : Last name of the student.
+  #   - :status     : :removed if the record is deleted.
+  #
+  # Ex:
+  # query_student(2, :name => 'robby')
+  def update_student(id, fields)
+    list = query_student(:id => id)
+    list[0].merge(fields) if list.length == 1
+    save_data
+  end
+
+  private
+
   def create_data(name, fields)
     result = fields.clone
     result[:name] = name
@@ -74,32 +185,6 @@ class YamlSchool
     @data[:students] << result
 
     result[:id] = @data[:students].length - 1
-    result
-  end
-
-  def delete_student(sId)
-    return false unless File.exist?(file)
-
-    @data[:students].each do | value |
-      next unless value[:id] == sId
-
-      @data[:students][sId][:status] = :removed
-      save_data
-      return 1
-    end
-    0
-  end
-
-  def query_student(hQuery)
-    result = []
-
-    @data[:students].each do | hValue |
-      elem = hValue
-      hQuery.each do | query_key, query_value |
-        elem = nil if not_in_query?(hQuery, hValue, query_key, query_value)
-      end
-      result << elem if elem
-    end
     result
   end
 
@@ -118,11 +203,5 @@ class YamlSchool
     return false if hValue.key?(:status) && hValue[:status] != :active &&
                     !hQuery.key?(:status)
     true
-  end
-
-  def update_student(_sId, fields)
-    list = query_student(:id => Id)
-    list[0].merge(fields) if list.length == 1
-    save_data
   end
 end

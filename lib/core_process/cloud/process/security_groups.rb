@@ -49,7 +49,7 @@ class CloudProcess
         config[:addr_map]   = '0.0.0.0/0'
 
         # object.Create(:rule)
-        Create(:rule)
+        process_create(:rule)
       end
     end
     security_group

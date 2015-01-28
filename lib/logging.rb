@@ -23,51 +23,6 @@ require 'ansi'
 require 'ansi/logger'
 
 #
-# PrcLib module
-#
-# PrcLib Implements a Logging class based on logger.
-#
-# For details about this class capabilities, see PrcLib::Logging
-#
-#    # To use the Prc::Logging system, do the following:
-#    require 'PrcLib'
-#
-#    # To configure logging system:
-#    PrcLib.app_name = 'config/app' # Define application data path as
-#                                   # ~/.<app_name>.
-#                                   #  Ex: 'config/app' will use ~/.config/app
-#    PrcLib.log_file = 'app.log'    # Relative path to the log file name
-#                                   # stored in the Application data path.
-#                                   # Here, ~/.config/app/app.log
-#    PrcLib.level = Logger::FATAL   # Define printout debug level. Can be any
-#                                   # Logger predefined value.
-#
-#    # To log some information:
-#    PrcLib.debug('My debug message')
-#    PrcLib.info('My info message')
-#    PrcLib.warning('my warning')
-#    PrcLib.error('my error')
-#    PrcLib.fatal(2, "Fatal error, with return code = 2)
-#    PrcLib.message('Only printout message')
-#
-#    # You can printout some instant message to the terminal, not logged.
-#    # This is useful before any action that will take time to be executed.
-#    # It is inform the end user that something is still running, which means
-#    # the application is not frozen
-#    PrcLib.state("Running a long task")
-#    # The next message will replace the previous state message.
-#    sleep(10)
-#    PrcLib.info("The long task has been executed successfully.")
-#
-#    # You can change the logger level with PrcLib.level
-#    PrcLib.level = Logger::DEBUG
-#
-#    # You can just print high level message (print without \n) if PrcLib.level
-# is not DEBUG or INFO.
-#    PrcLib.high_level_msg("Print a message, not logged, if level is not DEBUG
-# or INFO")
-#
-# Enjoy!
 module PrcLib
   # Class used to create 2 logger object, in order to keep track of error in a
   # log file and change log output to OUTPUT on needs (option flags).
@@ -86,7 +41,45 @@ module PrcLib
   # set.
   # In several cases, messages are printed out, but not stored in the log file.
   #
-  # See Logging functions for details.
+  # To use the Prc::Logging system, do the following:
+  #    require 'PrcLib'
+  #
+  #    # To configure logging system:
+  #    PrcLib.app_name = 'config/app' # Define application data path as
+  #                                   # ~/.<app_name>.
+  #                                   #  Ex: 'config/app' will use ~/.config/app
+  #    PrcLib.log_file = 'app.log'    # Relative path to the log file name
+  #                                   # stored in the Application data path.
+  #                                   # Here, ~/.config/app/app.log
+  #    PrcLib.level = Logger::FATAL   # Define printout debug level. Can be any
+  #                                   # Logger predefined value.
+  #
+  #    # To log some information:
+  #    PrcLib.debug('My %s debug message', 'test')
+  #    PrcLib.info('My info message')
+  #    PrcLib.warning('my warning')
+  #    PrcLib.error('my error')
+  #    PrcLib.fatal(2, "Fatal error, with return code = 2)
+  #    PrcLib.message('Only printout message')
+  #
+  #    # You can printout some instant message to the terminal, not logged.
+  #    # This is useful before any action that will take time to be executed.
+  #    # It is inform the end user that something is still running, which means
+  #    # the application is not frozen
+  #    PrcLib.state("Running a long task")
+  #    # The next message will replace the previous state message.
+  #    sleep(10)
+  #    PrcLib.info("The long task has been executed successfully.")
+  #
+  #    # You can change the logger level with PrcLib.level
+  #    PrcLib.level = Logger::DEBUG
+  #
+  #    # You can just print high level message (print without \n)
+  #    # if PrcLib.level is not DEBUG or INFO.
+  #    PrcLib.high_level_msg("Print a message, not logged, if level is not DEBUG
+  #    # or INFO")
+  #
+  # For details, see Logging functions
   #
   class Logging
     attr_reader :level
@@ -155,7 +148,7 @@ module PrcLib
     # Log to STDOUT and Log file and ERROR class message
     def error(message)
       @out_logger.error(message + ANSI.clear_eol)
-      @file_logger.error(message)
+      @file_logger.error(message + "\n" + caller.join("\n"))
     end
 
     # Log to STDOUT and Log file and FATAL class message
@@ -250,7 +243,7 @@ module PrcLib
 
   # Internal heap management to help controller developper to identify issue.
   def dcl_fail(msg, *p)
-    msg = "Declaration error:\n%s"
+    msg = "Declaration error:\n" + msg
     msg += format("\nSee at %s",
                   PrcLib.model.heap[0]) if PrcLib.model.heap.is_a?(Array)
     runtime_fail(msg, *p)

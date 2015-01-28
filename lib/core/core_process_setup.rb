@@ -119,7 +119,7 @@ module Lorj
     #
     def process_setup(sObjectType, sAccountName = nil)
       unless PrcLib.model.meta_obj.rh_exist?(sObjectType)
-        runtime_fail "Setup: '%s' not a valid object type."
+        PrcLib.runtime_fail "Setup: '%s' not a valid object type."
       end
 
       setup_steps = _setup_load
@@ -156,11 +156,11 @@ module Lorj
     def _setup_data_insert(setup_steps, data_to_add, step, order_index)
       level_index = 0
 
-      _setup_data_after(data_to_add).each do |sAfterKey |
+      _setup_data_after(data_to_add).each do |sAfterKey|
         setup_steps.each_index do |iStepToCheck|
           order_array = setup_steps[iStepToCheck][:order]
 
-          order_array.each_index do | iLevelToCheck |
+          order_array.each_index do |iLevelToCheck|
             data_to_ask = order_array[iLevelToCheck]
             order_to_check = data_to_ask.index(sAfterKey)
 
@@ -191,7 +191,7 @@ module Lorj
     # * *Raises* :
     #
     def _setup_data_after(data_to_check)
-      meta = _get_meta_data(data_to_check)
+      meta = _get_meta_data_auto(data_to_check)
       return [] unless meta.rh_exist?(:after)
 
       datas_after = meta[:after]
@@ -206,7 +206,7 @@ module Lorj
     #   - +order_array+   : Array of data classified per level/order
     #   - +data_to_check+ : data to check
     def _setup_attr_already_added?(order_array, data_to_check)
-      order_array.each_index do | order_index |
+      order_array.each_index do |order_index|
         attributes = order_array[order_index]
         return true unless attributes.index(data_to_check).nil?
       end
@@ -240,7 +240,7 @@ module Lorj
         return false
       end
 
-      meta = _get_meta_data(attr_name)
+      meta = _get_meta_data_auto(attr_name)
       return false unless meta.is_a?(Hash)
 
       ask_step = 0
@@ -250,8 +250,8 @@ module Lorj
       order_array = setup_steps[ask_step][:order]
 
       unless meta[:account].is_a?(TrueClass)
-        Lorj.debug(2, "'%s' used by '%s' won't be asked during setup."\
-                   ' :account = true not set.', attr_name, object_type)
+        Lorj.debug(2, "'%s' won't be asked during setup."\
+                   ' :account = true not set.', attr_name)
         return false
       end
 
@@ -263,7 +263,7 @@ module Lorj
       level = _setup_attr_add(order_array[level_index], attr_name, meta,
                               level_index)
       Lorj.debug(3, "S%s/L%s/%s: '%s' added in setup list. ",
-                 ask_step, level, order_index, attr_name)
+                 ask_step, level, level_index, attr_name)
 
       true
     end
@@ -300,12 +300,12 @@ module Lorj
         order_index = meta[:ask_sort]
         _setup_attr_add_at(level_array, attr_name, order_index)
         Lorj.debug(3, "S%s/L%s/O%s: '%s' added in setup list. ",
-                   ask_step, level_index, order_index, attr_name)
+                   meta[:ask_step], level_index, order_index, attr_name)
         "O#{level_index}"
       else
         level_array << attr_name
         Lorj.debug(3, "S%s/L%s/Last: '%s' added in setup list.",
-                   ask_step, level_index, attr_name)
+                   meta[:ask_step], level_index, attr_name)
         'Last'
       end
     end

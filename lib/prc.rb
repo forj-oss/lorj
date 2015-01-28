@@ -15,26 +15,96 @@
 require 'fileutils'
 require 'logger'
 
-# General lorj library. Used as library data configuration
+#
+# PrcLib module
+#
+# This module helps to configure the lorj library.
+# It implements also a Logging class based on logger.
+#
+# For details about this class capabilities, see PrcLib::Logging
+#
 # List of possible library settings:
-# PrcLib.log          : PrcLib::Logging object. Used internally by PrcLib
-#                       logging system.
-#                       This object is automatically created as soon as
-#                       a message is printed out
-# PrcLib.core_level   : lorj debug level. from 0 to 5.
-# PrcLib.pdata_path   : Define the private data local directory. Usually used
-#                       for any private keys, passwords, etc...
-#                       By default: ~/.config/<app_name>
-# PrcLib.data_path    : Define the data local directory.
-#                       By default: ~/.<app_name>
-# PrcLib.app_name     : Define the application name. By default 'lorj'
-# PrcLib.app_defaults : Used by Lorj::Config to load application default data.
-#                       By default nil.
-# PrcLib.log_file     : Define the log file name used.
-#                       By default, defined as ~/.<app_name>/<app_name>.log
-# PrcLib.level        : logger level used.
-#                       Can be set at runtime, with PrcLib.set_level
-# PrcLib.model        : Model loaded.
+# - PrcLib.log
+#
+#   PrcLib::Logging object. Used internally by PrcLib logging system.
+#
+#   This object is automatically created as soon as a message is printed out
+# - PrcLib.core_level
+#
+#   Initialize lorj debug level. from 0 to 5.
+#
+#   ex:
+#
+#    PrcLib.core_level = 4
+# - PrcLib.pdata_path
+#
+#   Define the private data local directory. Usually used
+#   for any private keys, passwords, etc...
+#
+#   By default: ~/.config/<app_name>
+#
+#   ex:
+#
+#    PrcLib.pdata_path = File.join('~', '.private_myapp')
+# - PrcLib.data_path
+#
+#   Define the data local directory.
+#
+#   By default: ~/.<app_name>
+#
+#   ex:
+#
+#    PrcLib.data_path = File.join('/etc', 'myapp')
+#
+# - PrcLib.app_name
+#
+#   Define the application name. By default 'lorj'.
+#   By default, this setting configure PrcLib.data_path and PrcLib.pdata_path
+#   automatically, except if you set it before.
+#
+#   ex:
+#
+#    PrcLib.app_name = 'myapp'
+# - PrcLib.app_defaults
+#
+#   Used by Lorj::Config to identify application defaults and your application
+#   data model data.
+#
+#   By default nil.
+#   Ex:
+#
+#    puts PrcLib.app_defaults[:data] # To get value of the predefined :data key.
+# - PrcLib.log_file
+#
+#   Define the log file name used.
+#
+#   By default, defined as ~/.<app_name>/<app_name>.log
+# - PrcLib.level
+#   logger level used. It can be updated at runtime.
+#
+#   Ex:
+#
+#    PrcLib.level = Logger::FATAL
+# - PrcLib.model
+#
+#   Model loaded.
+#
+# - PrcLib.log_file
+#
+#   Initialize a log file name instead of default one.
+#
+#   Ex:
+#
+#    PrcLib.log_file = "mylog.file.log"
+#
+# - PrcLib.controller_path
+#
+#   Provides the default controller path.
+#
+# - PrcLib.process_path
+#
+#   Provides the default process path.
+#
 module PrcLib
   # Check if dir exists and is fully accessible (rwx)
   def self.dir_exists?(path)
@@ -71,8 +141,7 @@ module PrcLib
   # Define module data for lorj library configuration
   class << self
     attr_accessor :log, :core_level
-    attr_reader :pdata_path, :data_path, :app_defaults, :log_file, :level,
-                :model
+    attr_reader :pdata_path, :data_path, :app_defaults, :log_file, :level
   end
 
   module_function
@@ -83,7 +152,7 @@ module PrcLib
   end
 
   def app_name
-    @app_name = 'Lorj' unless @app_name
+    self.app_name = 'Lorj' unless @app_name
     @app_name
   end
 
@@ -109,10 +178,14 @@ module PrcLib
     PrcLib.ensure_dir_exists(@data_path)
   end
 
-  # TODO: Low. Be able to support multiple model.
   def app_name=(v)
     @app_name = v unless @app_name
-    @model = Lorj::Model.new
+  end
+
+  # TODO: Low. Be able to support multiple model.
+  def model
+    @model = Lorj::Model.new if @model.nil?
+    @model
   end
 
   # TODO: Support for several defaults, depending on controllers loaded.

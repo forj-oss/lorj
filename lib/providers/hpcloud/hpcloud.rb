@@ -74,12 +74,12 @@ class Hpcloud
   obj_needs :data, :addr_map,   :mapping => :remote_ip_prefix
   obj_needs :data, :sg_id,      :mapping => :security_group_id
 
-  get_attr_mapping :dir,      :direction
-  get_attr_mapping :proto,    :protocol
-  get_attr_mapping :port_min, :port_range_min
-  get_attr_mapping :port_max, :port_range_max
-  get_attr_mapping :addr_map, :remote_ip_prefix
-  get_attr_mapping :sg_id,    :security_group_id
+  def_attr_mapping :dir,      :direction
+  def_attr_mapping :proto,    :protocol
+  def_attr_mapping :port_min, :port_range_min
+  def_attr_mapping :port_max, :port_range_max
+  def_attr_mapping :addr_map, :remote_ip_prefix
+  def_attr_mapping :sg_id,    :security_group_id
 
   define_obj :keypairs
 
@@ -95,11 +95,11 @@ class Hpcloud
   obj_needs :data,   :external_gateway_id, :mapping => [:external_gateway_info,
                                                         'network_id']
 
-  get_attr_mapping :gateway_network_id, [:external_gateway_info, 'network_id']
+  def_attr_mapping :gateway_network_id, [:external_gateway_info, 'network_id']
 
   # ************************************ SERVER Object
   define_obj :server
-  get_attr_mapping :status, :state
+  def_attr_mapping :status, :state
   attr_value_mapping :create, 'BUILD'
   attr_value_mapping :boot,   :boot
   attr_value_mapping :active, 'ACTIVE'
@@ -108,12 +108,12 @@ class Hpcloud
   define_obj :server_log
 
   # Excon::Response object type
-  get_attr_mapping :output,  'output'
+  def_attr_mapping :output,  'output'
 
   # ************************************* Public IP Object
   define_obj :public_ip
-  get_attr_mapping :server_id, :instance_id
-  get_attr_mapping :public_ip, :ip
+  def_attr_mapping :server_id, :instance_id
+  def_attr_mapping :public_ip, :ip
 
   # defines setup Cloud data (:account => true for setup)
   define_data(:account_id,
@@ -368,7 +368,7 @@ class HpcloudController # rubocop: disable Metrics/ClassLength
   def query_each(oFogObject)
     case oFogObject.class.to_s
     when 'Fog::HP::Network::Networks'
-      oFogObject.each { | value | yield(value) }
+      oFogObject.each { |value| yield(value) }
     else
       controller_error "'%s' is not a valid list for 'each'",
                        oFogObject.class
@@ -439,7 +439,7 @@ class HpcloudController # rubocop: disable Metrics/ClassLength
       # not know why...
       search_services = services.rh_get(:service_catalog)
       service = nil
-      service_to_find.each do | sServiceElem |
+      service_to_find.each do |sServiceElem|
         if search_services.key?(sServiceElem)
           service = sServiceElem
           break
@@ -450,7 +450,7 @@ class HpcloudController # rubocop: disable Metrics/ClassLength
                        service_to_find if service.nil?
       result = services.rh_get(:service_catalog, service).keys
       result.delete('name')
-      result.each_index do | iIndex |
+      result.each_index do |iIndex|
         result[iIndex] = result[iIndex].to_s if result[iIndex].is_a?(Symbol)
       end
       return result

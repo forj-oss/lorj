@@ -52,7 +52,10 @@ module Lorj
         }
 
         Lorj.debug(2, "Writing '%s' key file", key_file)
-        File.open(key_file, 'w') do |out|
+        PrcLib.ensure_dir_exists(
+          PrcLib.pdata_path
+        ) unless PrcLib.dir_exists?(PrcLib.pdata_path)
+        File.open(key_file, 'w+') do |out|
           out.write(Base64.encode64(entr.to_yaml))
         end
       else
@@ -81,16 +84,15 @@ module Lorj
       value_hidden = ''
       begin
         value_hidden = '*' * Encryptor.decrypt(
-           :value => Base64.strict_decode64(enc_value),
-           :key => entr[:key],
-           :iv => Base64.strict_decode64(entr[:iv]),
-           :salt => entr[:salt]
+          :value => Base64.strict_decode64(enc_value),
+          :key => entr[:key],
+          :iv => Base64.strict_decode64(entr[:iv]),
+          :salt => entr[:salt]
         ).length
       rescue
-        Lorj.error('Unable to decrypt your %s. You will need to re-enter it.',
-                   sDesc)
+        PrcLib.error('Unable to decrypt your %s. You will need to re-enter it.',
+                     sDesc)
       else
-        value_hidden = format('[%s]', value_hidden)
         PrcLib.message("'%s' is already set. If you want to keep it,"\
                        ' just press Enter', sDesc)
       end
@@ -119,7 +121,7 @@ module Lorj
       value_free = ''
       while value_free == ''
         # ask for encrypted data.
-        value_free = ask(format('Enter %s: [%s]', sDesc, value_hidden)) do |q|
+        value_free = ask(format('Enter %s: |%s|', sDesc, value_hidden)) do |q|
           q.echo = '*'
         end
         if value_free == '' && enc_value
@@ -134,12 +136,12 @@ module Lorj
         end
       end
       Base64.strict_encode64(
-         Encryptor.encrypt(
-            :value => value_free,
-            :key => entr[:key],
-            :iv => Base64.strict_decode64(entr[:iv]),
-            :salt => entr[:salt]
-         )
+        Encryptor.encrypt(
+          :value => value_free,
+          :key => entr[:key],
+          :iv => Base64.strict_decode64(entr[:iv]),
+          :salt => entr[:salt]
+        )
       )
     end
   end

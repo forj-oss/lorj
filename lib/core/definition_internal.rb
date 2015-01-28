@@ -34,6 +34,16 @@ module Lorj
       meta_default.merge!(meta)
     end
 
+    def _get_meta_data_auto(key)
+      return nil if key.nil?
+      Lorj.defaults.get_meta_auto(key)
+    end
+
+    def _get_account_section(key)
+      return nil if key.nil?
+      Lorj.defaults.get_meta_section(key)
+    end
+
     # internal runtime function for process call
     # Get the controller result and map controller object data to
     # lorj object attributes, using controller mapping function.
@@ -67,7 +77,7 @@ module Lorj
         value = _call_controller_map(map_handler, oControlerObject,
                                      map_obj.tree)
         value = _mapping_data(object_type, key_obj, object_opts, value)
-        attr_value.rh_set(value, key_path.tree)
+        attr_value.rh_set(value, key_obj.tree)
       end
       attr_value
     end
@@ -152,15 +162,15 @@ module Lorj
     def _mapping_data(object_type, key_obj, object_opts, value)
       value_mapping = object_opts.rh_get(:value_mapping, key_obj.fpath)
       if value_mapping && !value.nil?
-        value_mapping.each do | map_key, map_value |
+        value_mapping.each do |map_key, map_value|
           next unless value == map_value
           Lorj.debug(5, "Object '%s' value mapped '%s': '%s' => '%s'",
                      object_type, key_obj.tree,
                      value, map_value)
           return map_key
         end
-        runtime_fail("'%s.%s': No controller value mapping for '%s'.",
-                     object_type, key_obj.tree, value)
+        PrcLib.runtime_fail("'%s.%s': No controller value mapping for '%s'.",
+                            object_type, key_obj.tree, value)
       end
 
       Lorj.debug(5, "Object '%s' value '%s' extracted: '%s'",
@@ -198,9 +208,9 @@ module Lorj
         object_missing << object_type
       end
 
-      attr_paths.each do | _attr_path, attr_options|
+      attr_paths.each do |attr_path, attr_options|
         next if attr_options[:for] && !attr_options[:for].include?(sEventType)
-        _check_required_attr(object_missing, attr_name, attr_options, fname)
+        _check_required_attr(object_missing, attr_path, attr_options, fname)
       end
       object_missing
     end
@@ -212,16 +222,16 @@ module Lorj
     #
     # *parameters*:
     #   - +object_missing+ : Array of missing object for process caller.
-    #   - +attr_name+      : attribute/data name
-    #   - +attr_options+   : attribute options
-    #   - +fname+          : caller function
+    #   - +attr_path+      : String. Attribute/data path (See KeyPath.fpath)
+    #   - +attr_options+   : Hash. Attribute options
+    #   - +fname+          : String. Caller function
     #
     # *return*:
     #
     # *raise*:
     # - runtime error if required data is not set. (empty or nil)
     #
-    def _check_required_attr(object_missing, attr_name, attr_options, fname)
+    def _check_required_attr(object_missing, attr_path, attr_options, fname)
       attr_obj = KeyPath.new(attr_path)
 
       attr_name = attr_obj.key

@@ -38,7 +38,9 @@ module Lorj
     # creation.
     #
     # * *Returns* :
-    #   - +Object+ : Lorj::Data object of type +ObjectType+ created.
+    # - +Object+ : Lorj::Data object of type +ObjectType+ created.
+    # OR
+    # - Lorj::Data empty.
     #
     # * *Raises* :
     #   - Warning if the create_e process handler did not return any data. (nil)
@@ -49,65 +51,53 @@ module Lorj
     #     data. (nil) - Loop detection.
     #   - Error if the create_e process handler raise an error.
     #
-    def process_create(sObjectType, hConfig = {})
-      #  if hConfig.length > 0
-      #  # cleanup runtime data to avoid conflicts between multiple calls
-      #  valid_keys = _identify_data(sObjectType, :create_e)
-      #  valid_keys.each do | sKey|
-      #  value = hConfig.rh_get(sKey)
-      #  @config[sKey] = value if !@config.exist?(sKey) ||
-      #  @config.exist?(sKey) == 'runtime'
-      #  hConfig.rh_set(nil, sKey)
-      #  end
-      #  if hConfig.length > 0
-      #  PrcLib.warning("'%s' has been passed but not declared to '%s'"\
-      #  ' object. Those are ignored until you add it in the'\
-      #  " model definition of '%s'",
-      #  hConfig.keys, sObjectType, sObjectType)
-      #  end
-      #  end
+    def process_create(object_type, hConfig = nil)
+      return nil unless object_type
 
-      return nil unless sObjectType
+      _add_instant_config(hConfig)
 
-      unless PrcLib.model.meta_obj.rh_exist?(sObjectType)
-        runtime_fail "%s.Create: '%s' is not a known object type.",
-                     self.class, sObjectType
+      unless PrcLib.model.meta_obj.rh_exist?(object_type)
+        PrcLib.runtime_fail "%s.%s: '%s' is not a known object type.",
+                            self.class, __callee__, object_type
       end
-      proc = PrcLib.model.meta_obj.rh_get(sObjectType, :lambdas, :create_e)
+      proc = PrcLib.model.meta_obj.rh_get(object_type, :lambdas, :create_e)
 
       # Check required parameters
       _process_load_dependencies(object_type, proc, :create_e, __callee__)
 
       # Context: Default object used
-      @runtime_context[:oCurrentObj] = sObjectType
+      @runtime_context[:oCurrentObj] = object_type
 
       if proc.nil?
         # This object is a meta object, without any data.
         # Used to build other kind of objects.
         object = Lorj::Data.new
-        object.set({}, sObjectType) {}
+        object.set({}, object_type) {}
       else
         # build Function params to pass to the event handler.
-        params = _get_object_params(sObjectType, :create_e, proc, hConfig)
-        Lorj.debug(2, "Create Object '%s' - Running '%s'", sObjectType, proc)
+        params = _get_process_params(object_type, :create_e, proc)
+        Lorj.debug(2, "Create Object '%s' - Running '%s'", object_type, proc)
 
         # Call the process function.
         # At some point, the process will call the controller, via the framework
         # This controller call via the framework has the role to
         # create an ObjectData well formatted, with _return_map function
         # See Definition.connect/create/update/query/get functions (lowercase)
-        object = @process.method(proc).call(sObjectType, params)
+        object = @process.method(proc).call(object_type, params)
         # return usually is the main object that the process called should
         # provide.
         # Save Object if the object has been created by the process, without
         # controller
       end
 
+      _remove_instant_config(hConfig)
+
       if object.nil?
         PrcLib.warning("'%s' has returned no data for object Lorj::Data '%s'!",
-                       proc, sObjectType)
+                       proc, object_type)
+        Lorj::Data.new
       else
-        query_cleanup(sObjectType)
+        query_cleanup(object_type)
         @object_data.add(object)
       end
     end
@@ -133,12 +123,14 @@ module Lorj
     #     data. (nil) - Loop detection.
     #   - Error if the query_e process handler raise an error.
     #
-    def process_delete(object_type, hConfig = {})
+    def process_delete(object_type, hConfig = nil)
       return nil unless object_type
 
+      _add_instant_config(hConfig)
+
       unless PrcLib.model.meta_obj.rh_exist?(object_type)
-        runtime_fail "%s.Delete: '%s' is not a known object type.",
-                     self.class, object_type
+        PrcLib.runtime_fail "%s.%s: '%s' is not a known object type.",
+                            self.class, __callee__, object_type
       end
 
       proc = PrcLib.model.meta_obj.rh_get(object_type, :lambdas, :delete_e)
@@ -152,10 +144,12 @@ module Lorj
       @runtime_context[:oCurrentObj] = object_type
 
       # build Function params to pass to the event handler.
-      params = _get_object_params(object_type, :delete_e, proc, hConfig)
+      params = _get_process_params(object_type, :delete_e, proc)
 
       state = @process.method(proc).call(object_type, params)
       # return usually is the main object that the process called should provide
+
+      _remove_instant_config(hConfig)
 
       @object_data.delete(object_type) if state
     end
@@ -204,15 +198,20 @@ module Lorj
     #
     # * *Returns* :
     #   Lorj::Data of type :list
+    # OR
+    # - Lorj::Data empty.
     #
     # * *Raises* :
     #
     #
-    def process_query(object_type, hQuery, hConfig = {})
+    def process_query(object_type, hQuery, hConfig = nil)
       return nil unless object_type
+
+      _add_instant_config(hConfig)
+
       unless PrcLib.model.meta_obj.rh_exist?(object_type)
-        runtime_fail "%s.Get: '%s' is not a known object type.",
-                     self.class, object_type
+        PrcLib.runtime_fail "%s.%s: '%s' is not a known object type.",
+                            self.class, __callee__, object_type
       end
 
       # Check if we can re-use a previous query
@@ -230,7 +229,7 @@ module Lorj
       @runtime_context[:oCurrentObj] = object_type
 
       # build Function params to pass to the Process Event handler.
-      params = _get_object_params(object_type, :query_e, proc, hConfig)
+      params = _get_process_params(object_type, :query_e, proc)
 
       # Call the process function.
       # At some point, the process will call the controller, via the framework.
@@ -238,10 +237,14 @@ module Lorj
       # create an ObjectData well formatted, with _return_map function
       # See Definition.connect/create/update/query/get functions (lowercase)
       object = @process.method(proc).call(object_type, hQuery, params)
+
+      _remove_instant_config(hConfig)
+
       # return usually is the main object that the process called should provide
       if object.nil?
         PrcLib.warning("'%s' returned no collection of objects Lorj::Data "\
                        "for '%s'", proc, object_type)
+        Lorj::Data.new
       else
         # Save Object if the object has been created by the process, without
         # controller
@@ -274,7 +277,9 @@ module Lorj
     #                    getting.
     #
     # * *Returns* :
-    #   Lorj::Data of type :object
+    # - Lorj::Data of type :object
+    # OR
+    # - Lorj::Data empty.
     #
     # * *Raises* :
     #   - Warning if the Config data passed are not required by the meta object
@@ -284,11 +289,14 @@ module Lorj
     #     data. (nil) - Loop detection.
     #   - Error if the get_e process handler raise an error.
     #
-    def process_get(object_type, sUniqId, hConfig = {})
+    def process_get(object_type, sUniqId, hConfig = nil)
       return nil unless object_type
+
+      _add_instant_config(hConfig)
+
       unless PrcLib.model.meta_obj.rh_exist?(object_type)
-        runtime_fail "$s.Get: '%s' is not a known object type.",
-                     self.class, object_type
+        PrcLib.runtime_fail "$s.: '%s' is not a known object type.",
+                            self.class, __callee__, object_type
       end
 
       proc = PrcLib.model.meta_obj.rh_get(object_type, :lambdas, :get_e)
@@ -302,7 +310,7 @@ module Lorj
       @runtime_context[:oCurrentObj] = object_type
 
       # build Function params to pass to the Process Event handler.
-      params = _get_object_params(object_type, :get_e, proc, hConfig)
+      params = _get_process_params(object_type, :get_e, proc)
 
       # Call the process function.
       # At some point, the process will call the controller, via the framework.
@@ -312,9 +320,15 @@ module Lorj
       object = @process.method(proc).call(object_type, sUniqId, params)
       # return usually is the main object that the process called should provide
 
-      # Save Object if the object has been created by the process, without
-      # controller
-      @object_data.add(object) unless object.nil?
+      _remove_instant_config(hConfig)
+
+      if object.nil?
+        PrcLib.warning("'%s' has returned no data for object Lorj::Data '%s'!",
+                       proc, object_type)
+        Lorj::Data.new
+      else
+        @object_data.add(object)
+      end
     end
 
     # Function to execute a update process. This function returns a Lorj::Data
@@ -326,7 +340,9 @@ module Lorj
     # updating.
     #
     # * *Returns* :
-    #   Lorj::Data of type :object
+    # - Lorj::Data of type :object
+    # OR
+    # - Lorj::Data empty.
     #
     # * *Raises* :
     #   - Warning if the Config data passed are not required by the meta object
@@ -336,12 +352,14 @@ module Lorj
     #     data. (nil) - Loop detection.
     #   - Error if the get_e process handler raise an error.
     #
-    def process_update(object_type, hConfig = {})
+    def process_update(object_type, hConfig = nil)
       return nil unless object_type
 
+      _add_instant_config(hConfig)
+
       unless PrcLib.model.meta_obj.rh_exist?(object_type)
-        runtime_fail "$s.Update: '%s' is not a known object type.",
-                     self.class, object_type
+        PrcLib.runtime_fail "$s.%s: '%s' is not a known object type.",
+                            self.class, __callee__, object_type
       end
 
       proc = PrcLib.model.meta_obj.rh_get(object_type, :lambdas, :update_e)
@@ -354,14 +372,41 @@ module Lorj
       @runtime_context[:oCurrentObj] = object_type
 
       # build Function params to pass to the event handler.
-      params = _get_object_params(object_type, :update_e, proc, hConfig)
+      params = _get_process_params(object_type, :update_e, proc)
 
       object = @process.method(proc).call(object_type, params)
       # return usually is the main object that the process called should provide
 
-      # Save Object if the object has been created by the process, without
-      # controller
-      @object_data.add(object) unless object.nil?
+      _remove_instant_config(hConfig)
+
+      if object.nil?
+        PrcLib.warning("'%s' has returned no data for object Lorj::Data '%s'!",
+                       proc, object_type)
+        Lorj::Data.new
+      else
+        @object_data.add(object)
+      end
+    end
+  end
+
+  # Adding private process core functions.
+  class BaseDefinition
+    private
+
+    def _add_instant_config(hConfig)
+      return unless hConfig.is_a?(Hash)
+
+      config = PRC::BaseConfig.new hConfig
+      options = { :name => hConfig.object_id.to_s, :config => config,
+                  :set => false }
+
+      @config.layer_add PRC::CoreConfig.define_layer(options)
+    end
+
+    def _remove_instant_config(hConfig)
+      return unless hConfig.is_a?(Hash)
+
+      @config.layer_remove :name => hConfig.object_id.to_s
     end
 
     def _process_load_dependencies(object_type, proc, handler_name,
@@ -378,13 +423,13 @@ module Lorj
         end
 
         unless process_create(elem)
-          runtime_fail "Unable to create Object '%s'", elem
+          PrcLib.runtime_fail "Unable to create Object '%s'", elem
         end
 
         missing_obj = _check_required(object_type, handler_name, proc).reverse
-        runtime_fail "loop detection: '%s' is required but"\
+        PrcLib.runtime_fail "loop detection: '%s' is required but"\
                      " #{function_name}(%s) did not loaded it.",
-                     elem, elem if missing_obj.include?(elem)
+                            elem, elem if missing_obj.include?(elem)
       end
     end
   end

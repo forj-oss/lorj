@@ -106,7 +106,7 @@ module Lorj
       if %r{[^\\/]?/[^/]} =~ sKeyPath || /:[^:\/]/ =~ sKeyPath
         # keypath to interpret
         res = sKeyPath.split('/')
-        res.each_index do | iIndex |
+        res.each_index do |iIndex|
           next unless res[iIndex].is_a?(String)
           res[iIndex] = res[iIndex][1..-1].to_sym if res[iIndex][0] == ':'
         end

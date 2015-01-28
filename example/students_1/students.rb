@@ -15,14 +15,20 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+if ENV['BYEBUG']
+  require 'byebug'
+  lib_path = File.expand_path(File.join(app_path, '..', '..', 'lib'))
+  $LOAD_PATH << lib_path
+end
+
 app_path = File.dirname(__FILE__)
 
 require 'lorj'
 
 # If you want to see what is happening in the framework, uncomment debug
 # settings.
-# PrcLib.level = Logger::DEBUG # Printed out to your console.
-# PrcLib.core_level = 3 # framework debug levels.
+#  PrcLib.level = Logger::DEBUG # Printed out to your console.
+#  PrcLib.core_level = 3 # framework debug levels.
 
 # Initialize the framework
 processes = [File.join(app_path, 'process', 'students.rb')]

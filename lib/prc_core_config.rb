@@ -212,15 +212,16 @@ module PRC
 
     def layers
       result = []
-      @config_layers.each { | layer | result << layer[:name] }
+      @config_layers.each { |layer| result << layer[:name] }
       result
     end
 
     def to_s
       data = "Configs list ordered:\n"
-      @config_layers.each do | layer |
+      @config_layers.each do |layer|
         data += format("---- Config : %s ----\noptions: ", layer[:name])
 
+        data += 'predefined, ' if layer[:init].is_a?(TrueClass)
         if layer[:set]
           data += 'data RW '
         else
@@ -333,7 +334,7 @@ module PRC
 
       return nil if keys.length == 0 || keys[0].nil? || config_layers[0].nil?
 
-      config_layers.each_index do | index |
+      config_layers.each_index do |index|
         config = @config_layers[index][:config]
 
         data_options = options.clone
@@ -381,7 +382,7 @@ module PRC
 
     def _do_where?(config_layers, keys, options, data_opts)
       layer_indexes = []
-      config_layers.each_index do | index |
+      config_layers.each_index do |index|
         config = config_layers[index][:config]
 
         data_options = options.clone
@@ -421,7 +422,7 @@ module PRC
 
       return nil if keys.length == 0 || keys[0].nil? || config_layers[0].nil?
 
-      config_layers.each_index do | layer_index |
+      config_layers.each_index do |layer_index|
         layer = config_layers[layer_index]
 
         data_options = options.clone
@@ -650,12 +651,88 @@ module PRC
       initialize_layers(config_layers)
     end
 
+    # This function add a config layer at runtime.
+    # The new layer added at runtime, can be removed at runtime
+    # with layer_remove
+    # The name MUST be different than other existing config layer names
+    #
+    # *Args*
+    # - +options+ : Hash data
+    #   - :name     : Required. Name of the layer to add
+    #   - :index    : Config position to use. 0 is the default. 0 is the first
+    #                 Config layer use by get.
+    #   - :config   : A Config instance of class type PRC::BaseConfig
+    #   - :set      : Boolean. True if is authorized to set a variable.
+    #   - :load     : Boolean. True if is authorized to load from a file.
+    #   - :save     : Boolean. True if is authorized to save to a file.
+    #   - :file_set : Boolean. True if is authorized to change the file name.
+    #
+    # *returns*
+    # - true if layer is added.
+    # OR
+    # - nil : if layer name already exist
+    def layer_add(options)
+      layer = CoreConfig.define_layer(options)
+
+      layer[:init] = false # Runtime layer
+
+      index = 0
+      index = options[:index] if options[:index].is_a?(Fixnum)
+      names = []
+      @config_layers.each { |alayer| names << alayer[:name] }
+
+      return nil if names.include?(layer[:name])
+      @config_layers.insert(index, layer)
+      true
+    end
+
+    # Function to remove a runtime layer.
+    # You cannot remove a predefined layer, created during CoreConfig
+    # instanciation.
+    # *Args*
+    # - +options+ : Hash data
+    #   - +:name+ : Name of the layer to remove.
+    #   - +:index+: Index of the layer to remove.
+    #
+    # At least, :name or :index is required.
+    # If both; :name and :index are set, :name is used.
+    # *return*
+    # - true if layer name is removed.
+    # OR
+    # - nil : if not found or invalid.
+    def layer_remove(options)
+      index = layer_index(options[:name])
+      index = options[:index] if index.nil?
+
+      return nil if index.nil?
+
+      layer = @config_layers[index]
+
+      return nil if layer.nil? || layer[:init]
+
+      @config_layers.delete_at(index)
+      true
+    end
+
+    # Function to define layer options.
+    # By default, :set is true and :config is attached to a new PRC::BaseConfig
+    # instance.
+    #
+    # Supported options:
+    #   - :config   : optional. See `Defining Config layer instance` for details
+    #   - :name     : required. String. Name of the config layer.
+    #                 Warning! unique name on layers is no tested.
+    #   - :set      : boolean. True if authorized. Default is True.
+    #   - :load     : boolean. True if authorized. Default is False.
+    #   - :save     : boolean. True if authorized. Default is False.
+    #   - :file_set : boolean. True if authorized to update a filename.
+    #                 Default is False.
     def self.define_layer(options = {})
       attributes = [:name, :config, :set, :load, :save, :file_set]
 
       layer = {}
 
-      attributes.each do | attribute |
+      attributes.each do |attribute|
         if options.key?(attribute)
           layer[attribute] = options[attribute]
         else
@@ -673,6 +750,48 @@ module PRC
       end
       layer
     end
+
+    # layer_indexes function
+    #
+    # * *Args*
+    # - +:name+ : layer to identify.
+    #
+    # * *Returns*
+    #   first index found or nil.
+    #
+    def layer_indexes(names)
+      names = [names] if names.is_a?(String)
+      return nil unless names.is_a?(Array)
+
+      layers = []
+
+      names.each do |name|
+        index = layer_index(name)
+        layers << index unless index.nil?
+      end
+      return layers if layers.length > 0
+      nil
+    end
+
+    # layer_index function
+    #
+    # * *Args*
+    # - +:name+ : layer to identify.
+    #
+    # * *Returns*
+    #   first index found or nil.
+    #
+    def layer_index(name)
+      return nil unless name.is_a?(String)
+      return nil if @config_layers.nil?
+
+      @config_layers.each_index do |index|
+        return index if @config_layers[index][:name] == name
+      end
+      nil
+    end
+
+    private
 
     # Function to initialize Config layers.
     #
@@ -705,7 +824,7 @@ module PRC
     def initialize_layers(config_layers = nil)
       @config_layers = []
 
-      config_layers.each do | layer |
+      config_layers.each do |layer|
         next unless layer.is_a?(Hash) && layer.key?(:config) &&
                     layer[:config].is_a?(BaseConfig)
         next unless layer[:name].is_a?(String)
@@ -714,53 +833,16 @@ module PRC
       @config_layers.reverse!
     end
 
+    # Function to initialize a predefined layer
+    # Used internally by initialize_layers.
     def initialize_layer(layer)
       newlayer = { :config => layer[:config], :name => layer[:name] }
       newlayer[:set] = layer[:set].boolean? ? layer[:set] : true
       newlayer[:load] = layer[:load].boolean? ? layer[:load] : false
       newlayer[:save] = layer[:save].boolean? ? layer[:save] : false
       newlayer[:file_set] = layer[:file_set].boolean? ? layer[:file_set] : false
+      newlayer[:init] = true
       newlayer
-    end
-
-    # layer_indexes function
-    #
-    # * *Args*
-    # - +:name+ : layer to identify.
-    #
-    # * *Returns*
-    #   first index found or nil.
-    #
-    def _layer_indexes(names)
-      names = [names] if names.is_a?(String)
-      return nil unless names.is_a?(Array)
-
-      layers = []
-
-      names.each do | name |
-        index = layer_index(name)
-        layers << index unless index.nil?
-      end
-      return layers if layers.length > 0
-      nil
-    end
-
-    # layer_index function
-    #
-    # * *Args*
-    # - +:name+ : layer to identify.
-    #
-    # * *Returns*
-    #   first index found or nil.
-    #
-    def layer_index(name)
-      return nil unless name.is_a?(String)
-      return nil if @config_layers.nil?
-
-      @config_layers.each_index do | index |
-        return index if @config_layers[index][:name] == name
-      end
-      nil
     end
 
     # Check and returns values of options required and optionnal.
@@ -781,12 +863,12 @@ module PRC
 
       result = [[], []]
 
-      required.each do | key |
+      required.each do |key|
         return nil unless options.key?(key)
         result[0] << options[key]
       end
 
-      optionnal.each { | key | result[1] << options[key] }
+      optionnal.each { |key| result[1] << options[key] }
 
       result
     end
@@ -837,7 +919,7 @@ module PRC
 
     # Setting indexes from names or indexes.
     def _set_indexes(result)
-      names_indexes = _layer_indexes(result[1][1])
+      names_indexes = layer_indexes(result[1][1])
       # replaced indexes by names indexes if exists.
       result[1][0] = names_indexes if names_indexes
       result[1].delete_at(1)
@@ -846,7 +928,7 @@ module PRC
     def _set_data_opts(result)
       data_opts = []
 
-      result[0][0].each_index do | layer_index |
+      result[0][0].each_index do |layer_index|
         data_options = result[1][0][layer_index] if result[1][0].is_a?(Array)
         data_options = {} unless data_options.is_a?(Hash)
         data_opts << data_options
@@ -863,7 +945,7 @@ module PRC
         config_layers = @config_layers
       else
         config_layers = []
-        result[1][0].each do | index |
+        result[1][0].each do |index|
           config_layers << @config_layers[index] if index.is_a?(Fixnum)
         end
         config_layers = @config_layers if config_layers.length == 0

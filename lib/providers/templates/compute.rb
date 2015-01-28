@@ -29,12 +29,12 @@ class Mycloud
     # obj_needs(:data, :<CloudDataKey},{:mapping => :<MyCloudKeyMapped>})
     # can be updated by removing the mapping => <Value>
     Fog::Compute.new(
-       :provider => :mycloud,
-       :user => @oForjAccount.get(:account_id),
-       :pwd => @oForjAccount.get(:account_key),
-       :auth_uri => @oForjAccount.get(:auth_uri),
-       :project => @oForjAccount.get(:tenant),
-       :compute_service => @oForjAccount.get(:compute)
+      :provider => :mycloud,
+      :user => @oForjAccount.get(:account_id),
+      :pwd => @oForjAccount.get(:account_key),
+      :auth_uri => @oForjAccount.get(:auth_uri),
+      :project => @oForjAccount.get(:tenant),
+      :compute_service => @oForjAccount.get(:compute)
        )
   end
 end

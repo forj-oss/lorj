@@ -42,7 +42,7 @@ class MockController
 
     array = @@data[sObjectType]
 
-    array.each do | value |
+    array.each do |value|
       fail if value.key?(result[:name])
     end
     array << result
@@ -78,9 +78,9 @@ class MockController
 
     result = []
 
-    @@data[sObjectType].each do | value |
+    @@data[sObjectType].each do |value|
       elem = value
-      sQuery.each do | query_key, query_value |
+      sQuery.each do |query_key, query_value|
         elem = nil if !value.key?(query_key) || value[query_key] != query_value
       end
       result << elem if elem

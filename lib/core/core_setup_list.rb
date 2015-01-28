@@ -43,23 +43,23 @@ module Lorj
       PrcLib.message("Loading #{obj_to_load}.")
 
       object = @object_data[obj_to_load, :ObjectData]
-      object = Create(obj_to_load) if object.nil?
+      object = process_create(obj_to_load) if object.nil?
       return nil if object.nil?
 
       params = ObjectData.new
       params.add(object)
       params << list_options[:query_params]
 
-      runtime_fail '%s: query_type => :controller_call '\
+      PrcLib.runtime_fail '%s: query_type => :controller_call '\
                    'requires missing :query_call declaration'\
                    ' (Controller function)',
-                   data if list_options[:query_call].nil?
+                          data if list_options[:query_call].nil?
 
       proc = list_options[:query_call]
       begin
         list = @controller.method(proc).call(obj_to_load, params)
       rescue => e
-        runtime_fail "Error during call of '%s':\n%s", proc, e.message
+        PrcLib.runtime_fail "Error during call of '%s':\n%s", proc, e.message
       end
       { :list => list, :default_value => nil }
     end
@@ -83,10 +83,10 @@ module Lorj
       query_hash = list_options[:query_params]
       query_hash = {} if query_hash.nil?
 
-      object_list = query(obj_to_load, query_hash)
+      object_list = process_query(obj_to_load, query_hash)
 
       list = []
-      object_list.each { | oElem | list << oElem[list_options[:value]] }
+      object_list.each { |oElem| list << oElem[list_options[:value]] }
 
       { :list => list.sort!, :default_value => nil }
     end
@@ -94,11 +94,11 @@ module Lorj
     def _setup_build_process_params(option_params, params)
       return if option_params.nil?
 
-      option_params.each do | key, value |
+      option_params.each do |key, value|
         match_res = value.match(/lorj::config\[(.*)\]/)
         if match_res
           extract = match_res[1].split(', ')
-          extract.map! { | v | v[1..-1].to_sym if v[0] == ':' }
+          extract.map! { |v| v[1..-1].to_sym if v[0] == ':' }
           params << { key => config[extract] }
         else
           params << { key => value }
@@ -120,10 +120,10 @@ module Lorj
     # * *Raises* :
     #
     def _setup_list_from_process_call(obj_to_load, list_options)
-      runtime_fail '%s: query_type => :process_call'\
+      PrcLib.runtime_fail '%s: query_type => :process_call'\
                    ' requires missing :query_call declaration'\
                    ' (Provider function)',
-                   data if list_options[:query_call].nil?
+                          data if list_options[:query_call].nil?
       proc = list_options[:query_call]
       obj_to_load = list_options[:object]
       PrcLib.debug(2, "Running process '#{proc}' on '#{obj_to_load}'.")
@@ -138,8 +138,8 @@ module Lorj
         proc_method = @process.method(proc)
         result = proc_method.call(obj_to_load, params)
       rescue => e
-        runtime_fail "Error during call of '%s':\n%s",
-                     proc, e.message
+        PrcLib.runtime_fail "Error during call of '%s':\n%s",
+                            proc, e.message
       end
 
       if result.is_a?(Hash)

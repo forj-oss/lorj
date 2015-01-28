@@ -25,6 +25,6 @@ lorj_objects = %w(common connection network subnetwork router
                   keypairs images flavor internet_network server public_ip
                   server_log internet_server)
 
-lorj_objects.each do | name |
+lorj_objects.each do |name|
   require File.join(cloud_path, 'cloud', 'process', name + '.rb')
 end

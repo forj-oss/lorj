@@ -63,7 +63,7 @@ class CloudProcess
 end
 
 # Define framework object on BaseDefinition
-class Lorj
+module Lorj
   # ************************************ SERVER Object
   # Identify the server to use/build on the network/...
   class BaseDefinition

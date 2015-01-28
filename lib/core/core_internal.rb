@@ -221,7 +221,7 @@ module Lorj
     def init_processes(model, processes)
       process_array = processes_as_array(processes)
 
-      process_array.each do | a_process |
+      process_array.each do |a_process|
         a_process = a_process.to_s if a_process.is_a?(Symbol)
         unless load_process(model, a_process)
           PrcLib.warning("Process '%s' not properly loaded.", a_process)
@@ -295,7 +295,7 @@ module Lorj
 
       match_found = the_process_class.scan(/_[a-z]/)
       if match_found
-        match_found.each { | str | the_process_class[str] = str[1].capitalize }
+        match_found.each { |str| the_process_class[str] = str[1].capitalize }
       end
 
       the_process_class

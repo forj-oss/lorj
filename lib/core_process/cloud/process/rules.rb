@@ -30,18 +30,19 @@ class CloudProcess
 
   # Process Query handler
   def forj_query_rule(sCloudObj, sQuery, hParams)
-    rule = '%s %s:%s - %s to %s', hParams[:dir], hParams[:rule_proto],
-           hParams[:port_min], hParams[:port_max],
-           hParams[:addr_map]
+    rule = format('%s %s:%s - %s to %s', hParams[:dir], hParams[:rule_proto],
+                  hParams[:port_min], hParams[:port_max],
+                  hParams[:addr_map])
     PrcLib.state("Searching for rule '%s'", rule)
     ssl_error_obj = SSLErrorMgt.new
     begin
       info = {
-        :items => [:dir, :rule_proto, :port_min, :port_max, :addr_map],
+        :items => [:dir, :proto, :port_min, :port_max, :addr_map],
         :items_form => '%s %s:%s - %s to %s'
       }
-      list = controller_query(sCloudObj, sQuery)
-      query_single(sCloudObj, list, sQuery, rule, info)
+      #  list = controller_query(sCloudObj, sQuery)
+      #  query_single(sCloudObj, list, sQuery, rule, info)
+      query_single(sCloudObj, sQuery, rule, info)
     rescue => e
       retry unless ssl_error_obj.error_detected(e.message, e.backtrace, e)
     end

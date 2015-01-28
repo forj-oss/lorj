@@ -20,7 +20,10 @@
 class CloudProcess
   def forj_get_or_create_subnetwork(sCloudObj, hParams)
     subnet = query_subnet_one(sCloudObj, hParams)
-    return nil if subnet.nil?
+    unless subnet.empty?
+      register(subnet)
+      return subnet
+    end
 
     # Create the subnet
     subnet = create_subnet(sCloudObj, hParams)
