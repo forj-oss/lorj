@@ -98,4 +98,8 @@ module HPCompute
   def self.delete_server(oComputeConnect, server)
     oComputeConnect.servers.get(server.id).destroy
   end
+
+  def self.get_image(oComputeConnect, oImageID)
+    oComputeConnect.images.get(oImageID)
+  end
 end

@@ -54,16 +54,31 @@ class CloudProcess
     rescue => e
       retry unless ssl_error_obj.error_detected(e.message, e.backtrace, e)
     end
+    add_ssh_user(images)
+    images
+  end
+
+  def add_ssh_user(images)
     images.each do |image|
       image[:ssh_user] = ssh_user(image[:name])
     end
-    images
   end
 
   def ssh_user(image_name)
     return 'fedora' if image_name =~ /fedora/i
     return 'centos' if image_name =~ /centos/i
     'ubuntu'
+  end
+
+  def forj_get_image(sCloudObj, sId, _hParams)
+    ssl_error_obj = SSLErrorMgt.new
+    begin
+      image = controller_get(sCloudObj, sId)
+    rescue => e
+      retry unless ssl_error_obj.error_detected(e.message, e.backtrace, e)
+    end
+    add_ssh_user([image])
+    image
   end
 end
 
@@ -75,8 +90,8 @@ module Lorj
     define_obj(:image,
 
                :create_e => :forj_get_or_create_image,
-               :query_e => :forj_query_image
-               #         :get_e      => :forj_get_image
+               :query_e => :forj_query_image,
+               :get_e => :forj_get_image
                #         :update_e   => :forj_update_image
                #         :delete_e   => :forj_delete_image
                )
