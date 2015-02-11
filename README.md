@@ -71,40 +71,40 @@ next, we will write 3 versions, which will introduce how to deal with process an
 * version 1:
     Writing your first 'do nothing' process, with no controller.
 
-    [Details is explained here](example/students_1/student_v1_md.html)
+    [Details is explained here](https://github.com/forj-oss/lorj/blob/master/example/students_1/student_v1.md)
 
 * version 2:
     Complete the process to have create/query/get and delete capability, with mock controller.
     The mock controller is basically a controller keeping data in memory.
 
-    [Details is explained here](example/students_2/student_v2_md.html)
+    [Details is explained here](https://github.com/forj-oss/lorj/blob/master/example/students_2/student_v2.md)
 
 * version 3:
      In this version, we will just create a controller, to replace mock.
 
-    [Details is explained here](example/students_3/student_v3_md.html)
+    [Details is explained here](https://github.com/forj-oss/lorj/blob/master/example/students_3/student_v3.md)
 
 * version 4:
      In this version, we are going to improve the process, to find way to simplify
      the previous code.
 
-    [Details is explained here](example/students_4/student_v4_md.html)
+    [Details is explained here](https://github.com/forj-oss/lorj/blob/master/example/students_4/student_v4.md)
 
 * version 5:
      Update the version 4 to fully implement the example of an yaml_student API.
      ie :
-     Reproducind what the main `examples/yaml_students/students.rb` is doing.<BR>
+     Reproducing what the main `examples/yaml_students/students.rb` is doing.<BR>
      The API is `examples/yaml_students/yaml_students.rb`
 
-    [Details is explained here](example/students_5/student_v5_md.html)
+    [Details is explained here](https://github.com/forj-oss/lorj/blob/master/example/students_5/student_v5.md)
 
 # What next?
 
-If you want to understand the concept, check [here](lib/concept_md.html)
+If you want to understand the concept, check [here](https://github.com/forj-oss/lorj/blob/master/lib/concept.md)
 
-If you want to get an overview of functionnalities per context, see [here](lib/overview_md.html)
+If you want to get an overview of functionnalities per context, see [here](https://github.com/forj-oss/lorj/blob/master/lib/overview.md)
 
-For details, see API documentation.
+For details, [see API documentation](http://www.rubydoc.info/gems/lorj).
 
 # Contributing to Lorj
 

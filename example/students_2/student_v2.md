@@ -87,4 +87,4 @@ Let's move to the most interesting version. Integrate an API example in lorj!
 
 # Next?
 
-[Details is explained here](../students_3/student_v3_md.html)
+[Details is explained here](https://github.com/forj-oss/lorj/blob/master/example/students_3/student_v3.md)

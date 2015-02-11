@@ -112,4 +112,4 @@ There is 2 warnings.
 Complete the process to have create/query/get and delete capability, with mock controller.
 The mock controller is basically a controller keeping data in memory.
 
-[Details is explained here](../students_2/student_v2_md.html)
+[Details is explained here](https://github.com/forj-oss/lorj/blob/master/example/students_2/student_v2.md)

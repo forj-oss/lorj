@@ -189,3 +189,20 @@ As you saw, the main program has not changed. Just process and controllers.
 
 In the next version is the full implementation of what `yaml_students/students.rb`
 main basic tool running the YamlStudent API.
+
+# next?
+
+You can update version 5 to fully implement the example of the yaml_student API.
+
+ie :
+
+Reproducing what the main `examples/yaml_students/students.rb` is doing.<BR>
+The API is `examples/yaml_students/yaml_students.rb`
+
+[Details is explained here](https://github.com/forj-oss/lorj/blob/master/example/students_5/student_v5.md)
+
+If you want to understand the concept, check [here](https://github.com/forj-oss/lorj/blob/master/lib/concept.md)
+
+If you want to get an overview of functionnalities per context, see [here](https://github.com/forj-oss/lorj/blob/master/lib/overview.md)
+
+For details, [see API documentation](http://www.rubydoc.info/gems/lorj).

@@ -280,4 +280,4 @@ You can enhance your main by selecting between mock or yaml_students
 In next version, we will enhance the process to remove duplicates, and ensure
 a student is created if it does not exist.
 
-[Details is explained here](example/students_4/student_v4_md.html)
+[Details is explained here](https://github.com/forj-oss/lorj/blob/master/example/students_4/student_v4.md)
