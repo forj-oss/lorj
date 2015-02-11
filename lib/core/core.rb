@@ -346,7 +346,10 @@ module Lorj
 
       process_list = [:cloud_process]
 
-      controller_mod = config_account.get(:provider_name)
+      controller_mod = config_account.get(:provider)
+
+      controller_mod = config_account.get(:provider_name) if controller_mod.nil?
+
       PrcLib.runtime_fail 'Provider_name not set. Unable to create'\
                            ' instance CloudCore.' if controller_mod.nil?
 
