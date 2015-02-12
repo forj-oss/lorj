@@ -152,14 +152,8 @@ module PrcLib
     end
 
     # Log to STDOUT and Log file and FATAL class message
-    # fatal retrieve the caller list of functions and save it to the log file if
-    # the exception class is given.
-    # The exception class should provide message and backtrace.
-    def fatal(message, e = nil)
+    def fatal(message)
       @out_logger.fatal(message + ANSI.clear_eol)
-      return @file_logger.fatal(format("%s\n%s\n%s",
-                                       message, e.message,
-                                       e.backtrace.join("\n"))) if e
       @file_logger.fatal(message)
     end
 
@@ -184,18 +178,11 @@ module PrcLib
     private
 
     def file_logger_initialize
-      log_file = PrcLib.log_file
-      if log_file.nil?
-        default_log_file = format('%s.log', PrcLib.app_name)
-        log_file = File.join(PrcLib.data_path, default_log_file)
-      end
-
-      @file_logger = Logger.new(log_file, 'weekly')
+      @file_logger = Logger.new(PrcLib.log_file, 'weekly')
       @file_logger.level = Logger::DEBUG
       @file_logger.formatter = proc do |severity, datetime, progname, msg|
         "#{progname} : #{datetime}: #{severity}: #{msg} \n"
       end
-      PrcLib.log_file = log_file
     end
   end
 
@@ -260,12 +247,12 @@ module PrcLib
   # the exception class is given.
   # The exception class should provide message and backtrace.
   def fatal(rc, message, *p)
-    e = nil
     if p.length > 0 && p[-1].is_a?(Exception)
       e = p[-1]
       p.pop
+      message = format("%s\n%s\n%s", message, e.message, e.backtrace.join("\n"))
     end
-    log_object.fatal(format(message, *p), e)
+    log_object.fatal(format(message, *p))
     puts format('Issues found. Please fix it and retry. Process aborted. '\
          "See details in log file '%s'.", PrcLib.log_file)
     exit rc

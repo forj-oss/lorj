@@ -26,7 +26,16 @@ require 'logger'
 # List of possible library settings:
 # - PrcLib.log
 #
-#   PrcLib::Logging object. Used internally by PrcLib logging system.
+#   Set a logger object.
+#   By default, Lorj creates a Lorj::Logging object which enhance a double
+#   logging system (output and file at the same time)
+#
+#   You can set your own logger system.
+#   This logger instance requires to have following features:
+#   * functions : unknown/warn/fatal/error/debug/info(message)
+#   * Is level functions: info?/debug?/warn?/error?/fatal?
+#     NOTE: Those functions are currently not used but may be used in the future
+#   * attribute : level
 #
 #   This object is automatically created as soon as a message is printed out
 # - PrcLib.core_level
@@ -49,6 +58,8 @@ require 'logger'
 # - PrcLib.data_path
 #
 #   Define the data local directory.
+#   This setting influences default settings for:
+#   PrcLib.log_file
 #
 #   By default: ~/.<app_name>
 #
@@ -59,8 +70,8 @@ require 'logger'
 # - PrcLib.app_name
 #
 #   Define the application name. By default 'lorj'.
-#   By default, this setting configure PrcLib.data_path and PrcLib.pdata_path
-#   automatically, except if you set it before.
+#   This setting influences default settings for:
+#   PrcLib.data_path, PrcLib.pdata_path and PrcLib.log_file
 #
 #   ex:
 #
@@ -74,28 +85,28 @@ require 'logger'
 #   Ex:
 #
 #    puts PrcLib.app_defaults[:data] # To get value of the predefined :data key.
-# - PrcLib.log_file
 #
-#   Define the log file name used.
-#
-#   By default, defined as ~/.<app_name>/<app_name>.log
 # - PrcLib.level
 #   logger level used. It can be updated at runtime.
 #
 #   Ex:
 #
 #    PrcLib.level = Logger::FATAL
+#
 # - PrcLib.model
 #
 #   Model loaded.
 #
 # - PrcLib.log_file
 #
-#   Initialize a log file name instead of default one.
+#   Initialize a log file name (relative or absolute path) instead of default
+#   one.
+#   By default, defined as #{data_path}/#{app_name}.log
+#
 #
 #   Ex:
 #
-#    PrcLib.log_file = "mylog.file.log"
+#    PrcLib.log_file = "mylog.file.log" # Relative path to the file
 #
 # - PrcLib.controller_path
 #
@@ -141,54 +152,95 @@ module PrcLib
   # Define module data for lorj library configuration
   class << self
     attr_accessor :log, :core_level
-    attr_reader :pdata_path, :data_path, :app_defaults, :log_file, :level
+    attr_reader :app_defaults,  :level, :lib_path
   end
 
   module_function
 
-  def pdata_path
-    return @pdata_path unless @pdata_path.nil?
-    @pdata_path = File.expand_path(File.join('~', '.config', app_name))
-  end
-
+  # Attribute app_name
+  #
+  # app_name is set to 'lorj' if not set.
+  #
   def app_name
-    self.app_name = 'Lorj' unless @app_name
+    self.app_name = 'lorj' unless @app_name
     @app_name
   end
 
+  # Attribute app_name setting
+  #
+  # You can set the application name only one time
+  #
+  def app_name=(v)
+    @app_name = v unless @app_name
+  end
+
+  # Attribute pdata_path
+  #
+  # Path to a private data, like encrypted keys.
+  #
+  # It uses pdata_path= to set the default path if not set
+  # ~/.config/#{app_name}
+  def pdata_path
+    return @pdata_path unless @pdata_path.nil?
+    self.pdata_path = File.join('~', '.config', app_name)
+    @pdata_path
+  end
+
+  # Attribute pdata_path setting
+  #
+  # If path doesn't exist, it will be created with 700 rights (Unix).
+  #
   def pdata_path=(v)
     @pdata_path = File.expand_path(v) unless @pdata_path
-    PrcLib.ensure_dir_exists(@pdata_path)
     begin
+      ensure_dir_exists(@pdata_path)
       FileUtils.chmod(0700, @pdata_path) # no-op on windows
     rescue => e
       fatal_error(1, e.message)
     end
   end
 
+  # Attribute data_path
+  #
+  # Path to the application data.
+  #
+  # It uses data_path= to set the default path if not set
+  # ~/.#{app_name}
   def data_path
     return @data_path unless @data_path.nil?
 
-    default_path = File.join('~', '.' + app_name)
-    @data_path = File.expand_path(default_path)
+    self.data_path = File.join('~', '.' + app_name)
+    @data_path
   end
 
+  # Attribute data_path setting
+  #
+  # If path doesn't exist, it will be created.
+  #
   def data_path=(v)
     @data_path = File.expand_path(v) unless @data_path
-    PrcLib.ensure_dir_exists(@data_path)
-  end
-
-  def app_name=(v)
-    @app_name = v unless @app_name
+    begin
+      ensure_dir_exists(@data_path)
+    rescue => e
+      fatal_error(1, e.message)
+    end
   end
 
   # TODO: Low. Be able to support multiple model.
+
+  # Lorj::Model object access.
+  # If the object doesn't exist, it will be created
   def model
     @model = Lorj::Model.new if @model.nil?
     @model
   end
 
   # TODO: Support for several defaults, depending on controllers loaded.
+
+  # Attribute app_defaults
+  #
+  # Used to define where the application defaults.yaml is located.
+  #
   def app_defaults=(v)
     return if @app_defaults
 
@@ -197,33 +249,70 @@ module PrcLib
     @app_defaults = File.expand_path(v)
   end
 
+  # log_file module attribute
+  #
+  # by default, log_file is nil.
+  # The user can define a log_file name or path
+  # The path is created (if possible) as soon a
+  # log_file is set.
+  # The file name is created by the logging class.
+  #
+  # *args*
+  # - +log file+ : absolute or relative path to a log file.
+  #
+  def log_file
+    return @log_file unless @log_file.nil?
+
+    self.log_file = File.join(data_path, app_name + '.log')
+    @log_file
+  end
+
+  # Attribute log_file setting
+  #
+  # It ensures that the path to the log file is created.
+  #
   def log_file=(v)
     file = File.basename(v)
     dir = File.dirname(File.expand_path(v))
-    unless File.exist?(dir)
-      fail format("'%s' doesn't exist. Unable to create file '%s'", dir, file)
-    end
+    ensure_dir_exists(dir)
+
     @log_file = File.join(dir, file)
   end
 
+  # Attribute level setting
+  #
+  # Set the new output logging level
+  #
   def level=(v)
     @level = v
 
-    PrcLib.level = v unless PrcLib.log.nil?
+    log.level = v unless log.nil?
   end
 
+  # Attribute lib_path setting
+  #
+  # initialize the Lorj library path
+  # Used by Lorj module declaration
+  # See lib/lorj.rb
+  #
+  # This setting cannot be updated later.
+  #
   def lib_path=(v)
     @lib_path = v if @lib_path.nil?
   end
 
-  attr_reader :lib_path
+  # TODO: Support for updating the default controller path
+  # OR:
+  # TODO: Support for path search of controllers.
 
+  # Read Attribute setting for default library controller path
   def controller_path
     File.expand_path(File.join(@lib_path,  'providers'))
   end
 
+  # Read Attribute setting for default library model/process path
   def process_path
-    File.join(@lib_path, 'core_process')
+    File.expand_path(File.join(@lib_path, 'core_process'))
   end
 end
 

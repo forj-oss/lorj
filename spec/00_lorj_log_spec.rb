@@ -32,6 +32,16 @@ $LOAD_PATH << './lib'
 
 describe 'Module: Lorj,' do
   context 'Initializing' do
+    before(:all) do
+      rel_name = format('lorj-%d', Process.pid)
+      @rel_path = File.join('/tmp', rel_name) if File.exist?('/tmp')
+      @rel_path = File.expand_path(File.join('~', rel_name)) if @rel_path.nil?
+    end
+
+    after(:all) do
+      FileUtils.rm_rf(@rel_path)
+    end
+
     it 'PrcLib module exist' do
       require 'lorj' # Load lorj framework
       expect(PrcLib.class).to equal(Module)
@@ -39,8 +49,19 @@ describe 'Module: Lorj,' do
       expect(PrcLib.log).to be_nil
     end
 
+    it 'log_file = [...]/lorj-rspec.log creates the path' do
+      log = File.join(@rel_path, 'lorj-rspec.log')
+      PrcLib.log_file = log
+      expect(File.exist?(@rel_path))
+    end
+
+    it 'log_file should get absolute path to the file' do
+      log = File.join(@rel_path, 'lorj-rspec.log')
+      log = File.expand_path(log)
+      expect(PrcLib.log_file).to eq(log)
+    end
+
     it 'create PrcLib.log object at first message' do
-      PrcLib.log_file = 'lorj-rspec.log'
       PrcLib.level = Logger::FATAL
       PrcLib.app_name = 'lorj-spec'
       PrcLib.app_defaults = File.join(app_path, 'lorj-spec')

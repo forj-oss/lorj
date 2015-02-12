@@ -15,6 +15,8 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+#  require 'byebug'
+
 app_path = File.dirname(__FILE__)
 
 $LOAD_PATH << File.join('..', 'lib')
@@ -24,7 +26,11 @@ require 'lorj' # Load lorj framework
 describe 'class: Lorj::Config,' do
   context 'new instance, with no default local config files, ' do
     before(:all) do
-      PrcLib.log_file = 'lorj-rspec.log'
+      log_file = File.expand_path(File.join('~', 'lorj-rspec.log'))
+      File.delete(log_file) if File.exist?(log_file)
+
+      PrcLib.log = nil
+      PrcLib.log_file = log_file
       PrcLib.level = Logger::FATAL
       PrcLib.app_name = 'lorj-spec'
       PrcLib.app_defaults = File.expand_path(File.join(app_path, '..',
