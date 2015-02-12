@@ -15,13 +15,12 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-if ENV['BYEBUG']
-  require 'byebug'
-  lib_path = File.expand_path(File.join(app_path, '..', '..', 'lib'))
-  $LOAD_PATH << lib_path
-end
-
 app_path = File.dirname(__FILE__)
+
+lib_path = File.expand_path(File.join(app_path, '..', '..', 'lib'))
+$LOAD_PATH << lib_path
+
+require 'byebug' if ENV['BYEBUG']
 
 require 'lorj'
 

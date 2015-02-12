@@ -17,11 +17,11 @@
 
 app_path = File.dirname(__FILE__)
 
-if ENV['BYEBUG']
-  require 'byebug'
-  lib_path = File.expand_path(File.join(app_path, '..', '..', 'lib'))
-  $LOAD_PATH << lib_path
-end
+lib_path = File.expand_path(File.join(app_path, '..', '..', 'lib'))
+$LOAD_PATH << lib_path
+
+require 'byebug' if ENV['BYEBUG']
+
 require 'lorj'
 require 'ansi'
 
