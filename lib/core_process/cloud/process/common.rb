@@ -17,13 +17,10 @@
 
 # It requires Core objects to be defined + default ForjProcess functions.
 
-# Define framework object on BaseDefinition
-module Lorj
-  # Common definition
-  class BaseDefinition
-    # All objects used by this process are built from a Controller
-    process_default :use_controller => true
-  end
+# Common definition
+class Lorj::BaseDefinition # rubocop: disable Style/ClassAndModuleChildren
+  # All objects used by this process are built from a Controller
+  process_default :use_controller => true
 end
 
 # Class to manage retry on errors before failing

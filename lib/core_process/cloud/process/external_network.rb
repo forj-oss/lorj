@@ -16,6 +16,8 @@
 
 # It requires Core objects to be defined + default ForjProcess functions.
 
+# rubocop: disable Style/ClassAndModuleChildren
+
 # External network process attached to a network
 class CloudProcess
   def forj_get_or_create_ext_net(sCloudObj, hParams)
@@ -78,17 +80,14 @@ class CloudProcess
   end
 end
 
-# Define framework object on BaseDefinition
-module Lorj
-  # Identify an external network thanks to the network router.
-  class BaseDefinition
-    define_obj(:external_network,
+# Identify an external network thanks to the network router.
+class Lorj::BaseDefinition
+  define_obj(:external_network,
 
-               :create_e => :forj_get_or_create_ext_net,
-               :query_e => :forj_query_external_network
-               )
+             :create_e => :forj_get_or_create_ext_net,
+             :query_e => :forj_query_external_network
+             )
 
-    obj_needs :CloudObject,  :network_connection
-    obj_needs :CloudObject,  :router
-  end
+  obj_needs :CloudObject,  :network_connection
+  obj_needs :CloudObject,  :router
 end

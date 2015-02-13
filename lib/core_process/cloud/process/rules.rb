@@ -16,6 +16,8 @@
 
 # It requires Core objects to be defined + default ForjProcess functions.
 
+# rubocop: disable Style/ClassAndModuleChildren
+
 # SecurityGroups rules management
 class CloudProcess
   # Process Delete handler
@@ -68,35 +70,32 @@ class CloudProcess
   end
 end
 
-# Define framework object on BaseDefinition
-module Lorj
-  # ************************************ Security group rules Object
-  # Identify Rules attached to the security group
-  class BaseDefinition
-    define_obj(:rule,
+# Security group rules Object
+# Identify Rules attached to the security group
+class Lorj::BaseDefinition
+  define_obj(:rule,
 
-               :create_e => :forj_get_or_create_rule,
-               :query_e => :forj_query_rule
-               #         :delete_e   => :forj_delete_rule
-               )
+             :create_e => :forj_get_or_create_rule,
+             :query_e => :forj_query_rule
+             #         :delete_e   => :forj_delete_rule
+             )
 
-    undefine_attribute :name  # Do not return any predefined name attribute
+  undefine_attribute :name  # Do not return any predefined name attribute
 
-    obj_needs :CloudObject, :network_connection
-    obj_needs :CloudObject, :security_groups, :for => [:create_e]
-    obj_needs :data,        :sg_id, :for => [:create_e],
-                                    :extract_from => [:security_groups,
-                                                      :attrs, :id]
+  obj_needs :CloudObject, :network_connection
+  obj_needs :CloudObject, :security_groups, :for => [:create_e]
+  obj_needs :data,        :sg_id, :for => [:create_e],
+                                  :extract_from => [:security_groups,
+                                                    :attrs, :id]
 
-    obj_needs :data,        :dir,                 :for => [:create_e]
-    predefine_data_value :IN,   :desc => 'Input NAT/firewall rule map type'
-    predefine_data_value :OUT,  :desc => 'Output NAT/firewall rule map type'
+  obj_needs :data,        :dir,                 :for => [:create_e]
+  predefine_data_value :IN,   :desc => 'Input NAT/firewall rule map type'
+  predefine_data_value :OUT,  :desc => 'Output NAT/firewall rule map type'
 
-    obj_needs :data,        :proto,               :for => [:create_e]
-    obj_needs :data,        :port_min,            :for => [:create_e]
-    obj_needs :data,        :port_max,            :for => [:create_e]
-    obj_needs :data,        :addr_map,            :for => [:create_e]
-  end
+  obj_needs :data,        :proto,               :for => [:create_e]
+  obj_needs :data,        :port_min,            :for => [:create_e]
+  obj_needs :data,        :port_max,            :for => [:create_e]
+  obj_needs :data,        :addr_map,            :for => [:create_e]
 end
 
 # SecurityGroups rules management

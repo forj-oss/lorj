@@ -16,6 +16,8 @@
 
 # It requires Core objects to be defined + default ForjProcess functions.
 
+# rubocop: disable Style/ClassAndModuleChildren
+
 # SecurityGroups management
 class CloudProcess
   # Process Create handler
@@ -87,23 +89,19 @@ class CloudProcess
   end
 end
 
-# Define framework object on BaseDefinition
-module Lorj
-  # ************************************ Security groups Object
-  # Identify security_groups
-  class BaseDefinition
-    define_obj(:security_groups,
+# ************************************ Security groups Object
+# Identify security_groups
+class Lorj::BaseDefinition
+  define_obj(:security_groups,
+             :create_e => :forj_get_or_create_sg,
+             :query_e => :forj_query_sg,
+             :delete_e => :forj_delete_sg
+             )
 
-               :create_e => :forj_get_or_create_sg,
-               :query_e => :forj_query_sg,
-               :delete_e => :forj_delete_sg
-               )
-
-    obj_needs :CloudObject,  :network_connection
-    obj_needs :data,         :security_group,      :for => [:create_e]
-    obj_needs_optional
-    obj_needs :data,         :sg_desc,             :for => [:create_e]
-  end
+  obj_needs :CloudObject,  :network_connection
+  obj_needs :data,         :security_group,      :for => [:create_e]
+  obj_needs_optional
+  obj_needs :data,         :sg_desc,             :for => [:create_e]
 end
 
 # SecurityGroups Process internal functions #

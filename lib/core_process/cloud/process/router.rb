@@ -15,6 +15,9 @@
 #    limitations under the License.
 
 # It requires Core objects to be defined + default ForjProcess functions.
+
+# rubocop: disable Style/ClassAndModuleChildren
+
 # ---------------------------------------------------------------------------
 # Router management
 # ---------------------------------------------------------------------------
@@ -43,55 +46,52 @@ class CloudProcess
   end
 end
 
-# Define framework object on BaseDefinition
-module Lorj
-  # ************************************ Router Object
-  # Identify the router of a network.
-  class BaseDefinition
-    define_obj(:router,
+# Router Object
+# Identify the router of a network.
+class Lorj::BaseDefinition
+  define_obj(:router,
 
-               :create_e => :forj_get_or_create_router,
-               #         :query_e    => :forj_query_router,
-               #         :get_e      => :forj_get_router,
-               :update_e => :controller_update
-               #         :delete_e   => :forj_delete_router
-               )
-    obj_needs :CloudObject,  :network_connection
-    obj_needs :CloudObject,  :network,             :for => [:create_e]
-    obj_needs :CloudObject,  :subnetwork,          :for => [:create_e]
-    obj_needs_optional
-    obj_needs :data,         :router_name,         :for => [:create_e]
+             :create_e => :forj_get_or_create_router,
+             #         :query_e    => :forj_query_router,
+             #         :get_e      => :forj_get_router,
+             :update_e => :controller_update
+             #         :delete_e   => :forj_delete_router
+             )
+  obj_needs :CloudObject,  :network_connection
+  obj_needs :CloudObject,  :network,             :for => [:create_e]
+  obj_needs :CloudObject,  :subnetwork,          :for => [:create_e]
+  obj_needs_optional
+  obj_needs :data,         :router_name,         :for => [:create_e]
 
-    def_attribute :gateway_network_id
-  end
+  def_attribute :gateway_network_id
+end
 
-  # ************************************ Port Object
-  # Identify port attached to network
-  class BaseDefinition
-    define_obj :port,   :nohandler => true
+# Port Object
+# Identify port attached to network
+class Lorj::BaseDefinition
+  define_obj :port,   :nohandler => true
 
-    obj_needs :CloudObject,  :network_connection
-    def_attribute :device_id
+  obj_needs :CloudObject,  :network_connection
+  def_attribute :device_id
 
-    def_query_attribute :network_id
-    def_query_attribute :device_owner
-  end
+  def_query_attribute :network_id
+  def_query_attribute :device_owner
+end
 
-  # ************************************ Router interface Object
-  # Identify interface attached to a router
-  # This object will probably be moved to controller task
-  # To keep the network model more generic.
-  class BaseDefinition
-    # No process handler defined. Just Controller object
-    define_obj :router_interface,   :nohandler => true
+# Router interface Object
+# Identify interface attached to a router
+# This object will probably be moved to controller task
+# To keep the network model more generic.
+class Lorj::BaseDefinition
+  # No process handler defined. Just Controller object
+  define_obj :router_interface,   :nohandler => true
 
-    obj_needs :CloudObject,  :network_connection
-    obj_needs :CloudObject,  :router,              :for => [:create_e]
-    obj_needs :CloudObject,  :subnetwork,          :for => [:create_e]
+  obj_needs :CloudObject,  :network_connection
+  obj_needs :CloudObject,  :router,              :for => [:create_e]
+  obj_needs :CloudObject,  :subnetwork,          :for => [:create_e]
 
-    undefine_attribute :name
-    undefine_attribute :id
-  end
+  undefine_attribute :name
+  undefine_attribute :id
 end
 
 # Router Process internal functions

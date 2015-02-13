@@ -17,6 +17,8 @@
 
 # It requires Core objects to be defined + default ForjProcess functions.
 
+# rubocop: disable Style/ClassAndModuleChildren
+
 # Connection process code
 class CloudProcess
   def connect(sCloudObj, hParams)
@@ -36,58 +38,55 @@ class CloudProcess
   end
 end
 
-# Define framework object on BaseDefinition
-module Lorj
-  # Define services model
-  class BaseDefinition
-    # predefined list of objects.
-    # Links between objects is not predefined. To do it, use needs declaration
-    # in your provider class.
+# Define services model
+class Lorj::BaseDefinition
+  # predefined list of objects.
+  # Links between objects is not predefined. To do it, use needs declaration
+  # in your provider class.
 
-    # object to get list of services
-    # Defines Process handler to call
-    define_obj(:services,
+  # object to get list of services
+  # Defines Process handler to call
+  define_obj(:services,
 
-               :create_e => :connect
-               )
-    obj_needs :data, :auth_uri
-    obj_needs :data, :account_id
-    obj_needs :data, :account_key
-    obj_needs :data, :tenant
+             :create_e => :connect
+             )
+  obj_needs :data, :auth_uri
+  obj_needs :data, :account_id
+  obj_needs :data, :account_key
+  obj_needs :data, :tenant
 
-    undefine_attribute :id    # Do not return any predefined ID
-    undefine_attribute :name  # Do not return any predefined NAME
-  end
+  undefine_attribute :id    # Do not return any predefined ID
+  undefine_attribute :name  # Do not return any predefined NAME
+end
 
-  # compute_connection
-  class BaseDefinition
-    define_obj(:compute_connection,
+# compute_connection
+class Lorj::BaseDefinition
+  define_obj(:compute_connection,
 
-               :create_e => :connect # Will call ForjProcess connect
-               )
-    obj_needs :data, :account_id
-    obj_needs :data, :account_key
-    obj_needs :data, :auth_uri
-    obj_needs :data, :tenant
-    obj_needs :data, :compute
+             :create_e => :connect # Will call ForjProcess connect
+             )
+  obj_needs :data, :account_id
+  obj_needs :data, :account_key
+  obj_needs :data, :auth_uri
+  obj_needs :data, :tenant
+  obj_needs :data, :compute
 
-    undefine_attribute :id    # Do not return any predefined ID
-    undefine_attribute :name  # Do not return any predefined NAME
-  end
+  undefine_attribute :id    # Do not return any predefined ID
+  undefine_attribute :name  # Do not return any predefined NAME
+end
 
-  # network_connection
-  class BaseDefinition
-    define_obj(:network_connection,
+# network_connection
+class Lorj::BaseDefinition
+  define_obj(:network_connection,
 
-               :create_e => :connect
-               )
-    obj_needs :data, :account_id
-    obj_needs :data, :account_key
-    obj_needs :data, :auth_uri
-    obj_needs :data, :tenant
-    obj_needs :data, :network
+             :create_e => :connect
+             )
+  obj_needs :data, :account_id
+  obj_needs :data, :account_key
+  obj_needs :data, :auth_uri
+  obj_needs :data, :tenant
+  obj_needs :data, :network
 
-    undefine_attribute :id    # Do not return any predefined ID
-    undefine_attribute :name  # Do not return any predefined NAME
-  end
+  undefine_attribute :id    # Do not return any predefined ID
+  undefine_attribute :name  # Do not return any predefined NAME
 end

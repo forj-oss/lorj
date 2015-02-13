@@ -16,6 +16,8 @@
 
 # It requires Core objects to be defined + default ForjProcess functions.
 
+# rubocop: disable Style/ClassAndModuleChildren
+
 # Subnetwork Management
 class CloudProcess
   def forj_get_or_create_subnetwork(sCloudObj, hParams)
@@ -34,21 +36,18 @@ class CloudProcess
   end
 end
 
-# ************************************ SubNetwork Object model
 # Define framework object on BaseDefinition
-module Lorj
-  # Identify subnetwork as part of network.
-  class BaseDefinition
-    define_obj(:subnetwork,
-               :create_e => :forj_get_or_create_subnetwork
-              )
+# Identify subnetwork as part of network.
+class Lorj::BaseDefinition
+  define_obj(:subnetwork,
+             :create_e => :forj_get_or_create_subnetwork
+            )
 
-    obj_needs :CloudObject,  :network_connection
-    obj_needs :CloudObject,  :network
-    obj_needs :data,         :subnetwork_name
+  obj_needs :CloudObject,  :network_connection
+  obj_needs :CloudObject,  :network
+  obj_needs :data,         :subnetwork_name
 
-    def_query_attribute :network_id
-  end
+  def_query_attribute :network_id
 end
 
 # Subnetwork Management - internal functions

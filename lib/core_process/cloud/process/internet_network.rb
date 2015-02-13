@@ -16,19 +16,18 @@
 
 # It requires Core objects to be defined + default ForjProcess functions.
 
-# Define framework object on BaseDefinition
-module Lorj
-  # ************************************ Internet network Object
-  # Define Internet network
-  #
-  # This object contains the logic to ensure the router's network has a gateway
-  # to the external network (internet)
-  # is capable to connect to internet
-  # And to create this connection if possible.
-  class BaseDefinition # rubocop: disable ClassAndModuleChildren
-    define_obj(:internet_network,    :nohandler => true)
+# rubocop: disable Style/ClassAndModuleChildren
 
-    obj_needs :CloudObject,  :external_network # External network to connect if
-    # needed.
-  end
+# Internet network Object
+# Define Internet network
+#
+# This object contains the logic to ensure the router's network has a gateway
+# to the external network (internet)
+# is capable to connect to internet
+# And to create this connection if possible.
+class Lorj::BaseDefinition # rubocop: disable ClassAndModuleChildren
+  define_obj(:internet_network,    :nohandler => true)
+
+  obj_needs :CloudObject,  :external_network # External network to connect if
+  # needed.
 end

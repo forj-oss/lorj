@@ -16,6 +16,8 @@
 
 # It requires Core objects to be defined + default ForjProcess functions.
 
+# rubocop: disable Style/ClassAndModuleChildren
+
 # ---------------------------------------------------------------------------
 # Server management
 # ---------------------------------------------------------------------------
@@ -62,42 +64,39 @@ class CloudProcess
   end
 end
 
-# Define framework object on BaseDefinition
-module Lorj
-  # ************************************ SERVER Object
-  # Identify the server to use/build on the network/...
-  class BaseDefinition
-    define_obj(:server,
+# SERVER Object
+# Identify the server to use/build on the network/...
+class Lorj::BaseDefinition
+  define_obj(:server,
 
-               :create_e => :forj_get_or_create_server,
-               :query_e => :forj_query_server,
-               :get_e => :forj_get_server,
-               #         :update_e   => :forj_update_server,
-               :delete_e => :forj_delete_server
-               )
+             :create_e => :forj_get_or_create_server,
+             :query_e => :forj_query_server,
+             :get_e => :forj_get_server,
+             #         :update_e   => :forj_update_server,
+             :delete_e => :forj_delete_server
+             )
 
-    obj_needs :CloudObject,  :compute_connection
-    obj_needs :CloudObject,  :flavor,              :for => [:create_e]
-    obj_needs :CloudObject,  :network,             :for => [:create_e]
-    obj_needs :CloudObject,  :security_groups,     :for => [:create_e]
-    obj_needs :CloudObject,  :keypairs,            :for => [:create_e]
-    obj_needs :CloudObject,  :image,               :for => [:create_e]
-    obj_needs :data,         :server_name,         :for => [:create_e]
+  obj_needs :CloudObject,  :compute_connection
+  obj_needs :CloudObject,  :flavor,              :for => [:create_e]
+  obj_needs :CloudObject,  :network,             :for => [:create_e]
+  obj_needs :CloudObject,  :security_groups,     :for => [:create_e]
+  obj_needs :CloudObject,  :keypairs,            :for => [:create_e]
+  obj_needs :CloudObject,  :image,               :for => [:create_e]
+  obj_needs :data,         :server_name,         :for => [:create_e]
 
-    obj_needs_optional
-    obj_needs :data,         :user_data,           :for => [:create_e]
-    obj_needs :data,         :meta_data,           :for => [:create_e]
+  obj_needs_optional
+  obj_needs :data,         :user_data,           :for => [:create_e]
+  obj_needs :data,         :meta_data,           :for => [:create_e]
 
-    def_attribute :status
-    predefine_data_value :create,   :desc => 'Server is creating.'
-    predefine_data_value :boot,     :desc => 'Server is booting.'
-    predefine_data_value :active,   :desc => 'Server is started.'
-    def_attribute :private_ip_address
-    def_attribute :public_ip_address
+  def_attribute :status
+  predefine_data_value :create,   :desc => 'Server is creating.'
+  predefine_data_value :boot,     :desc => 'Server is booting.'
+  predefine_data_value :active,   :desc => 'Server is started.'
+  def_attribute :private_ip_address
+  def_attribute :public_ip_address
 
-    def_attribute :image_id
-    def_attribute :key_name
-  end
+  def_attribute :image_id
+  def_attribute :key_name
 end
 
 # Internal Process function

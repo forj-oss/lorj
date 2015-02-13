@@ -16,6 +16,8 @@
 
 # It requires Core objects to be defined + default ForjProcess functions.
 
+# rubocop: disable Style/ClassAndModuleChildren
+
 # Addresses management
 class CloudProcess
   # Process Handler functions
@@ -62,26 +64,23 @@ class CloudProcess
   end
 end
 
-# Define framework object on BaseDefinition
-module Lorj
-  # ************************************ SERVER Addresses Object
-  # Object representing the list of IP addresses attached to a server.
-  class BaseDefinition
-    define_obj(:public_ip,
-               :create_e => :forj_get_or_assign_public_address,
-               :query_e => :forj_query_public_address
-    #      :get_e      => :forj_get_address
-    #      :update_e   => :forj_update_address
-    #      :delete_e   => :forj_delete_address
-    )
+# SERVER Addresses Object
+# Object representing the list of IP addresses attached to a server.
+class Lorj::BaseDefinition
+  define_obj(:public_ip,
+             :create_e => :forj_get_or_assign_public_address,
+             :query_e => :forj_query_public_address
+  #      :get_e      => :forj_get_address
+  #      :update_e   => :forj_update_address
+  #      :delete_e   => :forj_delete_address
+  )
 
-    obj_needs :CloudObject,  :compute_connection
-    obj_needs :CloudObject,  :server
+  obj_needs :CloudObject,  :compute_connection
+  obj_needs :CloudObject,  :server
 
-    def_attribute :server_id
-    def_attribute :public_ip
-    undefine_attribute :name # No name to extract
-  end
+  def_attribute :server_id
+  def_attribute :public_ip
+  undefine_attribute :name # No name to extract
 end
 
 # Internal Process function

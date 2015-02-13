@@ -16,20 +16,19 @@
 
 # It requires Core objects to be defined + default ForjProcess functions.
 
-# Define framework object on BaseDefinition
-module Lorj
-  # ************************************ SERVER Console Object
-  # Object representing the console log attached to a server
-  class BaseDefinition
-    define_obj(:server_log,
+# rubocop: disable Style/ClassAndModuleChildren
 
-               :get_e => :forj_get_server_log
-               )
+# SERVER Console Object
+# Object representing the console log attached to a server
+class Lorj::BaseDefinition
+  define_obj(:server_log,
 
-    obj_needs :CloudObject,  :server
-    obj_needs :data,         :log_lines
-    undefine_attribute :name
-    undefine_attribute :id
-    def_attribute :output
-  end
+             :get_e => :forj_get_server_log
+             )
+
+  obj_needs :CloudObject,  :server
+  obj_needs :data,         :log_lines
+  undefine_attribute :name
+  undefine_attribute :id
+  def_attribute :output
 end

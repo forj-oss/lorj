@@ -16,6 +16,8 @@
 
 # It requires Core objects to be defined + default ForjProcess functions.
 
+# rubocop: disable Style/ClassAndModuleChildren
+
 # Keypair management
 class CloudProcess
   # KeyPair Create Process Handler
@@ -252,26 +254,23 @@ class CloudProcess
   end
 end
 
-# Define framework object on BaseDefinition
-module Lorj
-  # ************************************ keypairs Object
-  # Identify keypairs
-  class BaseDefinition
-    define_obj(:keypairs,
+# ************************************ keypairs Object
+# Identify keypairs
+class Lorj::BaseDefinition
+  define_obj(:keypairs,
 
-               :create_e => :forj_get_or_create_keypair,
-               :query_e => :forj_query_keypair,
-               :get_e => :forj_get_keypair
-               #         :delete_e   => :forj_delete_keypair
-               )
+             :create_e => :forj_get_or_create_keypair,
+             :query_e => :forj_query_keypair,
+             :get_e => :forj_get_keypair
+             #         :delete_e   => :forj_delete_keypair
+             )
 
-    obj_needs :CloudObject,  :compute_connection
-    obj_needs :data,         :keypair_name,        :for => [:create_e]
-    obj_needs :data,         :keypair_path,        :for => [:create_e]
+  obj_needs :CloudObject,  :compute_connection
+  obj_needs :data,         :keypair_name,        :for => [:create_e]
+  obj_needs :data,         :keypair_path,        :for => [:create_e]
 
-    obj_needs_optional
-    obj_needs :data,         :public_key,          :for => [:create_e]
+  obj_needs_optional
+  obj_needs :data,         :public_key,          :for => [:create_e]
 
-    def_attribute :public_key
-  end
+  def_attribute :public_key
 end

@@ -16,6 +16,8 @@
 
 # It requires Core objects to be defined + default ForjProcess functions.
 
+# rubocop: disable Style/ClassAndModuleChildren
+
 # Network Management
 class CloudProcess
   # Process Create handler
@@ -56,25 +58,22 @@ class CloudProcess
   end
 end
 
-# Define framework object on BaseDefinition
-module Lorj
-  # ************************************ Network Object
-  # Identify the network
-  class BaseDefinition
-    define_obj(:network,
-               :create_e => :forj_get_or_create_network,
-               :query_e => :controller_query,
-               :get_e => :forj_get_network,
-               :delete_e => :forj_delete_network
-              )
-    obj_needs :CloudObject,  :network_connection
-    obj_needs :data,         :network_name,        :for => [:create_e]
+# Network Object
+# Identify the network
+class Lorj::BaseDefinition
+  define_obj(:network,
+             :create_e => :forj_get_or_create_network,
+             :query_e => :controller_query,
+             :get_e => :forj_get_network,
+             :delete_e => :forj_delete_network
+            )
+  obj_needs :CloudObject,  :network_connection
+  obj_needs :data,         :network_name,        :for => [:create_e]
 
-    obj_needs_optional
-    obj_needs :data,         :subnetwork_name,     :for => [:create_e]
+  obj_needs_optional
+  obj_needs :data,         :subnetwork_name,     :for => [:create_e]
 
-    def_query_attribute :external # true if network is external or not.
-  end
+  def_query_attribute :external # true if network is external or not.
 end
 
 # Network Process internal functions #
