@@ -15,11 +15,13 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+#  require 'byebug'
+
 $LOAD_PATH << File.join('..', 'lib')
 
 require 'rh'
 
-describe 'Recursive Hash extension,' do
+describe 'Recursive Hash/Array extension,' do
   context "With { :test => {:test2 => 'value1', :test3 => 'value2'},"\
           ":test4 => 'value3'}" do
     before(:all) do
@@ -196,6 +198,43 @@ describe 'Recursive Hash extension,' do
       expect(@hdata).to eq({})
     end
   end
+
+  context "With hdata = { :test => { :test2 => { :test5 => :test,\n"\
+          "                                        'text' => 'blabla' },\n"\
+          "                            'test5' => 'test' },\n"\
+          '                 :array => [{ :test => :value1 }, '\
+          '2, { :test => :value3 }]}' do
+    before(:all) do
+      @hdata = { :test => { :test2 => { :test5 => :test,
+                                        'text' => 'blabla' },
+                            'test5' => 'test' },
+                 :array => [{ :test => :value1 }, 2, { :test => :value3 }]
+               }
+    end
+    it 'rh_clone is done without error' do
+      expect { @hdata.rh_clone }.to_not raise_error
+    end
+    it 'hclone[:test] = "test" => hdata[:test] != hclone[:test]' do
+      hclone = @hdata.rh_clone
+      hclone[:test] = 'test'
+      expect(@hdata[:test]).to eq(:test2 => { :test5 => :test,
+                                              'text' => 'blabla' },
+                                  'test5' => 'test')
+    end
+    it 'hclone[:array].pop => hdata[:array].length != hclone[:array].length' do
+      hclone = @hdata.rh_clone
+      hclone[:array].pop
+      expect(@hdata[:array].length).not_to eq(hclone[:array].length)
+    end
+
+    it 'hclone[:array][0][:test] = "value2" '\
+       '=> hdata[:array][0][:test] != hclone[:array][0][:test]' do
+      hclone = @hdata.rh_clone
+      hclone[:array][0][:test] = 'value2'
+      expect(@hdata[:array][0][:test]).to eq(:value1)
+    end
+  end
+
   context 'With hdata = { :test => { :test2 => { :test5 => :test,'\
           "'text' => 'blabla' },"\
           "'test5' => 'test' }}" do

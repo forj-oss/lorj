@@ -18,6 +18,12 @@
 require 'rubygems'
 require 'yaml'
 
+# Adding rh_clone at object level. This be able to use a generic rh_clone
+# redefined per object Hash and Array.
+class Object
+  alias_method :rh_clone, :clone
+end
+
 # Recursive Hash added to the Hash class
 class Hash
   # Recursive Hash deep level found counter
@@ -125,6 +131,8 @@ class Hash
   #   # it is like searching for nothing...
   #   yVal.rh_exist? => nil
   def rh_exist?(*p)
+    p = p.flatten
+
     return nil if p.length == 0
 
     count = p.length
@@ -283,8 +291,8 @@ class Hash
   #                                         'text' => 'blabla' },
   #                             'test5' => 'test' }}
   #
-  #  rh_key_to_symbol(1) return no diff
-  #  rh_key_to_symbol(2) return "test5" is replaced by :test5
+  #  hdata.rh_key_to_symbol(1) return no diff
+  #  hdata.rh_key_to_symbol(2) return "test5" is replaced by :test5
   #  # hdata = { :test => { :test2 => { :test5 => :test,
   #  #                                  'text' => 'blabla' },
   #  #                      :test5 => 'test' }}
@@ -322,10 +330,10 @@ class Hash
   #                                         'text' => 'blabla' },
   #                             'test5' => 'test' }}
   #
-  #  rh_key_to_symbol?(1) return false
-  #  rh_key_to_symbol?(2) return true
-  #  rh_key_to_symbol?(3) return true
-  #  rh_key_to_symbol?(4) return true
+  #  hdata.rh_key_to_symbol?(1) return false
+  #  hdata.rh_key_to_symbol?(2) return true
+  #  hdata.rh_key_to_symbol?(3) return true
+  #  hdata.rh_key_to_symbol?(4) return true
   def rh_key_to_symbol?(levels = 1)
     each do |key, value|
       return true if key.is_a?(String)
@@ -337,5 +345,82 @@ class Hash
       return true if res
     end
     false
+  end
+
+  # return an exact clone of the recursive Array and Hash contents.
+  #
+  # * *Args*    :
+  #
+  # * *Returns* :
+  #   - Recursive Array/Hash cloned. Other kind of objects are kept referenced.
+  # * *Raises* :
+  #   Nothing
+  #
+  # examples:
+  #  hdata = { :test => { :test2 => { :test5 => :test,
+  #                                   'text' => 'blabla' },
+  #                       'test5' => 'test' },
+  #            :array => [{ :test => :value1 }, 2, { :test => :value3 }]}
+  #
+  #  hclone = hdata.rh_clone
+  #  hclone[:test] = "test"
+  #  hdata[:test] == { :test2 => { :test5 => :test,'text' => 'blabla' }
+  #  # => true
+  #  hclone[:array].pop
+  #  hdata[:array].length != hclone[:array].length
+  #  # => true
+  #  hclone[:array][0][:test] = "value2"
+  #  hdata[:array][0][:test] != hclone[:array][0][:test]
+  #  # => true
+  def rh_clone
+    result = {}
+    each do |key, value|
+      if [Array, Hash].include?(value.class)
+        result[key] = value.rh_clone
+      else
+        result[key] = value
+      end
+    end
+    result
+  end
+end
+
+# Defines rh_clone for Array
+class Array
+  # return an exact clone of the recursive Array and Hash contents.
+  #
+  # * *Args*    :
+  #
+  # * *Returns* :
+  #   - Recursive Array/Hash cloned.
+  # * *Raises* :
+  #   Nothing
+  #
+  # examples:
+  #  hdata = { :test => { :test2 => { :test5 => :test,
+  #                                   'text' => 'blabla' },
+  #                       'test5' => 'test' },
+  #            :array => [{ :test => :value1 }, 2, { :test => :value3 }]}
+  #
+  #  hclone = hdata.rh_clone
+  #  hclone[:test] = "test"
+  #  hdata[:test] == { :test2 => { :test5 => :test,'text' => 'blabla' }
+  #  # => true
+  #  hclone[:array].pop
+  #  hdata[:array].length != hclone[:array].length
+  #  # => true
+  #  hclone[:array][0][:test] = "value2"
+  #  hdata[:array][0][:test] != hclone[:array][0][:test]
+  #  # => true
+  def rh_clone
+    result = []
+    each do |value|
+      begin
+        result << value.rh_clone
+      rescue
+        result << value
+      end
+    end
+    result
   end
 end
