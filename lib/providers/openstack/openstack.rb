@@ -32,16 +32,24 @@ class Openstack
   # Defines Data used by compute.
 
   obj_needs :data, :account_id,  :mapping => :openstack_username
-  obj_needs :data, :account_key, :mapping => :openstack_api_key
+  obj_needs :data, :account_key, :mapping => :openstack_api_key,
+                                 :decrypt => true
   obj_needs :data, :auth_uri,    :mapping => :openstack_auth_url
   obj_needs :data, :tenant,      :mapping => :openstack_tenant
+
+  obj_needs_optional
+  # Required for HPHelion
   obj_needs :data, :compute,     :mapping => :openstack_region
 
   define_obj :network_connection
   obj_needs :data, :account_id,  :mapping => :openstack_username
-  obj_needs :data, :account_key, :mapping => :openstack_api_key
+  obj_needs :data, :account_key, :mapping => :openstack_api_key,
+                                 :decrypt => true
   obj_needs :data, :auth_uri,    :mapping => :openstack_auth_url
   obj_needs :data, :tenant,      :mapping => :openstack_tenant
+
+  obj_needs_optional
+  # Required for HPHelion
   obj_needs :data, :network,     :mapping => :openstack_region
 
   define_obj :network
@@ -83,30 +91,41 @@ class Openstack
   define_data(:account_key,
               :account => true,
               :desc => 'Openstack Password',
-              :encrypted => false,
               :validate => /^.+/
   )
   define_data(:auth_uri,
               :account => true,
-              :desc => 'Openstack Authentication service URL',
-              :validate => %r{^http(s)?:\/\/.*$}
+              :explanation => "The authentication service is identified as '"\
+                "identity' under your horizon UI - Project/Compute then "\
+                'Access & security.',
+              :desc => 'Openstack Authentication service URL. '\
+                'Ex: https://mycloud:5000/v2.0/tokens',
+              :validate => %r{^http(s)?:\/\/.*\/tokens$}
   )
   define_data(:tenant,
               :account => true,
+              :explanation => 'The Project name is shown from your horizon UI'\
+                ', on top left, close to the logo',
               :desc => 'Openstack Tenant Name',
               :validate => /^.+/
   )
 
   define_data(:compute,
               :account => true,
-              :desc => 'Openstack Compute service zone (Ex: regionOne)',
-              :validate => /^.+/
+              :explanation => 'Depending on your installation, you may need to'\
+                ' provide a Region name. This information shown under your '\
+                'horizon UI - close right to the project name (top left).'\
+                "\nIf there is no region shown, you can ignore it.",
+              :desc => 'Openstack Compute Region (Ex: regionOne)'
   )
 
   define_data(:network,
               :account => true,
-              :desc => 'Openstack Network service zone (Ex: regionOne)',
-              :validate => /^.+/
+              :desc => 'Openstack Network Region (Ex: regionOne)',
+              :explanation => 'Depending on your installation, you may need to'\
+                ' provide a Region name. This information shown under your '\
+                'horizon UI - close right to the project name (top left).'\
+                "\nIf there is no region shown, you can ignore it."
   )
 
   define_obj :server
@@ -154,7 +173,7 @@ class OpenstackController
             send(method_name, hParams)
           else
             controller_error "'%s' is not a valid object for '%s'",
-                             sObjectType, type
+                             sObjectType, crud_type
           end
         end
       when :query, :get
@@ -164,7 +183,7 @@ class OpenstackController
             send(method_name, hParams, sCondition)
           else
             controller_error "'%s' is not a valid object for '%s'",
-                             sObjectType, type
+                             sObjectType, crud_type
           end
         end
       end
@@ -175,7 +194,7 @@ class OpenstackController
     case sObjectType
     when :compute_connection
       Fog::Compute.new(
-        hParams[:hdata].merge(:provider => :Openstack, :version => 'v2')
+        hParams[:hdata].merge(:provider => :openstack)
       )
     when :network_connection
       Fog::Network::OpenStack.new(hParams[:hdata])
