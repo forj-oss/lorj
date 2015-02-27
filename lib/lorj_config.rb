@@ -17,6 +17,7 @@
 require 'rubygems'
 require 'yaml'
 
+# Definition of Lorj::Config
 module Lorj
   # Lorj::Config is a generic class for configuration management.
   # It is used by lorj to get/set data
@@ -101,7 +102,7 @@ module Lorj
     #
     # * *Args*    :
     #   - +config_name+ : Config file name to use. By default, file path is
-    #                     built as PrcLib.data_path+'config.yaml'
+    #                     built as #{PrcLib.data_path}/config.yaml
     # * *Returns* :
     #   -
     # * *Raises* :
@@ -112,8 +113,12 @@ module Lorj
       # Application layer
       config_layers << define_default_layer
 
+      # runtime Config layer
+      config_layers << define_controller_data_layer
+
       # Local Config layer
-      config_layers << define_local_layer
+      local = define_local_layer
+      config_layers << local
 
       # runtime Config layer
       config_layers << define_runtime_layer
@@ -122,7 +127,7 @@ module Lorj
         PrcLib.fatal(1, 'Internal PrcLib.data_path was not set.')
       end
 
-      initialize_local(config_layers[1][:config], config_name)
+      initialize_local(local[:config], config_name)
 
       initialize_layers(config_layers)
     end
@@ -137,6 +142,10 @@ module Lorj
       PRC::CoreConfig.define_layer(:name => 'local',
                                    :config => PRC::SectionConfig.new,
                                    :load => true, :save => true)
+    end
+
+    def define_controller_data_layer
+      PRC::CoreConfig.define_layer :name => 'controller'
     end
 
     def define_runtime_layer
@@ -230,7 +239,7 @@ module Lorj
     # * *Raises* :
     #   nothing
     def [](key, default = nil) # Re-define PRC::CoreConfig []= function
-      return _get(:keys => [key]) if exist?(key)
+      return p_get(:keys => [key]) if exist?(key)
       default
     end
 
@@ -288,21 +297,6 @@ module Lorj
     def runtime_get(key)
       index = layer_index('runtime')
       @config_layers[index][:config][key]
-    end
-
-    # Get Application data
-    # Used to get any kind of section available in the Application default.yaml.
-    #
-    # * *Args*    :
-    #   - +section+   : section name to get the key.
-    #   - +keys_tree+ : list of key name tree
-    # * *Returns* :
-    #   value found
-    # * *Raises* :
-    #   nothing
-    def app_default(*keys)
-      return Lorj.defaults.data.rh_get(*keys) if keys.length > 0
-      nil
     end
 
     # Save the config.yaml file.

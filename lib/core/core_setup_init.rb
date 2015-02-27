@@ -37,7 +37,7 @@ module Lorj
     # * *Raises* :
     #
     def _setup_load
-      ask_steps = Lorj.defaults.data.rh_get(:setup, :ask_step)
+      ask_steps = Lorj.data.setup_data(:ask_step)
       setup_steps = []
       ask_steps.each do |value|
         setup_steps << {
@@ -214,7 +214,7 @@ module Lorj
         order_array.each_index do |iIndex|
           Lorj.debug(2, 'Ask order %s:', iIndex)
           order_array[iIndex].each do |data|
-            options = _get_meta_data_auto(data)
+            options = _get_meta_data(data)
             options = {} if options.nil?
 
             data_desc = _setup_display_data(data, options)

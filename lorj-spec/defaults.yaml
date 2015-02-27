@@ -14,17 +14,23 @@
 
 # Defaults yaml file used for rspec.
 :default:
-   :maestro_url: http://example.org
-   :keypair_name: default_key
-   :data: None
-
+  :maestro_url: http://example.org
+  :keypair_name: default_key
+  :data: None
 :description:
-   :FORJ_HPC: Testing extra application default value.
-
+  :FORJ_HPC: Testing extra application default value.
+:setup:
+  - :desc: 'Step 1'
+    :explanation: |-
+      My complete explanation is in
+      multiline <%= config['text'] %>
+  - :desc: 'Step 2'
+    :add:
+     - :data
 :sections:
-   :credentials:
-      :keypair_name:
-      :data:
-        :account_exclusive: true
-   :maestro:
-      :maestro_url:
+  :credentials:
+    :keypair_name:
+    :data:
+      :account_exclusive: true
+  :maestro:
+    :maestro_url:

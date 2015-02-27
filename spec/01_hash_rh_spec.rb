@@ -17,7 +17,7 @@
 
 #  require 'byebug'
 
-$LOAD_PATH << File.join('..', 'lib')
+$LOAD_PATH << File.join(File.dirname(__FILE__), '..', 'lib')
 
 require 'rh'
 

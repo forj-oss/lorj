@@ -22,26 +22,22 @@ module Lorj
 
     # return Object data meta data.
     def _get_meta_data(key)
-      meta_default = Lorj.defaults.get_meta(key)
-      return nil if meta_default.nil?
-      meta_default = meta_default.clone
+      Lorj.data.auto_section_data(key)
+      #  meta_default = Lorj.defaults.get_meta_auto(key)
+      #  return nil if meta_default.nil?
+      #  meta_default = meta_default.clone
 
-      section = Lorj.defaults.get_meta_section(key)
-      return meta_default if section.nil?
-      meta = PrcLib.model.meta_data.rh_get(section, key)
-      return meta_default if meta.nil?
+      #  section = Lorj.defaults.get_meta_section(key)
+      #  return meta_default if section.nil?
+      #  meta = PrcLib.model.meta_data.rh_get(section, key)
+      #  return meta_default if meta.nil?
 
-      meta_default.merge!(meta)
-    end
-
-    def _get_meta_data_auto(key)
-      return nil if key.nil?
-      Lorj.defaults.get_meta_auto(key)
+      #  meta_default.merge!(meta)
     end
 
     def _get_account_section(key)
       return nil if key.nil?
-      Lorj.defaults.get_meta_section(key)
+      Lorj.data.first_section(key)
     end
 
     # internal runtime function for process call

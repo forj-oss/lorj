@@ -16,7 +16,8 @@
 
 # rubocop: disable Metrics/AbcSize
 
-# Module Lorj which contains several classes.
+# - Lorj::Core : Lorj exposed interface.
+#   - Initialization functions
 module Lorj
   # Define private initialize functions for processes
   class Core

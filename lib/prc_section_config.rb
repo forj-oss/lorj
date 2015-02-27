@@ -18,45 +18,73 @@ require 'rubygems'
 require 'yaml'
 
 module PRC
-  # SectionConfig class layer
+  # SectionConfig class layer based on BaseConfig.
+  #
+  # It supports a data_options :section for #[], #[]=, etc...
+  #
   class SectionConfig < PRC::BaseConfig
     # Get the value of a specific key under a section.
+    # You have to call #data_options(:section => 'MySection')
     #
     # * *Args*    :
     #   - +keys+  : keys to get values from a section set by data_options.
-    #               If section is set, it will use :default
+    #     If section is not set, it will use :default
     # * *Returns* :
     #   - key value.
     # * *Raises* :
     #   Nothing
     def [](*keys)
       return nil if keys.length == 0
-      return _get(:default, *keys) if @data_options[:section].nil?
-      _get(@data_options[:section], *keys)
+      return p_get(:default, *keys) if @data_options[:section].nil?
+      p_get(@data_options[:section], *keys)
     end
 
+    # Set the value of a specific key under a section.
+    # You have to call #data_options(:section => 'MySection')
+    #
+    # * *Args*    :
+    #   - +keys+  : keys to get values from a section set by data_options.
+    #     If section is not set, it will use :default
+    # * *Returns* :
+    #   - key value.
+    # * *Raises* :
+    #   Nothing
     def []=(*keys, value)
       return nil if keys.length == 0
-      return _set(:default, *keys, value) if @data_options[:section].nil?
-      _set(@data_options[:section], *keys, value)
+      return p_set(:default, *keys, value) if @data_options[:section].nil?
+      p_set(@data_options[:section], *keys, value)
     end
 
+    # Check key existence under a section.
+    # You have to call #data_options(:section => 'MySection')
+    #
+    # * *Args*    :
+    #   - +keys+  : keys to get values from a section set by data_options.
+    #     If section is not set, it will use :default
+    # * *Returns* :
+    #   - key value.
+    # * *Raises* :
+    #   Nothing
     def exist?(*keys)
       return nil if keys.length == 0
-      return _exist?(:default, *keys) if @data_options[:section].nil?
-      _exist?(@data_options[:section], *keys)
+      return p_exist?(:default, *keys) if @data_options[:section].nil?
+      p_exist?(@data_options[:section], *keys)
     end
 
-    def where?(*keys)
-      return nil if keys.length == 0
-      return _exist?(:default, *keys) if @data_options[:section].nil?
-      _where?(@data_options[:section], *keys)
-    end
-
+    # remove the key under a section.
+    # You have to call #data_options(:section => 'MySection')
+    #
+    # * *Args*    :
+    #   - +keys+  : keys to get values from a section set by data_options.
+    #     If section is not set, it will use :default
+    # * *Returns* :
+    #   - key value.
+    # * *Raises* :
+    #   Nothing
     def del(*keys)
       return nil if keys.length == 0
-      return _del(:default, *keys) if @data_options[:section].nil?
-      _del(@data_options[:section], *keys)
+      return p_del(:default, *keys) if @data_options[:section].nil?
+      p_del(@data_options[:section], *keys)
     end
   end
 end

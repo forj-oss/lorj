@@ -17,6 +17,7 @@
 
 require 'rubygems'
 
+# Lorj implements Lorj::Accounts
 module Lorj
   # Simple List of accounts class.
   class Accounts
@@ -35,6 +36,7 @@ module Lorj
   end
 end
 
+# Lorj implements Lorj::AccountConfig
 module Lorj
   # AccountConfig class layer
   class AccountConfig < PRC::SectionConfig
@@ -48,11 +50,12 @@ module Lorj
     end
 
     def data_options(options = { :section => :default })
-      _data_options(options)
+      p_data_options(options)
     end
   end
 end
 
+# Lorj implements Lorj::Account
 module Lorj
   # Lorj::Account manage a list of key/value grouped by section.
   # The intent of Lorj::Account is to attach some keys/values to
@@ -109,16 +112,25 @@ module Lorj
 
     # This object manage data located in oConfig[:hpc_accounts/AccountName]
 
-    # The class new accept to provide a local config file different than
-    # standard one configured by PrcLib.app_path/.config.yaml
+    # Lorj::Account implements Config layers.
+    # - default    : Represents the application defaults.yaml config.
+    # - controller : Represents the controller config redefinition.
+    #   See BaseDefinition::define_data
+    # - local      : Represents the config.yaml located in ~/.forj
+    # - account    : Represents an Account data located in ~/.forj/accounts
+    # - runtime    : Represents the runtime in memory data settings.
     def initialize(config_name = nil)
       config_layers = []
 
       # Application layer
       config_layers << define_default_layer
 
+      # runtime Config layer
+      config_layers << define_controller_data_layer
+
       # Local Config layer
-      config_layers << define_local_layer
+      local = define_local_layer
+      config_layers << local
 
       # Account config layer
       config_layers << define_account_layer
@@ -130,7 +142,7 @@ module Lorj
         PrcLib.fatal(1, 'Internal PrcLib.data_path was not set.')
       end
 
-      initialize_local(config_layers[1][:config], config_name)
+      initialize_local(local[:config], config_name)
 
       initialize_account
 
@@ -143,15 +155,15 @@ module Lorj
     # otherwise, search in all layers.
     #
     # * *Args*    :
-    # - +key+     : key name. It do not support it to be a key tree (Arrays of
-    #               keys).
-    # - +default+ : default value, if not found.
-    # - +options+ : Options for get:
-    #   - +:section+ : Get will use this section name instead of searching it.
-    #   - +:name+    : layer to exclusively get data.
-    #   - +:indexes+ : layer index to exclusively get data.
-    #                  If neither :name or :index is set, get will search
-    #                  data on all predefined layers, first found.
+    #   - +key+     : key name. It do not support it to be a key tree (Arrays of
+    #     keys).
+    #   - +default+ : default value, if not found.
+    #   - +options+ : Options for get:
+    #     - +:section+ : Get will use this section name instead of searching it.
+    #     - +:names+   : array of layers name to exclusively get data.
+    #     - +:indexes+ : array of layers index to exclusively get data.
+    #       If neither :name or :index is set, get will search
+    #       data on all predefined layers, first found.
     # * *Returns* :
     #   - key value.
     # * *Raises* :
@@ -165,17 +177,19 @@ module Lorj
 
       options = { :keys => [key], :section => section }
 
-      indexes = _identify_indexes(options, exclusive?(key, section))
+      indexes = _identify_array_indexes(options, exclusive?(key, section))
       names = []
       indexes.each { |index| names << @config_layers[index][:name] }
 
       options[:data_options] = _set_data_options_per_names(names)
 
-      return _get(options) if _exist?(options)
+      return p_get(options) if p_exist?(options)
 
       default
     end
 
+    # Simple get call with default options
+    # Alternative is to use Account::get
     def [](key, default = nil)
       get(key, default)
     end
@@ -186,14 +200,14 @@ module Lorj
     # otherwise, search in all layers.
     #
     # * *Args*    :
-    # - +key+     : key name. It do not support it to be a key tree (Arrays of
-    #               keys).
-    # - +options+ : possible options:
-    #   - +:section+ : Force to use a specific section name.
-    #   - +:name+    : layer to exclusively get data.
-    #   - +:indexes+ : layer index to exclusively get data.
-    #                  If neither :name or :index is set, get will search
-    #                  data on all predefined layers, first found, first listed.
+    #   - +key+     : key name. It do not support it to be a key tree (Arrays of
+    #     keys).
+    #   - +options+ : possible options:
+    #     - +:section+ : Force to use a specific section name.
+    #     - +:names+   : array of layers name to exclusively get data.
+    #     - +:indexes+ : array of layers index to exclusively get data.
+    #       If neither :name or :index is set, get will search data on all
+    #       predefined layers, first found, first listed.
     # * *Returns* :
     #   - key value.
     # * *Raises* :
@@ -217,20 +231,20 @@ module Lorj
         :data_options => _set_data_options_per_names(names)
       }
 
-      _where?(where_options)
+      p_where?(where_options)
     end
 
     # check key/value existence in config layers
     #
     # * *Args*    :
-    # - +key+     : key name. It do not support it to be a key tree (Arrays of
-    #               keys).
-    # - +options+ : possible options:
-    #   - +:section+ : Force to use a specific section name.
-    #   - +:name+    : layer to exclusively get data.
-    #   - +:indexes+ : layer index to exclusively get data.
-    #                  If neither :name or :index is set, get will search
-    #                  data on all predefined layers, first found.
+    #   - +key+     : key name. It do not support it to be a key tree (Arrays of
+    #   keys).
+    #   - +options+ : possible options:
+    #     - +:section+ : Force to use a specific section name.
+    #     - +:names+   : array of layers name to exclusively get data.
+    #     - +:indexes+ : array of layers index to exclusively get data.
+    #       If neither :name or :index is set, get will search data on all
+    #       predefined layers, first found.
     #
     # * *Returns* :
     #   - 'runtime'       : if found in runtime.
@@ -249,24 +263,24 @@ module Lorj
       section = Lorj.defaults.get_meta_section(key) if section.nil?
       options = { :keys => [key], :section => section }
 
-      indexes = _identify_indexes(options, exclusive?(key, section))
+      indexes = _identify_array_indexes(options, exclusive?(key, section))
 
       names = []
       indexes.each { |index| names << @config_layers[index][:name] }
 
       options[:data_options] = _set_data_options_per_names(names)
 
-      _exist?(options)
+      p_exist?(options)
     end
 
     # Return true if readonly. set won't be able to update this value.
-    # Only _set (private function) is able.
+    # Only p_set (private function) is able.
     #
     # * *Args*    :
     #   - +key+     : key name. It can support it to be a key tree (Arrays of
-    #                 keys).
+    #     keys).
     #   - +section+ : optionnal. If missing the section name is determined by
-    #                 the data name associated
+    #     the data name associated
     # * *Returns* :
     #   - true/false : readonly value
     #   OR
@@ -287,13 +301,13 @@ module Lorj
 
     # Return true if exclusive
     # set won't be able to update this value.
-    # Only _set (private function) is able.
+    # Only p_set (private function) is able.
     #
     # * *Args*    :
     #   - +key+     : key name. It can support it to be a key tree (Arrays of
-    #                 keys).
+    #     keys).
     #   - +section+ : optionnal. If missing the section name is determined by
-    #                 the data name associated
+    #     the data name associated
     # * *Returns* :
     #   - true/false : readonly value
     #   OR
@@ -303,37 +317,35 @@ module Lorj
       return nil unless key
 
       key = key.to_sym if key.class == String
-      section = Lorj.defaults.get_meta_section(key) if section.nil?
+      section = Lorj.data.first_section(key) if section.nil?
 
       return nil if section.nil?
-      result = Lorj.defaults.get_meta(section, key,
-                                      :account_exclusive)
+      result = Lorj.data[:sections, section, key, :account_exclusive]
       return result if result.boolean?
       result
     end
 
     # This function update a section/key=value if the account structure is
-    # defined.
-    # If no section is defined, set it in runtime config.
+    # defined. (see Lorj::Defaults)
+    # If no section is defined, it will assume to be :default.
     #
     # * *Args*    :
-    # - +key+     : key name. It do not support it to be a key tree (Arrays of
-    #               keys).
-    # - +value+   : value to set
-    # - +options+ : possible options:
-    #   - +:section+ : Force to use a specific section name.
-    #   - +:name+    : layer to exclusively get data.
-    #   - +:indexes+ : layer index to exclusively get data.
-    #                  If neither :name or :index is set, set will use the
-    #                  'runtime' layer.
+    #   - +key+     : key name. It do not support it to be a key tree (Arrays of
+    #     keys).
+    #   - +value+   : value to set
+    #   - +options+ : possible options:
+    #     - +:section+ : Force to use a specific section name.
+    #     - +:name+    : layer to exclusively get data.
+    #     - +:indexes+ : layer index to exclusively get data.
+    #       If neither :name or :index is set, set will use the 'runtime' layer.
     #
     # * *Returns* :
-    # - the value set
-    # OR
-    # - nil if:
-    #   - lorj data model set this key as readonly.
-    #   - value is nil. The value is set to nil, then.
-    #   - key is nil. No update is done.
+    #   - the value set
+    #   OR
+    #   - nil if:
+    #     - lorj data model set this key as readonly.
+    #     - value is nil. The value is set to nil, then.
+    #     - key is nil. No update is done.
     #
     # * *Raises* :
     #   Nothing
@@ -351,15 +363,41 @@ module Lorj
 
       options = { :keys => [key], :section => section, :value => value }
 
-      options[:indexes] = index_to_update(layer_name, key, section)
+      options[:index] = index_to_update(layer_name, key, section)
 
-      _set(options)
+      p_set(options)
     end
 
+    # Set a key to te runtime config layer.
+    # Alternative is to use Account::set
     def []=(key, value)
       set(key, value)
     end
 
+    # This function delete a section/key.
+    # If no section is defined, it will assume to be :default.
+    # Without any options, the runtime layer is used to delete the key.
+    #
+    # * *Args*    :
+    #   - +key+     : key name. It do not support it to be a key tree (Arrays of
+    #     keys).
+    #   - +value+   : value to set
+    #   - +options+ : possible options:
+    #     - +:section+ : Force to use a specific section name.
+    #     - +:name+    : layer to exclusively get data.
+    #     - +:index+   : layer index to exclusively get data.
+    #       If neither :name or :index is set, set will use the 'runtime' layer.
+    #
+    # * *Returns* :
+    #   - the value set
+    #   OR
+    #   - nil if:
+    #     - lorj data model set this key as readonly.
+    #     - value is nil. The value is set to nil, then.
+    #     - key is nil. No update is done.
+    #
+    # * *Raises* :
+    #   Nothing
     def del(key, options = {})
       parameters = validate_key_and_options(key, options)
       return nil if parameters.nil?
@@ -374,9 +412,9 @@ module Lorj
 
       options = { :keys => [key], :section => section }
 
-      options[:indexes] = index_to_update(layer_name, key, section)
+      options[:index] = index_to_update(layer_name, key, section)
 
-      _del(options)
+      p_del(options)
     end
   end
 
@@ -385,8 +423,9 @@ module Lorj
     def ac_new(sAccountName, provider_name = nil)
       return nil if sAccountName.nil?
       @account_name = sAccountName
+      index = layer_index('account')
 
-      account = @config_layers[1][:config]
+      account = @config_layers[index][:config]
       account.erase
       account.ac_new sAccountName, provider_name
     end
@@ -399,8 +438,9 @@ module Lorj
 
       account_file = File.join(@account_path, @account_name)
       return false unless File.exist?(account_file)
+      index = layer_index('account')
 
-      _do_load(@config_layers[1][:config], account_file)
+      _do_load(@config_layers[index][:config], account_file)
     end
 
     # Account save function.
@@ -425,8 +465,11 @@ module Lorj
 
       account_file = File.join(@account_path, @account_name)
 
-      account = @config_layers[1][:config]
-      local = @config_layers[2][:config]
+      local_index = layer_index('local')
+      account_index = layer_index('account')
+
+      account = @config_layers[account_index][:config]
+      local = @config_layers[local_index][:config]
 
       account.data_options(:section => :account)
       if account[:provider].nil?
@@ -435,15 +478,15 @@ module Lorj
         return false
       end
 
-      account.filename = account_file
-      result = account.save
+      local.filename = account_file
+      result = local.save
 
       return result unless result
 
-      return true if local.exist?(:account_name)
+      return true if account.exist?(:account_name)
 
-      local[:account_name] = @account_name
-      local.save
+      account[:account_name] = @account_name
+      account.save
 
       true
     end
@@ -494,7 +537,7 @@ module Lorj
 
     def exclusive_indexes(account_exclusive)
       return [0, 1] if account_exclusive
-      [0, 1, 2, 3]
+      [0, 1, 2, 3, 4]
     end
 
     def _identify_indexes(options, account_exclusive)
@@ -516,8 +559,9 @@ module Lorj
       data_options
     end
 
-    # This internal function defines default section name per config index.
     # TODO: Change local and default way to get default values, not in /:default
+
+    # This internal function defines default section name per config index.
     def _data_options_per_layer(layer_name)
       # runtime and local and default uses :default section
       case layer_name
@@ -552,14 +596,14 @@ module Lorj
     end
 
     def index_to_update(layer_name, key, section)
-      indexes = [0] # choose runtime by default.
-      indexes = layer_indexes([layer_name]) unless layer_name.nil?
+      index = 0 # choose runtime by default.
+      index = layer_index(layer_name) unless layer_name.nil?
 
       if layer_name.nil?
         # Return runtime layer, if layer requested is not updatable.
-        return [0] if indexes[0] <= (exclusive?(key, section) ? 1 : 3)
+        return 0 if index <= (exclusive?(key, section) ? 1 : 3)
       end
-      indexes
+      index
     end
 
     def define_account_layer

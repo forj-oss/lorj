@@ -12,15 +12,8 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-# Module Lorj which contains several classes.
-#
-# Those classes describes :
-# - processes (BaseProcess)   : How to create/delete/edit/query object.
-# - controler (BaseControler) : If a provider is defined, define how will do
-#                               object creation/etc...
-# - definition(BaseDefinition): Functions to declare objects, query/data mapping
-#                               and setup
-# this task to make it to work.
+# - Lorj::Data : Defines how to manage Objects data between processes,
+#   controllers and internally in the core of Lorj.
 module Lorj
   # This class is the Data object used by lorj object!
   # This is a key component of lorj

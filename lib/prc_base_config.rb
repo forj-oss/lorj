@@ -20,21 +20,27 @@ module PRC
   # This class is Base config system of lorj.
   #
   # It implements basic config features:
-  # * erase        - To cleanup all data in self config
-  # * []           - To get a value for a key or tree of keys
-  # * []=          - To set a value for a key in the tree.
-  # * exist?       - To check the existence of a value from a key
-  # * del          - To delete a key tree.
-  # * save         - To save all data in a yaml file
-  # * load         - To load data from a yaml file
-  # * data_options - To influence on how exist?, [], []=, load and save will
-  #                  behave
+  # * #erase        - To cleanup all data in self config
+  # * #[]           - To get a value for a key or tree of keys
+  # * #[]=          - To set a value for a key in the tree.
+  # * #exist?       - To check the existence of a value from a key
+  # * #del          - To delete a key tree.
+  # * #save         - To save all data in a yaml file
+  # * #load         - To load data from a yaml file
+  # * #data_options - To influence on how exist?, [], []=, load and save will
+  #   behave
   #
   # Config Data are managed as Hash of Hashes.
   # It uses actively Hash.rh_* functions. See rh.rb.
   class BaseConfig
+    # internal Hash data of this config.
+    # Do not use it except if you know what you are doing.
     attr_reader :data
-    attr_reader :filename
+
+    # * *set*: set the config file name. It accepts relative or absolute path to
+    #   the file.
+    # * *get*: get the config file name used by #load and #save.
+    attr_accessor :filename
 
     # initialize BaseConfig
     #
@@ -61,39 +67,37 @@ module PRC
     #
     # Currently, data_options implements:
     # - :data_readonly : The data cannot be updated. set will not update
-    #                    the value.
+    #   the value.
     # - :file_readonly : The file used to load data cannot be updated.
-    #                    save will not update the file.
+    #   save will not update the file.
     #
     # The child class can superseed or replace data options with their own
     # options.
     # Ex: If your child class want to introduce notion of sections,
     # you can define the following with get:
-    # # by default, section name to use by get/set is :default
-    # def data_options(options = {:section => :default})
-    #   _data_options(options)
-    # end
     #
-    # def [](*keys)
-    #   _get(@data_options[:section], *keys)
-    # end
+    #    class MySection < PRC::BaseConfig
+    #      # by default, section name to use by get/set is :default
+    #      def data_options(options = {:section => :default})
+    #        p_data_options(options)
+    #      end
     #
-    # def []=(*keys, value)
-    #   _set(@data_options[:section], *keys, value)
-    # end
+    #      def [](*keys)
+    #        p_get(@data_options[:section], *keys)
+    #      end
     #
-    # end
+    #      def []=(*keys, value)
+    #        p_set(@data_options[:section], *keys, value)
+    #      end
+    #    end
     #
     # * *Args*
     #   - +keys+ : Array of key path to found
     #
     # * *Returns*
     #   - boolean : true if the key path was found
-    #
-    # ex:
-    # { :test => {:titi => 'found'}}
     def data_options(options = nil)
-      _data_options options
+      p_data_options options
     end
 
     # exist?
@@ -107,7 +111,7 @@ module PRC
     # ex:
     # { :test => {:titi => 'found'}}
     def exist?(*keys)
-      _exist?(*keys)
+      p_exist?(*keys)
     end
 
     # Erase function
@@ -130,7 +134,7 @@ module PRC
     #   -
     #
     def [](*keys)
-      _get(*keys)
+      p_get(*keys)
     end
 
     # Set function
@@ -148,8 +152,9 @@ module PRC
     # # => {:level1 => {:level2 => 'value'}}
 
     def del(*keys)
-      _del(*keys)
+      p_del(*keys)
     end
+
     # Set function
     #
     # * *Args*
@@ -159,25 +164,25 @@ module PRC
     #   - The value set or nil
     #
     # ex:
-    # value = CoreConfig.New
+    #    value = CoreConfig.New
     #
-    # value[:level1, :level2] = 'value'
-    # # => {:level1 => {:level2 => 'value'}}
+    #    value[:level1, :level2] = 'value'
+    #    # => {:level1 => {:level2 => 'value'}}
     def []=(*keys, value)
-      _set(*keys, value)
+      p_set(*keys, value)
     end
 
     # Load from a file
     #
     # * *Args*    :
     #   - +filename+ : file name to load. This file name will become the default
-    #                  file name to use next time.
+    #     file name to use next time.
     # * *Returns* :
     #   - true if loaded.
     # * *Raises* :
     #   - ++ ->
     def load(filename = nil)
-      _load(filename)
+      p_load(filename)
     end
 
     # Save to a file
@@ -188,7 +193,7 @@ module PRC
     # * *Returns* :
     #   - boolean if saved or not. true = saved.
     def save(filename = nil)
-      _save(filename)
+      p_save(filename)
     end
 
     # transform keys from string to symbol until deep level. Default is 1.
@@ -215,16 +220,17 @@ module PRC
       data.rh_key_to_symbol? level
     end
 
-    # Update default filename.
+    # Redefine the file name attribute set.
     #
     # * *Args*    :
     #   - +filename+ : default file name to use.
     # * *Returns* :
     #   - filename
-    def filename=(filename)
+    def filename=(filename) #:nodoc:
       @filename = File.expand_path(filename) unless filename.nil?
     end
 
+    # Print a representation of the Layer data
     def to_s
       msg = format("File : %s\n", @filename)
       msg += data.to_yaml
@@ -233,37 +239,37 @@ module PRC
 
     private
 
-    def _data_options(options = nil)
+    def p_data_options(options = nil)
       @data_options = options unless options.nil?
       @data_options
     end
 
-    def _exist?(*keys)
+    def p_exist?(*keys)
       return nil if keys.length == 0
 
       (@data.rh_exist?(*keys))
     end
 
-    def _get(*keys)
+    def p_get(*keys)
       return nil if keys.length == 0
 
       @data.rh_get(*keys)
     end
 
-    def _del(*keys)
+    def p_del(*keys)
       return nil if keys.length == 0
 
       @data.rh_del(*keys)
     end
 
-    def _set(*keys, value)
+    def p_set(*keys, value)
       return nil if keys.length == 0
-      return _get(*keys) if @data_options[:data_readonly]
+      return p_get(*keys) if @data_options[:data_readonly]
 
       @data.rh_set(value, keys)
     end
 
-    def _load(file = nil)
+    def p_load(file = nil)
       self.filename = file unless file.nil?
 
       fail 'Config filename not set.' if @filename.nil?
@@ -272,7 +278,7 @@ module PRC
       true
     end
 
-    def _save(file = nil)
+    def p_save(file = nil)
       return false if @data_options[:file_readonly]
       self.filename = file unless file.nil?
 

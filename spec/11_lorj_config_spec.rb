@@ -19,7 +19,7 @@
 
 app_path = File.dirname(__FILE__)
 
-$LOAD_PATH << File.join('..', 'lib')
+$LOAD_PATH << File.join(app_path, '..', 'lib')
 
 require 'lorj' # Load lorj framework
 
@@ -73,7 +73,7 @@ describe 'class: Lorj::Config,' do
     end
 
     it 'config.layers returns all config names.' do
-      expect(@config.layers).to eq(%w(runtime local default))
+      expect(@config.layers).to eq(%w(runtime local controller default))
     end
 
     it 'config.where?(:test1) return false' do
@@ -239,30 +239,6 @@ describe 'class: Lorj::Config,' do
       end
       it 'config.runtime_exist?(:test1) returns true' do
         expect(@config.runtime_exist?(:test1)).to equal(true)
-      end
-    end
-    context 'app default functions' do
-      before(:all) do
-        default_file = @config.config_filename('default')
-        @default = YAML.load_file(default_file)
-      end
-      it 'config.app_default(:default) returns :default of defaults.yaml' do
-        expect(@config.app_default(:default)).to eq(@default[:default])
-      end
-
-      it 'config.app_default(:sections) returns :section of defaults.yaml' do
-        expect(@config.app_default(:sections)).to eq(@default[:sections])
-      end
-      it 'config.meta_each provides the wanted list of section/key/values' do
-        # The defaults.yaml MUST have data exclusive set to true
-        expect(@default.rh_get(:sections, :credentials, :data,
-                               :account_exclusive)).to equal(true)
-        @config.meta_each do |section, key, value|
-          expect(@default.rh_exist?(:sections, section, key)).to equal(true)
-          expect(@default.rh_get(:sections, section, key)).to equal(value)
-          expect([section, key,
-                  value]).not_to eq([:sections, :credentials, :data])
-        end
       end
     end
   end

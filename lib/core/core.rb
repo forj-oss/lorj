@@ -319,6 +319,8 @@ module Lorj
 
       init_core_config(the_config)
 
+      PrcLib.model.config = @config
+
       model = initialize_model
 
       # Load Application processes

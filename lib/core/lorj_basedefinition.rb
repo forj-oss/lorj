@@ -14,16 +14,9 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-# Module Lorj which contains several classes.
+# Module Lorj implements ERBConfig, and initialization functions for
+# Lorj::BaseDefinition
 #
-# Those classes describes :
-# - processes (BaseProcess)   : How to create/delete/edit/query object.
-# - controler (BaseControler) : If a provider is defined, define how will do
-#                               object creation/etc...
-# - definition(BaseDefinition): Functions to declare objects, query/data mapping
-#                               and setup
-# this task to make it to work.
-
 module Lorj
   # This class limits ERC template to access only to config object data.
   class ERBConfig
@@ -80,21 +73,9 @@ module Lorj
     # Ex: object.set_data(...)
     #     config
 
-    # Function to manipulate the config object.
-    # 2 kind of functions:
-    # - set (key, value) and []=(key, value)
-    #   From processes, you can set a runtime data with:
-    #     config.set(key, value)
-    #   OR
-    #     config[key] = value
+    # Reference to the config object.
     #
-    # - get (key, default) and [](key, default)
-    #   default is an optional value.
-    #   From processes, you can get a data (runtime/account/config.yaml or
-    #   defaults.yaml) with:
-    #     config.get(key)
-    #   OR
-    #     config[key]
+    # See Lorj::Config or Lorj::Account for details
     def config
       PrcLib.runtime_fail 'No config object loaded.' unless @config
       @config

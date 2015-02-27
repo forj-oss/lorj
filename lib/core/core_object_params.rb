@@ -15,6 +15,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+# Lorj implements Lorj::BaseDefinition core internal functions
 module Lorj
   # Class Definition internal function.
   class BaseDefinition

@@ -21,7 +21,7 @@
 
 app_path = File.dirname(File.dirname(__FILE__))
 
-$LOAD_PATH << './lib'
+$LOAD_PATH << File.join(File.dirname(__FILE__), '..', 'lib')
 
 # This spec HAVE to the the first one executed!
 # Do never create a file or rename this file, which will

@@ -18,20 +18,12 @@
 
 # TODO: Move most declaration functions to Model class for simplification.
 
-# Module Lorj which contains several classes.
-#
-# Those classes describes :
-# - processes (BaseProcess)   : How to create/delete/edit/query object.
-# - controler (BaseControler) : If a provider is defined, define how will do
-#                               object creation/etc...
-# - definition(BaseDefinition): Functions to declare objects, query/data mapping
-#                               and setup
-# this task to make it to work.
+# - Lorj::Model : Model class reference.
 module Lorj
   # Model Object
   class Model
     attr_accessor :meta_obj, :meta_data, :meta_predefined_values
-    attr_accessor :query_auto_map
+    attr_accessor :query_auto_map, :config
 
     # Model initialisation
     def initialize

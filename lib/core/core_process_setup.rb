@@ -191,7 +191,7 @@ module Lorj
     # * *Raises* :
     #
     def _setup_data_after(data_to_check)
-      meta = _get_meta_data_auto(data_to_check)
+      meta = _get_meta_data(data_to_check)
       return [] unless meta.rh_exist?(:after)
 
       datas_after = meta[:after]
@@ -240,7 +240,7 @@ module Lorj
         return false
       end
 
-      meta = _get_meta_data_auto(attr_name)
+      meta = _get_meta_data(attr_name)
       return false unless meta.is_a?(Hash)
 
       ask_step = 0
@@ -273,7 +273,7 @@ module Lorj
     # parameters:
     # - +order_array+ : array of levels of attributes ordered.
     # - +attr_name+   : attribute name
-    # - +depends_on+  : Dependendy Array.
+    # - +depends_on+  : Dependency Array.
     #
     # return:
     # - level_index to use.
@@ -284,7 +284,7 @@ module Lorj
                        attr_name) unless depends_on.nil?
         0
       else
-        _setup_find_dep_level(order_array, meta[:depends_on])
+        _setup_find_dep_level(order_array, depends_on)
       end
     end
 

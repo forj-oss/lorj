@@ -48,9 +48,10 @@ module Lorj
   # puts oKey.tree      # => [:test,:test2,:test3]
   #
   class KeyPath
-    def initialize(sKeyPath = nil)
+    def initialize(sKeyPath = nil, max_level = -1)
       @keypath = []
-      set sKeyPath
+      @max_level = max_level
+      set sKeyPath unless sKeyPath.nil?
     end
 
     def key=(sKeyPath)
@@ -65,6 +66,8 @@ module Lorj
       elsif sKeyPath.is_a?(String)
         @keypath = string_to_sarray(sKeyPath)
       end
+      PrcLib.error 'key path size limit (%s) reached',
+                   @max_level if @max_level > 0 && @keypath.length > @max_level
     end
 
     def tree # rubocop: disable TrivialAccessors

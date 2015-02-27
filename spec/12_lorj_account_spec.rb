@@ -15,13 +15,11 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-# require 'rubygems'
-# require 'byebug'
-# require 'bundler/setup'
+#  require 'byebug'
 
-app_path = File.dirname(File.dirname(__FILE__))
+app_path = File.dirname(__FILE__)
 
-$LOAD_PATH << '../lib'
+$LOAD_PATH << File.join(app_path, '..', 'lib')
 
 require 'lorj' # Load lorj framework
 
@@ -31,7 +29,7 @@ describe 'class: Lorj::Account,' do
       PrcLib.log_file = 'lorj-rspec.log'
       PrcLib.level = Logger::FATAL
       PrcLib.app_name = 'lorj-spec'
-      PrcLib.app_defaults = File.join(app_path, 'lorj-spec')
+      PrcLib.app_defaults = File.join(app_path, '..', 'lorj-spec')
 
       account = Lorj::Account.new
       expect(account).to be
@@ -39,7 +37,7 @@ describe 'class: Lorj::Account,' do
 
     it 'account.layers is compliant' do
       account = Lorj::Account.new
-      expect(account.layers).to eq(%w(runtime account local default))
+      expect(account.layers).to eq(%w(runtime account local controller default))
     end
   end
 

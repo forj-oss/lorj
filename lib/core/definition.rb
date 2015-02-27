@@ -261,17 +261,16 @@ module Lorj
       return nil if options.class != Hash
       PrcLib.model.heap true
 
-      data = data.to_sym if data.class == String
+      data = KeyPath.new data, 2
       PrcLib.dcl_fail("%s: Config data '%s' unknown",
-                      self.class, data) unless Lorj.defaults.meta_exist?(data)
+                      self.class,
+                      data) unless Lorj.defaults.meta_exist?(data.key)
 
       PrcLib.model.data_context data
 
-      section = _section_from(data)
+      section = Lorj.data.first_section(data.key)
 
-      cur_options = PrcLib.model.meta_data.rh_get(section, data)
-      return cur_options.merge!(options) if cur_options
-      PrcLib.model.meta_data.rh_set(options, section, data)
+      Lorj.data.define_controller_data(section, data.key, options)
     end
 
     # Controller to declare a model Data value mapping
@@ -288,7 +287,7 @@ module Lorj
       section = _section_from(data)
 
       Lorj.debug(2, format("%s/%s: Define config data value mapping: '%s' => "\
-                           "'%s'", section, data, value, map))
+                           "'%s'", section, data.fpath, value, map))
       PrcLib.model.meta_data.rh_set(map, section, data,
                                     :value_mapping,  :controller, value)
       PrcLib.model.meta_data.rh_set(value, section, data,
@@ -495,9 +494,10 @@ module Lorj
       [key_path_obj.fpath, map_path_obj.fpath]
     end
 
-    # Internal section detection
+    # Internal section detection based on a keyPath Object
     def self._section_from(data)
-      section = Lorj.defaults.get_meta_section(data)
+      return data.key[0] if data.length == 2
+      section = Lorj.defaults.get_meta_section(data.key)
       section = :runtime if section.nil?
 
       section
