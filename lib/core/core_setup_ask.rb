@@ -34,12 +34,13 @@ module Lorj
     # new value
     #
     # * *Args* :
-    #  - +desc+   : Data description
-    #  - +data+   : Data to ask.
-    #  - +options+: list and validation options
+    #   - +desc+   : Data description
+    #   - +data+   : Data to ask.
+    #   - +options+: list and validation options
+    #     - +:post_step_function+ : Call a post process function.
     #
     # * *Returns*:
-    #   - value : value entered by the end user.
+    #   - nothing
     #
     # * *Raises* :
     #
@@ -52,22 +53,34 @@ module Lorj
                                             desc, options)
         end
 
-        @config.set(data, value)
-
+        # @config.set(data, value) ??? Why do we need that???
         section = _get_account_section(data)
-        @config.set(data, value, :name =>
-                    'account', :section => section) unless section.nil?
+        # We set the value only if there is a value entered by the user.
+        unless section.nil? || value.nil?
+          @config.set(data, value, :name => 'account', :section => section)
+        end
 
-        break if options[:post_step_function].nil?
-
-        proc = options[:post_step_function]
-        result = @process.method(proc).call
-
-        PrcLib.debug("Warning: '%s' did not return any boolean"\
-                     ' value. Ignored', proc) unless result.boolean?
-
+        result = _setup_ask_post_process(options[:post_step_function])
         break unless result.is_a?(FalseClass)
       end
+    end
+
+    # Execute the post process on data entered by the user
+    #
+    # * *returns*
+    #   - false if the process ask the user to re-enter a value.
+    #   - true otherwise.
+    def _setup_ask_post_process(proc)
+      return true if proc.nil?
+
+      result = @process.method(proc).call
+
+      unless result.boolean?
+        PrcLib.debug("Warning: '%s' did not return any boolean"\
+                     ' value. Ignored', proc)
+        result = true
+      end
+      result
     end
 
     # Internal setup function to ask to the end user from a list.
@@ -173,12 +186,14 @@ module Lorj
     # Internal setup function to ask to the end user.
     #
     # * *Args* :
-    #  - +desc+   : Data description
-    #  - +data+   : Data to ask.
-    #  - +options+: list and validation options
+    #   - +desc+   : Data description
+    #   - +data+   : Data to ask.
+    #   - +options+: list and validation options
+    #     - :ask_function: Replace the _ask default call by a process function
+    #       This function should return a string or nil, if no value.
     #
     # * *Returns*:
-    #   - value : value entered by the end user.
+    #   - value : value entered by the end user or nil if no value.
     #
     # * *Raises* :
     #
@@ -196,24 +211,11 @@ module Lorj
       proc_ask = options[:ask_function]
 
       if proc_ask.nil?
-        # proc_method = _ask(desc, default, valid_regex,
-        #                    is_encrypted, is_required)
-        value = _ask(desc, default, valid_regex,
-                     is_encrypted, is_required)
+        value = _ask(desc, default, valid_regex, is_encrypted, is_required)
       else
-        # proc_method = @process.method(proc_ask)
         value = @process.method(proc_ask)
       end
-
-      # loop do
-      #   value = proc_method.call(desc, default, valid_regex,
-      #                            is_encrypted, is_required)
-      #   break if validate_proc.nil?
-
-      #   validate_method = @process.method(validate_proc)
-      #   break if validate_method.call(value)
-      # end
-      value
+      _nil_if_no_value(value)
     end
 
     # internal runtime function for process call
@@ -246,6 +248,12 @@ module Lorj
         say ANSI.bold('This information is required!')
       end
       value.to_s
+    end
+
+    # Internal function to return nil if value is empty.
+    def _nil_if_no_value(value)
+      return nil if value.nil? || value == ''
+      value
     end
   end
 end
