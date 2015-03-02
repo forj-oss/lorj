@@ -124,7 +124,7 @@ module Lorj
 
       setup_steps = _setup_load
 
-      @config.ac_load(sAccountName) if sAccountName
+      return nil unless _process_setup_init(sAccountName)
 
       Lorj.debug(2, "Setup is identifying account data to ask for '%s'",
                  sObjectType)
@@ -137,8 +137,34 @@ module Lorj
       Lorj.debug(2, "Setup will ask for :\n %s", setup_steps.to_yaml)
 
       _setup_ask(setup_steps)
-      PrcLib.info("Configuring account : '#{config[:account_name]}',"\
+
+      PrcLib.info("Configuring account : '#{sAccountName}',"\
                   " provider '#{config[:provider_name]}'")
+    end
+
+    private
+
+    # Internal function to initialize the account.
+    #
+    # return true if initialized, false otherwise.
+    def _process_setup_init(sAccountName)
+      return false unless sAccountName
+
+      if @config.ac_load(sAccountName)
+        if @config[:provider] != @config[:provider_name]
+          s_ask = format("Account '%s' was configured with a different "\
+                         "provider '%s'.\nAre you sure to re-initialize this "\
+                         "account with '%s' provider instead? "\
+                         'All data will be lost',
+                         sAccountName, @config[:provider],
+                         @config[:provider_name])
+          PrcLib.fatal(0, 'Exited by user request.') unless agree(s_ask)
+          @config.ac_new(sAccountName, config[:provider_name])
+        end
+      else
+        @config.ac_new(sAccountName, config[:provider_name])
+      end
+      true
     end
 
     # Internal function to insert the data after several data to ask.

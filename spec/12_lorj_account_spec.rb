@@ -53,7 +53,8 @@ describe 'class: Lorj::Account,' do
       File.open(File.join(PrcLib.data_path, 'accounts', 'test1'),
                 'w+') do |file|
         file.write(":credentials:\n  :keypair_name: nova_test1\n  "\
-                   ":tenant_name: test\n  :data: ac_data")
+                   ":tenant_name: test\n  :data: ac_data\n:account:\n  "\
+                   ":name: test1\n  :provider: myprovider\n")
       end
 
       @account = Lorj::Account.new
@@ -176,17 +177,6 @@ describe 'class: Lorj::Account,' do
                           :name => 'account')).to eq('nova_test2')
     end
 
-    it 'account.ac_save return false - '\
-       'file has no valid provider name' do
-      expect(@account.ac_save).to equal(false)
-    end
-
-    it 'set provider name' do
-      expect(@account.set(:provider, 'myprovider',
-                          :name => 'account',
-                          :section => :account)).to eq('myprovider')
-    end
-
     it 'account.ac_save return true' do
       expect(@account.ac_save).to equal(true)
     end
@@ -205,6 +195,34 @@ describe 'class: Lorj::Account,' do
        "saved 'nova_test2'" do
       expect(@account.get(:keypair_name,
                           :name => 'account')).to eq('nova_test2')
+    end
+  end
+
+  context "Key      | runtime | accounts   | local     | default)\n"\
+          "  :keypair | nil     | nil        | nova_local| default_key\n"\
+          "  :data    | nil     | nil        | no effect | None\n"\
+          "  :data is account exclusive\n  => accounts/test1 not set:" do
+    before(:all) do
+      File.open(File.join(PrcLib.data_path, 'config.yaml'),
+                'w+') do |file|
+        file.write(":default:\n  :keypair_name: nova_local\n  :data: no effect")
+      end
+      File.open(File.join(PrcLib.data_path, 'accounts', 'test1'),
+                'w+') do |file|
+        file.write(":credentials:\n  :keypair_name: nova_test1\n  "\
+                   ":tenant_name: test\n  :data: ac_data\n")
+      end
+
+      @account = Lorj::Account.new
+    end
+
+    it 'account.load return true' do
+      expect(@account.ac_load 'test1').to equal(true)
+      expect(@account.where?(:data)).to eq(%w(account))
+    end
+
+    it 'account.ac_save return false - provider not set.' do
+      expect(@account.ac_save).to equal(false)
     end
   end
 end

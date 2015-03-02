@@ -472,20 +472,22 @@ module Lorj
       local = @config_layers[local_index][:config]
 
       account.data_options(:section => :account)
-      if account[:provider].nil?
-        PrcLib.error "Provider name is not set. Unable to save the account '"\
-                     "%s' to '%s'", @account_name, account_file
+
+      [:provider].each do |key|
+        next if account.exist?(key) && !account[key].nil?
+
+        PrcLib.error "':%s' is not set. Unable to save the account '"\
+                     "%s' to '%s'", key.to_s, @account_name, account_file
         return false
       end
 
-      local.filename = account_file
       result = local.save
 
       return result unless result
 
-      return true if account.exist?(:account_name)
-
-      account[:account_name] = @account_name
+      account.data_options(:section => :account)
+      account[:name] = @account_name
+      account.filename = account_file
       account.save
 
       true
