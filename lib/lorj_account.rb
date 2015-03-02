@@ -496,8 +496,9 @@ module Lorj
 
   # Defines internal functions
   class Account
-    # TODO: Strange function!!! To revisit
+    # TODO: Strange function!!! To revisit. Used by forj cli in forj-settings.rb
 
+    #
     def meta_type?(key)
       return nil unless key
 
