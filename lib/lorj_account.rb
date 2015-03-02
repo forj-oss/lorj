@@ -420,7 +420,7 @@ module Lorj
 
   # Defines Account exclusive functions
   class Account
-    def ac_new(sAccountName, provider_name = nil)
+    def ac_new(sAccountName, provider_name)
       return nil if sAccountName.nil?
       @account_name = sAccountName
       index = layer_index('account')

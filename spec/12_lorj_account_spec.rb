@@ -182,7 +182,7 @@ describe 'class: Lorj::Account,' do
     end
 
     it 'account.ac_new return true, and :data disappeared.' do
-      expect(@account.ac_new 'test1').to equal(true)
+      expect(@account.ac_new 'test1', 'provider').to equal(true)
       expect(@account.where?(:data)).to eq(%w(runtime))
     end
 
