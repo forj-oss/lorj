@@ -575,7 +575,7 @@ module Lorj
     # Internal function
     def self._obj_needs_data(object_attr, msg_action, new_params)
       attr_name = PrcLib.model.attribute_context
-      if Lorj.defaults.meta_exist?(attr_name)
+      if Lorj.data.auto_meta_exist?(attr_name)
         Lorj.debug(2, "%-28s: %s predefined config '%s'.",
                    _object_name(PrcLib.model.object_context),
                    msg_action, attr_name)

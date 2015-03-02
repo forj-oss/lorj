@@ -68,6 +68,8 @@ module Lorj
     #   - +new_params+    : Parameters ObjectData
     #   - +param_obj+     : parameter object
     #   - +param_options+ : parameter options
+    #     - :type   : hdata requires parameters to be :data.
+    #     - :decrypt: true if the data needs to be decrypted automatically.
     #   - +value+         : value to add in hdata Hash.
     #
     # *return*:
@@ -88,6 +90,10 @@ module Lorj
                             object_type, attr_name,
                             value) unless value_mapping.key?(value)
         value = value_mapping[value]
+      end
+
+      if param_options[:decrypt].is_a?(TrueClass)
+        value = _get_encrypted_value(value, _get_encrypt_key)
       end
 
       return unless param_options[:mapping]

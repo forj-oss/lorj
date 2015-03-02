@@ -83,12 +83,7 @@ module Lorj
       return '' if enc_value.nil?
       value_hidden = ''
       begin
-        value_hidden = '*' * Encryptor.decrypt(
-          :value => Base64.strict_decode64(enc_value),
-          :key => entr[:key],
-          :iv => Base64.strict_decode64(entr[:iv]),
-          :salt => entr[:salt]
-        ).length
+        value_hidden = '*' * _get_encrypted_value(enc_value, entr).length
       rescue
         PrcLib.error('Unable to decrypt your %s. You will need to re-enter it.',
                      sDesc)
@@ -97,6 +92,34 @@ module Lorj
                        ' just press Enter', sDesc)
       end
       value_hidden
+    end
+
+    # internal runtime function for process call #_build_hdata and
+    # #_get_encrypted_value_hidden
+    # Get encrypted value
+    #
+    # *parameters*:
+    #   - +default+     : encrypted default value
+    #   - +entropy+     : Entropy Hash
+    #
+    # *return*:
+    # - value : decrypted value.
+    #
+    # *raise*:
+    #
+    def _get_encrypted_value(enc_value, entr)
+      return '' if enc_value.nil?
+      begin
+        Encryptor.decrypt(
+          :value => Base64.strict_decode64(enc_value),
+          :key => entr[:key],
+          :iv => Base64.strict_decode64(entr[:iv]),
+          :salt => entr[:salt]
+        )
+      rescue
+        PrcLib.error('Unable to decrypt your %s. You will need to re-enter it.',
+                     sDesc)
+      end
     end
 
     # internal runtime function for process call
