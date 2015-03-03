@@ -22,6 +22,18 @@ class OpenstackController
     hParams[:network_connection].security_group_rules.create(hParams[:hdata])
   end
 
+  def create_keypairs(hParams)
+    required?(hParams, :compute_connection)
+    required?(hParams, :keypair_name)
+    required?(hParams, :public_key)
+
+    # API:
+    # https://github.com/fog/fog/blob/master/lib/fog/openstack/docs/compute.md
+    service = hParams[:compute_connection]
+    service.key_pairs.create(:name => hParams[:keypair_name],
+                            :public_key => hParams[:public_key])
+  end
+
   def create_server(hParams)
     [:compute_connection, :image,
      :network, :flavor, :keypairs,
