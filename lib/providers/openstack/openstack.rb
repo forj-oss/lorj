@@ -28,6 +28,8 @@ require File.join(hpcloud_path, 'openstack_create.rb')
 
 # Defines Meta Openstack object
 class Openstack
+  process_default :use_controller => true
+
   define_obj :compute_connection
   # Defines Data used by compute.
 
@@ -36,9 +38,6 @@ class Openstack
                                  :decrypt => true
   obj_needs :data, :auth_uri,    :mapping => :openstack_auth_url
   obj_needs :data, :tenant,      :mapping => :openstack_tenant
-
-  obj_needs_optional
-  # Required for HPHelion
   obj_needs :data, :compute,     :mapping => :openstack_region
 
   define_obj :network_connection
@@ -47,10 +46,12 @@ class Openstack
                                  :decrypt => true
   obj_needs :data, :auth_uri,    :mapping => :openstack_auth_url
   obj_needs :data, :tenant,      :mapping => :openstack_tenant
-
-  obj_needs_optional
-  # Required for HPHelion
   obj_needs :data, :network,     :mapping => :openstack_region
+
+  # Openstack tenants object
+  define_obj(:tenants, :create_e => :openstack_get_tenant)
+  obj_needs :CloudObject, :compute_connection
+  obj_needs :data, :tenant
 
   define_obj :network
   query_mapping :external, :router_external
@@ -63,6 +64,10 @@ class Openstack
 
   # Excon::Response object type
   def_attr_mapping :output, 'output'
+
+  define_obj :security_groups
+  # Added tenant data to add in queries.
+  obj_needs :CloudObject, :tenants
 
   define_obj :rule
   obj_needs :data, :dir,        :mapping => :direction

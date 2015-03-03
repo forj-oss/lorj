@@ -31,7 +31,7 @@ class OpenstackController
     # https://github.com/fog/fog/blob/master/lib/fog/openstack/docs/compute.md
     service = hParams[:compute_connection]
     service.key_pairs.create(:name => hParams[:keypair_name],
-                            :public_key => hParams[:public_key])
+                             :public_key => hParams[:public_key])
   end
 
   def create_server(hParams)

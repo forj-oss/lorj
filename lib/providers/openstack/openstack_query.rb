@@ -16,6 +16,16 @@
 
 # Defined Openstack object query.
 class OpenstackController
+  def self.def_basic_query(connection, name, property_name = nil)
+    property_name = property_name.nil? ? name.to_s + 's' : property_name.to_s
+
+    define_method("query_#{name}") do |hParams, _query|
+      required?(hParams, connection)
+      hParams[connection].send(property_name).all
+    end
+  end
+
+  # Implementation of API supporting query Hash
   def self.def_simple_query(connection, name, property_name = nil)
     property_name = property_name.nil? ? name.to_s + 's' : property_name.to_s
 
@@ -25,6 +35,8 @@ class OpenstackController
     end
   end
 
+  # Implementation of API NOT supporting query Hash
+  # The function will filter itself.
   def self.def_complex_query(connection, name, property_name = nil)
     property_name = property_name.nil? ? name.to_s + 's' : property_name.to_s
 
@@ -48,6 +60,8 @@ class OpenstackController
     end
   end
 
+  def_simple_query :compute_connection, :tenant
+
   def_simple_query :compute_connection, :image
 
   def_simple_query :compute_connection, :flavor
@@ -62,11 +76,21 @@ class OpenstackController
 
   def_simple_query :network_connection, :port
 
-  def_simple_query :network_connection, :security_groups, :security_groups
+  # def_simple_query :network_connection, :security_groups, :security_groups
 
   def_simple_query :network_connection, :rule, :security_group_rules
 
   def_complex_query :compute_connection, :keypairs, :key_pairs
 
   def_complex_query :compute_connection, :public_ip, :addresses
+
+  def_complex_query :compute_connection, :tenants, :tenants
+
+  def query_security_groups(hParams, query)
+    required?(hParams, :network_connection)
+    required?(hParams, :tenants)
+
+    query[:tenant_id] = hParams[:tenants].id
+    hParams[:network_connection].send(:security_groups).all query
+  end
 end
