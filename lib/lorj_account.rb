@@ -335,8 +335,8 @@ module Lorj
     #   - +value+   : value to set
     #   - +options+ : possible options:
     #     - +:section+ : Force to use a specific section name.
-    #     - +:name+    : layer to exclusively get data.
-    #     - +:indexes+ : layer index to exclusively get data.
+    #     - +:name+    : layer to exclusively set data.
+    #     - +:index+   : layer index to exclusively set data.
     #       If neither :name or :index is set, set will use the 'runtime' layer.
     #
     # * *Returns* :
