@@ -173,7 +173,7 @@ module Lorj
       options = {} unless options.is_a?(Hash)
 
       section = options[:section]
-      section = Lorj.defaults.get_meta_section(key) if section.nil?
+      section = Lorj.data.first_section(key) if section.nil?
 
       options = { :keys => [key], :section => section }
 
@@ -260,7 +260,7 @@ module Lorj
       options = {} unless options.is_a?(Hash)
 
       section = options[:section]
-      section = Lorj.defaults.get_meta_section(key) if section.nil?
+      section = Lorj.data.first_section(key) if section.nil?
       options = { :keys => [key], :section => section }
 
       indexes = _identify_array_indexes(options, exclusive?(key, section))
@@ -294,7 +294,7 @@ module Lorj
 
       return nil if section.nil?
 
-      result = Lorj.defaults.get_meta(section, key, :readonly)
+      result = Lorj.data.section_data(section, key, :readonly)
       return result if result.boolean?
       false
     end
@@ -356,7 +356,7 @@ module Lorj
       key = parameters[0][0]
       layer_name, section = parameters[1]
 
-      section = Lorj.defaults.get_meta_section(key) if section.nil?
+      section = Lorj.data.first_section(key) if section.nil?
       section = :default if section.nil?
 
       return nil if readonly?(key, section)

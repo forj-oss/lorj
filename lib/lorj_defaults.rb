@@ -93,8 +93,8 @@ module Lorj
     def meta_each
       PrcLib.debug("'Lorj.defaults.%s' is obsolete and will be removed "\
                    'in Lorj 2.0. Please update your code to call '\
-                   "'Lorj.data.%s' instead.",
-                   __method__, 'meta_each')
+                   "'Lorj.data.%s' instead.\n%s",
+                   __method__, 'meta_each', caller[0])
       Lorj.data.meta_each do |section, key, value|
         yield section, key, value
       end
@@ -113,8 +113,8 @@ module Lorj
     def meta_exist?(key)
       PrcLib.debug("'Lorj.defaults.%s' is obsolete and will be removed "\
                    'in Lorj 2.0. Please update your code to call '\
-                   "'Lorj.data.%s' instead.",
-                   __method__, 'auto_meta_exist?')
+                   "'Lorj.data.%s' instead.\n%s",
+                   __method__, 'auto_meta_exist?', caller[0])
       Lorj.data.auto_meta_exist?(key)
     end
 
@@ -135,8 +135,8 @@ module Lorj
     def get_meta_auto(data, *options)
       PrcLib.debug("'Lorj.defaults.%s' is obsolete and will be removed "\
                    'in Lorj 2.0. Please update your code to call '\
-                   "'Lorj.data.%s' instead.",
-                   __method__, 'auto_section_data')
+                   "'Lorj.data.%s' instead.\n%s",
+                   __method__, 'auto_section_data', caller[0])
       Lorj.data.auto_section_data(data, *options)
     end
 
@@ -163,8 +163,8 @@ module Lorj
     def get_meta(section, data, *options)
       PrcLib.debug("'Lorj.defaults.%s' is obsolete and will be removed "\
                    'in Lorj 2.0. Please update your code to call '\
-                   "'Lorj.data.%s' instead.",
-                   __method__, 'section_data')
+                   "'Lorj.data.%s' instead.\n%s",
+                   __method__, 'section_data', caller[0])
       Lorj.data.section_data(section, data, *options)
     end
 
@@ -179,8 +179,8 @@ module Lorj
     def get_meta_section(key)
       PrcLib.debug("'Lorj.defaults.%s' is obsolete and will be removed "\
                    'in Lorj 2.0. Please update your code to call '\
-                   "'Lorj.data.%s' instead.",
-                   __method__, 'first_section')
+                   "'Lorj.data.%s' instead.\n%s",
+                   __method__, 'first_section', caller[0])
       Lorj.data.first_section(key)
     end
 

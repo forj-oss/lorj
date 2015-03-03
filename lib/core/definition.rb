@@ -264,7 +264,7 @@ module Lorj
       data = KeyPath.new data, 2
       PrcLib.dcl_fail("%s: Config data '%s' unknown",
                       self.class,
-                      data) unless Lorj.defaults.meta_exist?(data.key)
+                      data) unless Lorj.data.auto_meta_exist?(data.key)
 
       PrcLib.model.data_context data
 
