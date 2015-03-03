@@ -61,15 +61,15 @@ class CloudProcess
                                   { :name => keypair_name }, hParams)
 
     if keypairs.length == 0
-      keypair = keypair_import(keypair_name, loc_kpair)
+      keypair = keypair_import(hParams, loc_kpair)
     else
       keypair = keypairs[0]
       keypair[:coherent] = coherent_keypair?(loc_kpair, keypair)
       # Adding information about key files.
     end
     if keypair[:coherent]
-      keypair[:private_key_file] = loc_kpair[:private_key_file]
-      keypair[:public_key_file] = loc_kpair[:public_key_file]
+      keypair[:private_key_name] = loc_kpair[:private_key_name]
+      keypair[:public_key_name] = loc_kpair[:public_key_name]
     end
     keypair
   end
@@ -89,20 +89,27 @@ end
 
 # Keypair management: Internal process functions
 class CloudProcess
-  def keypair_import(keypair_name, loc_kpair)
+  def keypair_import(hParams, loc_kpair)
     PrcLib.fatal(1, "Unable to import keypair '%s'. "\
                     'Public key file is not found. '\
                     "Please run 'forj setup %s'",
-                 keypair_name,
+                 hParams[:keypair_name],
                  config[:account_name]) unless loc_kpair[:public_key_exist?]
+    public_key_file = File.join(loc_kpair[:keypair_path],
+                                loc_kpair[:public_key_name])
+
     begin
-      config[:public_key] = File.read(loc_kpair[:public_key_file])
+      config[:public_key] = File.read(public_key_file)
     rescue => e
       PrcLib.fatal(1, "Unable to import keypair '%s'. '%s' is "\
-                      "unreadable.\n%s", keypair_name,
-                   loc_kpair[:public_key_file], e.message)
+                      "unreadable.\n%s", hParams[:keypair_name],
+                   loc_kpair[:public_key_file],
+                   e.message)
     end
-    keypair = create_keypair(sCloudObj, hParams)
+    keypair = create_keypair(:keypairs, hParams)
+
+    return nil if keypair.nil?
+
     if !loc_kpair[:private_key_exist?]
       keypair[:coherent] = false
     else
