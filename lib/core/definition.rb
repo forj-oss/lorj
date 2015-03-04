@@ -116,6 +116,17 @@ module Lorj
     # - def_attr_mapping  : Define object attribute mapping.
     # - data_value_mapping: Define Data model values mapping.
     #
+    # * *Args*
+    #   - type     : Symbol. Object type to declare.
+    #   - handlers : Hash. List of Process handler to call for
+    #     create/query/get/delete/update/get_attr.
+    #     Handlers supported:
+    #     - :create_e   : Process function to call with create
+    #     - :delete_e   : Process function to call with delete
+    #     - :update_e   : Process function to call with update
+    #     - :get_e      : Process function to call with get
+    #     - :query_e    : Process function to call with query
+    #     - :get_attr_e : Process function to call with get_attr
     def self.define_obj(obj_type_name, handlers = nil)
       return nil unless [NilClass, String, Symbol].include?(obj_type_name.class)
       PrcLib.model.heap true

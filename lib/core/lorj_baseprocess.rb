@@ -167,6 +167,33 @@ module Lorj
       @base_object.config
     end
 
+    # Function to execute a query and return one or no record.
+    #
+    # * *Args*
+    #   - +type+   : Symbol. meta object type to query.
+    #   - +sQuery+ : Hash. Represents the query to execute
+    #   - +name+   : String. Name of the object.
+    #   - +info+   : List of message to format. This string is printed out
+    #      thanks to #Lorj.debug or #PrcLib.info
+    #     - :notfound   : not found string formated with: type, name
+    #     - :checkmatch : checking match string formated with: type, name
+    #     - :nomatch    : No match string formated with: type, name
+    #     - :found      : Found string formated with: type, item
+    #       item string built from :items and :items_form
+    #     - :more       : Found several string formated with: type, name
+    #     - :items_form : Combined with :items. Represent a valid format string
+    #       for Ruby format function
+    #     - :items      : Symbol or Array of Symbol.
+    #       List of elements extracted from the first element of the query
+    #       result.
+    #       It is used to format the `item` string with :items_form format
+    #       string.
+    #       by default, the element extracted is :name and :items_form is '%s'.
+    #
+    # * *returns*
+    # - Lorj::Data of type :list. It represents the query result.
+    #   It contains 0 or more Lorj::Data of type :data
+    #
     def query_single(sCloudObj, sQuery, name, sInfoMsg = {})
       list = controller_query(sCloudObj, sQuery)
 
@@ -255,9 +282,6 @@ module Lorj
       end
     end
 
-    # qs_info_init is not omplex as well described. Disabling rubocop
-    # rubocop: disable PerceivedComplexity, CyclomaticComplexity
-
     def _qs_info_init(sInfoMsg)
       info = {
         :notfound => "No %s '%s' found",
@@ -268,13 +292,8 @@ module Lorj
         :items_form => '%s',
         :items => [:name]
       }
-      info[:notfound]     = sInfoMsg[:notfound]   if sInfoMsg.key?(:notfound)
-      info[:checkmatch]   = sInfoMsg[:checkmatch] if sInfoMsg.key?(:checkmatch)
-      info[:nomatch]      = sInfoMsg[:nomatch]    if sInfoMsg.key?(:nomatch)
-      info[:found]        = sInfoMsg[:found]      if sInfoMsg.key?(:found)
-      info[:more]         = sInfoMsg[:more]       if sInfoMsg.key?(:more)
-      info[:items]        = sInfoMsg[:items]      if sInfoMsg.key?(:items)
-      info[:items_form]   = sInfoMsg[:items_form] if sInfoMsg.key?(:items_form)
+
+      info.each { |key| info[key] = sInfoMsg[key] if sInfoMsg.key?(key) }
       info
     end
   end
