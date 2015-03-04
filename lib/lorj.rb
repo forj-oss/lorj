@@ -73,7 +73,7 @@ module Lorj
     if iLevel <= PrcLib.core_level
       message = format('-%s- %s', iLevel, sMsg)
 
-      PrcLib.debug(format(message, *p))
+      PrcLib.debug(message, *p)
     end
   end
 
