@@ -35,7 +35,8 @@ class Openstack
   # Define Data used by service
 
   obj_needs :data, :account_id,  :mapping => :openstack_username
-  obj_needs :data, :account_key, :mapping => :openstack_api_key
+  obj_needs :data, :account_key, :mapping => :openstack_api_key,
+                                 :decrypt => true
   obj_needs :data, :auth_uri,    :mapping => :openstack_auth_uri
   obj_needs :data, :tenant,      :mapping => :openstack_tenant
   obj_needs :data, ':excon_opts/:connect_timeout', :default_value => 30
@@ -139,7 +140,15 @@ class Openstack
                 'API, then download the Openstack RC file. The Region name is '\
                 'set as OS_REGION_NAME.'\
                 "\nIf there is no region shown, you can ignore it.",
-              :desc => 'Openstack Compute Region (Ex: RegionOne)'
+              :desc => 'Openstack Compute Region (Ex: RegionOne)',
+              :depends_on => [:account_id, :account_key, :auth_uri, :tenant],
+              :list_values => {
+                :query_type => :controller_call,
+                :object => :services,
+                :query_call => :get_services,
+                :query_params => { :list_services => [:Compute, :compute] },
+                :validate => :list_strict
+              }
   )
 
   define_data(:network,
@@ -152,7 +161,15 @@ class Openstack
                 "\nYou can also get it from Project-Compute-Access & Security-"\
                 'API, then download the Openstack RC file. The Region name is '\
                 'set as OS_REGION_NAME.'\
-                "\nIf there is no region shown, you can ignore it."
+                "\nIf there is no region shown, you can ignore it.",
+              :depends_on => [:account_id, :account_key, :auth_uri, :tenant],
+              :list_values => {
+                :query_type => :controller_call,
+                :object => :services,
+                :query_call => :get_services,
+                :query_params => { :list_services => [:Networking, :network] },
+                :validate => :list_strict
+              }
   )
 
   define_obj :server
@@ -306,5 +323,84 @@ class OpenstackController
     end
   rescue => e
     controller_error "==>Unable to map '%s'. %s", key, e.message
+  end
+end
+
+# Following class describe how FORJ should handle Openstack Cloud objects.
+class OpenstackController
+  # This function requires to return an Array of values or nil.
+  def get_services(sObjectType, oParams)
+    case sObjectType
+    when :services
+      # oParams[sObjectType] will provide the controller object.
+      # This one can be interpreted only by controller code,
+      # except if controller declares how to map with this object.
+      # Processes can deal only process mapped data.
+      # Currently there is no services process function. No need to map.
+      services = oParams[:services]
+      if !oParams[:list_services].is_a?(Array)
+        service_to_find = [oParams[:list_services]]
+      else
+        service_to_find = oParams[:list_services]
+      end
+      # Search for service. Ex: Can be :Networking or network. I currently do
+      # not know why...
+      search_services = services.rh_get(:service_catalog)
+      service = nil
+      service_to_find.each do |sServiceElem|
+        if search_services.key?(sServiceElem)
+          service = sServiceElem
+          break
+        end
+      end
+
+      controller_error 'Unable to find services %s',
+                       service_to_find if service.nil?
+      result = services.rh_get(:service_catalog, service).keys
+      result.delete('name')
+      result.each_index do |iIndex|
+        result[iIndex] = result[iIndex].to_s if result[iIndex].is_a?(Symbol)
+      end
+      return result
+    else
+      controller_error "'%s' is not a valid object for 'get_services'",
+                       sObjectType
+    end
+  end
+
+  def format_retrieve_result(retrieve_result)
+    {
+      :auth_token => retrieve_result['access']['token']['id'],
+      :expires => retrieve_result['access']['token']['expires'],
+      :service_catalog =>
+          get_service_catalog(retrieve_result['access']['serviceCatalog']),
+      :endpoint_url => nil,
+      :cdn_endpoint_url => nil
+    }
+  end
+
+  def get_service_catalog(body)
+    fail 'Unable to parse service catalog.' unless body
+    service_catalog = {}
+    body.each do |s|
+      type = s['type']
+      next if type.nil?
+      type = type.to_sym
+      next if s['endpoints'].nil?
+      service_catalog[type] = {}
+      service_catalog[type]['name'] = s['name']
+      service_catalog = parse_service_catalog_endpoint(s, type, service_catalog)
+    end
+    service_catalog
+  end
+
+  def parse_service_catalog_endpoint(s, type, service_catalog)
+    s['endpoints'].each do |ep|
+      next if ep['region'].nil?
+      next if ep['publicURL'].nil?
+      next if ep['publicURL'].empty?
+      service_catalog[type][ep['region'].to_sym] = ep['publicURL']
+    end
+    service_catalog
   end
 end
