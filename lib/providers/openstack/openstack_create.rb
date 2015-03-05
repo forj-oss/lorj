@@ -16,6 +16,17 @@
 
 # Defined Openstack object create.
 class OpenstackController
+  def create_security_groups(hParams)
+    required?(hParams, :network_connection)
+    required?(hParams, :tenants)
+    required?(hParams, :security_group)
+
+    service = hParams[:network_connection]
+
+    service.security_groups.create(:name => hParams[:security_group],
+                                   :tenant_id => hParams[:tenants].id)
+  end
+
   def create_rule(hParams)
     required?(hParams, :network_connection)
     required?(hParams, :security_groups)
