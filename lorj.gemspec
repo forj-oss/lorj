@@ -29,6 +29,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'bundler'
   spec.add_development_dependency 'rake', '~> 10.0'
   spec.add_development_dependency 'rspec', '~> 3.1.0'
+  spec.add_development_dependency 'rubocop', '>= 0.29.0'
   spec.add_development_dependency 'byebug' unless less_than_two
   spec.rdoc_options << \
     '--title Lorj - The Process Controllers framework system' << \
