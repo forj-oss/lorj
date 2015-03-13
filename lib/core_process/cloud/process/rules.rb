@@ -60,7 +60,6 @@ class CloudProcess
       :addr_map => hParams[:addr_map],
       :sg_id => hParams[:sg_id]
     }
-
     rules = forj_query_rule(sCloudObj, query, hParams)
     if rules.length == 0
       create_rule(sCloudObj, hParams)
@@ -103,17 +102,18 @@ class CloudProcess
   # Rules internal #
   #----------------#
   def create_rule(sCloudObj, hParams)
-    rule = '%s %s:%s - %s to %s', hParams[:dir], hParams[:rule_proto],
-           hParams[:port_min], hParams[:port_max],
-           hParams[:addr_map]
-    PrcLib.state("Creating rule '%s'", rule)
+    rule_msg = format('%s %s:%s - %s to %s',
+                      hParams[:dir], hParams[:rule_proto],
+                      hParams[:port_min], hParams[:port_max],
+                      hParams[:addr_map])
+    PrcLib.state("Creating rule '%s'", rule_msg)
     ssl_error_obj = SSLErrorMgt.new
     begin
       rule = controller_create(sCloudObj)
-      PrcLib.info("Rule '%s' created.", rule)
+      PrcLib.info("Rule '%s' created.", rule_msg)
     rescue StandardError => e
       retry unless ssl_error_obj.error_detected(e.message, e.backtrace, e)
-      PrcLib.error 'error creating the rule for port %s', rule
+      PrcLib.error 'error creating the rule "%s"', rule_msg
     end
     rule
   end

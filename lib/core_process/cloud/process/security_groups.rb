@@ -44,14 +44,15 @@ class CloudProcess
         portmax = (port_found_match[3]) ? (port_found_match[3]) : (portmin)
         # Need to set runtime data to get or if missing
         # create the required rule.
-        config[:dir]        = :IN
-        config[:proto] = 'tcp'
-        config[:port_min]   = portmin.to_i
-        config[:port_max]   = portmax.to_i
-        config[:addr_map]   = '0.0.0.0/0'
+        params = {}
+        params[:dir]        = :IN
+        params[:proto] = 'tcp'
+        params[:port_min]   = portmin.to_i
+        params[:port_max]   = portmax.to_i
+        params[:addr_map]   = '0.0.0.0/0'
 
         # object.Create(:rule)
-        process_create(:rule)
+        process_create(:rule, params)
       end
     end
     security_group

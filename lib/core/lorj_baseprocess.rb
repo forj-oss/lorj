@@ -293,7 +293,7 @@ module Lorj
         :items => [:name]
       }
 
-      info.each { |key| info[key] = sInfoMsg[key] if sInfoMsg.key?(key) }
+      info.each { |key, _| info[key] = sInfoMsg[key] if sInfoMsg.key?(key) }
       info
     end
   end
