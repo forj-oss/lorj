@@ -80,29 +80,29 @@ module Lorj
   # class describing generic Object Process
   # with process calls
   class BaseProcess
-    def process_create(sObjectType)
+    def process_create(sObjectType, hConfig = nil)
       process_error 'No Base object loaded.' unless @base_object
-      @base_object.process_create(sObjectType)
+      @base_object.process_create(sObjectType, hConfig)
     end
 
-    def process_query(sObjectType, sQuery)
+    def process_query(sObjectType, sQuery, hConfig = nil)
       process_error 'No Base object loaded.' unless @base_object
-      @base_object.process_query(sObjectType, sQuery)
+      @base_object.process_query(sObjectType, sQuery, hConfig)
     end
 
-    def process_update(sObjectType)
+    def process_update(sObjectType, hConfig = nil)
       process_error 'No Base object loaded.' unless @base_object
-      @base_object.process_update(sObjectType)
+      @base_object.process_update(sObjectType, hConfig)
     end
 
-    def process_get(sObjectType, sId)
+    def process_get(sObjectType, sId, hConfig = nil)
       process_error 'No Base object loaded.' unless @base_object
-      @base_object.process_get(sObjectType, sId)
+      @base_object.process_get(sObjectType, sId, hConfig)
     end
 
-    def process_delete(sObjectType)
+    def process_delete(sObjectType, hConfig = nil)
       process_error 'No Base object loaded.' unless @base_object
-      @base_object.process_delete(sObjectType)
+      @base_object.process_delete(sObjectType, hConfig)
     end
   end
 
