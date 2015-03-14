@@ -21,10 +21,10 @@
 # Subnetwork Management
 class CloudProcess
   def forj_get_or_create_subnetwork(sCloudObj, hParams)
-    subnet = query_subnet_one(sCloudObj, hParams)
-    unless subnet.empty?
-      register(subnet)
-      return subnet
+    subnets = query_subnet(sCloudObj, hParams)
+    unless subnets.length == 0
+      register(subnets[0])
+      return subnets[0]
     end
 
     # Create the subnet
@@ -48,6 +48,8 @@ class Lorj::BaseDefinition
   obj_needs :data,         :subnetwork_name
 
   def_query_attribute :network_id
+
+  def_attribute :network_id
 end
 
 # Subnetwork Management - internal functions
@@ -56,7 +58,7 @@ class CloudProcess
     name = hParams[:subnetwork_name]
     PrcLib.state("Creating subnet '%s'", name)
     begin
-      subnet = controller_create(sCloudObj)
+      subnet = controller_create(sCloudObj, hParams)
       PrcLib.info("Subnet '%s' created.", subnet[:name])
    rescue => e
      PrcLib.fatal(1, "Unable to create '%s' subnet.", name, e)
@@ -77,34 +79,20 @@ class CloudProcess
     end
   end
 
-  def query_subnet_one(_sCloudObj, hParams)
+  def query_subnet(sCloudObj, hParams)
     PrcLib.state('Searching for sub-network attached to '\
                  "network '%s'", hParams[:network, :name])
     #######################
     begin
       query = { :network_id => hParams[:network, :id] }
-      subnets = controller_query(:subnetwork, query)
-   rescue => e
-     PrcLib.error("%s\n%s", e.message, e.backtrace.join("\n"))
-    end
-    return nil if subnets.nil?
-
-    case subnets.length
-    when 0
-      PrcLib.info('No subnet found from '\
-                  "'%s' network", hParams[:network, :name])
-      ForjLib::Data.new
-    when 1
-      PrcLib.info("Found '%s' subnet from "\
-                  "'%s' network", subnets[0, :name],
-                  hParams[:network, :name])
-      subnets[0]
-    else
-      PrcLib.warning('Several subnet was found on '\
-                     "'%s'. Choosing the first one "\
-                     "= '%s'", hParams[:network, :name],
-                     subnets[0, :name])
-      subnets[0]
+      info = {
+        :notfound => "No %s found from '%s' network",
+        :checkmatch => "Found 1 %s. checking exact match for network '%s'.",
+        :nomatch => "No %s for network '%s' match"
+      }
+      query_single(sCloudObj, query, hParams[:network, :name], info)
+    rescue => e
+      PrcLib.error("%s\n%s", e.message, e.backtrace.join("\n"))
     end
   end
 end

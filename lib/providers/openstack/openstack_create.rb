@@ -27,10 +27,53 @@ class OpenstackController
                                    :tenant_id => hParams[:tenants].id)
   end
 
+  def create_network(hParams)
+    required?(hParams, :network_connection)
+    required?(hParams, :network_name)
+
+    hParams[:network_connection].networks.create(hParams[:hdata])
+  end
+
+  def create_subnetwork(hParams)
+    required?(hParams, :network_connection)
+    required?(hParams, :network)
+
+    netconn = hParams[:network_connection]
+    netconn.subnets.create(
+      :network_id => hParams[:network].id,
+      :name => hParams[:subnetwork_name],
+      :cidr => get_next_subnet(netconn),
+      :ip_version => '4'
+    )
+  end
+
   def create_rule(hParams)
     required?(hParams, :network_connection)
     required?(hParams, :security_groups)
     hParams[:network_connection].security_group_rules.create(hParams[:hdata])
+  end
+
+  def create_router(hParams)
+    required?(hParams, :network_connection)
+    required?(hParams, :router_name)
+
+    # Forcelly used admin_status_up to true. Coming from HPCloud.
+    # But not sure if we need it or not.
+    #  hParams[:hdata] = hParams[:hdata].merge(:admin_state_up => true)
+
+    hParams[:network_connection].routers.create(hParams[:hdata])
+  end
+
+  def create_router_interface(hParams)
+    required?(hParams, :network_connection)
+    required?(hParams, :router)
+    required?(hParams, :subnetwork)
+
+    service = hParams[:network_connection]
+    router = hParams[:router]
+    result = service.add_router_interface(router.id, hParams[:subnetwork].id)
+    fail if result.status != 200
+    result
   end
 
   def create_keypairs(hParams)
@@ -108,5 +151,47 @@ class OpenstackController
     # This function needs to returns a list of object.
     # This list must support the each function.
     address
+  end
+
+  def get_next_subnet(oNetworkConnect)
+    subnet_values = []
+    subnets = oNetworkConnect.subnets.all
+
+    subnets.each do|s|
+      subnet_values.push(s.cidr)
+    end
+
+    gap = false
+    count = 0
+    range_used = []
+    new_subnet = 0
+    new_cidr = ''
+
+    subnet_values = subnet_values.sort!
+
+    subnet_values.each do|value|
+      range_used.push(value[5])
+    end
+
+    range_used.each do |n|
+      if count.to_i == n.to_i
+      else
+      new_subnet = count
+      gap = true
+      break
+      end
+      count += 1
+    end
+
+    if gap
+      new_cidr = format('10.0.%s.0/24', count)
+    else
+      max_value = range_used.max
+      new_subnet = max_value.to_i + 1
+      new_cidr  = format('10.0.%s.0/24', new_subnet)
+    end
+    new_cidr
+  rescue => e
+    Logging.error("%s\n%s", e.message, e.backtrace.join("\n"))
   end
 end

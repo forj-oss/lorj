@@ -53,7 +53,9 @@ class Openstack
   obj_needs :CloudObject, :compute_connection
   obj_needs :data, :tenant
 
+  # Openstack Network
   define_obj :network
+  def_hdata :network_name, :mapping => :name
   query_mapping :external, :router_external
 
   define_obj :keypairs
@@ -157,6 +159,11 @@ class Openstack
 
   def_attr_mapping :gateway_network_id,
                    [:external_gateway_info, 'network_id']
+
+  # Port attributes used specifically by openstack fog API.
+  define_obj :port
+  def_attribute :device_owner
+  def_attribute :network_id
 
   define_obj :public_ip
   def_attr_mapping :server_id, :instance_id

@@ -26,21 +26,21 @@ class CloudProcess
   def forj_get_or_create_router(_sCloudObj, hParams)
     sub_net_obj = hParams[:subnetwork]
 
-    unless hParams[:router_name]
-      config[:router_name] = 'router-%s', hParams[:network, :name]
-      hParams[:router_name] = config[:router_name]
+    if hParams[:router_name].nil?
+      router_name = format('router-%s', hParams[:network, :name])
+    else
+      router_name = hParams[:router_name]
     end
 
-    router_name = hParams[:router_name]
     router_port = get_router_interface_attached(:port, hParams)
 
-    if !router_port
+    if router_port.length == 0
       # Trying to get router
       router = get_router(router_name)
-      router = create_router(router_name) unless router
+      router = create_router(router_name) if router.empty?
       create_router_interface(sub_net_obj, router) if router
     else
-      router = query_router_from_port(router_port, hParams)
+      router = query_router_from_port(router_port[0], hParams)
     end
     router
   end
@@ -99,16 +99,12 @@ class CloudProcess
   def get_router(name)
     PrcLib.state("Searching for router '%s'", name)
     begin
-      routers = controller_query(:router, :name => name)
-      case routers.length
-      when 1
-        routers[0]
-      else
-        PrcLib.info("Router '%s' not found.", name)
-        nil
-      end
-   rescue => e
-     PrcLib.error("%s\n%s", e.message, e.backtrace.join("\n"))
+      query = { :name => name }
+      routers = query_single(:router, query, name)
+      return Lorj::Data.new if routers.length == 0
+      register(routers[0])
+    rescue => e
+      PrcLib.error("%s\n%s", e.message, e.backtrace.join("\n"))
     end
   end
 
@@ -124,7 +120,7 @@ class CloudProcess
                      router_name)
       end
 
-      router = controller_create(:router)
+      router = controller_create(:router, :router_name => router_name)
       if oExternalNetwork
         PrcLib.info("Router '%s' created and attached to the external "\
                     "Network '%s'.", router_name, ext_net)
@@ -133,8 +129,8 @@ class CloudProcess
                     router_name)
       end
    rescue => e
-     raise ForjError.new, "Unable to create '%s' router\n%s",
-           router_name, e.message
+     PrcLib.error "Unable to create '%s' router\n%s\n%s", router_name,
+                  e.message, e.backtrace.join("\n")
     end
     router
   end
@@ -150,20 +146,20 @@ class CloudProcess
     end
   end
 
-  def query_router_from_port(router_port, hParams)
+  def query_router_from_port(router_port, _hParams)
     query = { :id => router_port[:device_id] }
-    routers = controller_query(:router, query)
-    case routers.length
-    when 1
-      PrcLib.info("Found router '%s' attached to the network '%s'.",
-                  routers[0, :name], hParams[:network, :name])
-      routers[0]
-    else
-      PrcLib.warning('Unable to find the router '\
-                     "id '%s'", router_port[:device_id])
-      ForjLib::Data.new
-    end
+    info = {
+      :notfound => 'No %s for port ID %s found',
+      :checkmatch => 'Found 1 %s. Checking exact match for port ID %s.',
+      :nomatch => 'No %s for port ID %s match',
+      :found => "Found %s '%s' from port ID #{router_port[:device_id]}.",
+      :more => 'Found several %s. Searching for port ID %s.'
+    }
+    routers = query_single(:router, query, router_port[:device_id], info)
+    return Lorj::Data.new if routers.length == 0
+    register(routers[0])
   end
+
   # TODO: Move router interface management to hpcloud controller.
   # Router interface to connect to the network
   def create_router_interface(oSubnet, router_obj)
@@ -193,28 +189,26 @@ class CloudProcess
   end
 
   def get_router_interface_attached(sCloudObj, hParams)
-    PrcLib.state("Searching for router port attached to the network '%s'",
-                 hParams[:network, :name])
+    name = hParams[:network, :name]
+    PrcLib.state("Searching for router port attached to the network '%s'", name)
     begin
       # Searching for router port attached
       #################
       query = { :network_id => hParams[
                                :network, :id],
                 :device_owner => 'network:router_interface' }
-
-      ports = controller_query(sCloudObj, query)
-      case ports.length
-      when 0
-        PrcLib.info("No router port attached to the network '%s'",
-                    hParams[:network, :name])
-        nil
-      else
-        PrcLib.info("Found a router port attached to the network '%s' ",
-                    hParams[:network, :name])
-        ports[0]
-      end
-   rescue => e
-     PrcLib.error("%s\n%s", e.message, e.backtrace.join("\n"))
+      info = {
+        :notfound => "No router %s for network '%s' found",
+        :checkmatch => 'Found 1 router %s. '\
+                             "Checking exact match for network '%s'.",
+        :nomatch => "No router %s for network '%s' match",
+        :found => "Found router %s ID %s attached to network '#{name}'.",
+        :more => "Found several router %s. Searching for network '%s'.",
+        :items => [:id]
+      }
+      query_single(sCloudObj, query, name, info)
+    rescue => e
+      PrcLib.error("%s\n%s", e.message, e.backtrace.join("\n"))
     end
   end
 
@@ -244,7 +238,7 @@ class CloudProcess
       case networks.length
       when 0
         PrcLib.info('No external network')
-        ForjLib::Data.new
+        Lorj::Data.new
       when 1
         PrcLib.info("Found external network '%s'.", networks[0, :name])
         networks[0]

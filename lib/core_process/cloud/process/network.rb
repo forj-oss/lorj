@@ -33,13 +33,12 @@ class CloudProcess
 
     # Attaching if missing the subnet.
     # Creates an object subnet, attached to the network.
+    params = {}
     unless hParams[:subnetwork_name]
-      hParams[:subnetwork_name] = 'sub-' + hParams[:network_name]
-      config[:subnetwork_name] = hParams[:subnetwork_name]
+      params[:subnetwork_name] = 'sub-' + hParams[:network_name]
     end
 
-    # object.Create(:subnetwork)
-    process_create(:subnetwork)
+    process_create(:subnetwork, params)
 
     network
   end

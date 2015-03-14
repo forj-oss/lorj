@@ -60,22 +60,19 @@ class CloudProcess
     PrcLib.state('Identifying External gateway')
     begin
       # Searching for external network
-      networks = controller_query(:network, sQuery.merge(:external => true))
-
-      case networks.length
-      when 0
-        PrcLib.info('No external network')
-        nil
-      when 1
-        PrcLib.info("Found external network '%s'.", networks[0, :name])
-        networks[0]
-      else
-        PrcLib.warning('Found several external networks. '\
-                       "Selecting the first one '%s'", networks[0, :name])
-        networks[0]
-      end
-   rescue => e
-     PrcLib.error("%s\n%s", e.message, e.backtrace.join("\n"))
+      query = sQuery.merge(:external => true)
+      info = {
+        :notfound => 'No external network found',
+        :checkmatch => 'Found 1 %s. Checking if it is an %s.',
+        :nomatch => 'No %s identified as %s match',
+        :found => "Found external %s '%s'.",
+        :more => 'Found several %s. Searching for the first one to be an %s.'
+      }
+      networks = query_single(:network, query, 'external network', info)
+      return Lorj::Data.new if networks.length == 0
+      networks[0]
+    rescue => e
+      PrcLib.error("%s\n%s", e.message, e.backtrace.join("\n"))
     end
   end
 end
