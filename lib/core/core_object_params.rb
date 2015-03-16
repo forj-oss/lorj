@@ -133,7 +133,7 @@ module Lorj
            @object_data.type?(param_name) != :DataObject
           PrcLib.runtime_fail "Object '%s/%s' is not defined. '%s' "\
                                'requirement failed.',
-                              self.class, param_name, fname
+                              self.class, param_name, __callee__
         end
         if @object_data.exist?(param_name)
           new_params.add(@object_data[param_name, :ObjectData])
