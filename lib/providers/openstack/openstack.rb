@@ -291,7 +291,10 @@ class OpenstackController
                        oControlerObject.class,
                        oControlerObject.class.attributes unless
                        oControlerObject.class.attributes.include?(key[0])
-      attributes.rh_get(key)
+
+      return attributes.rh_get(key) if attributes.rh_exist?(key)
+      return oControlerObject.send(key[0]) if key.length == 1
+      oControlerObject.send(key[0]).rh_get(key[1..-1])
     end
   rescue => e
     controller_error "==>Unable to map '%s'. %s", key, e.message

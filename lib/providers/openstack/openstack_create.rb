@@ -138,10 +138,7 @@ class OpenstackController
       end
     end
 
-    if address.nil?
-      # Create a new public IP to add in the pool.
-      address = compute_connect.addresses.create
-    end
+    address = allocate_new_ip(compute_connect) if address.nil?
     if address.nil?
       controller_error("No Public IP to assign to server '%s'", server.name)
     end
@@ -151,6 +148,17 @@ class OpenstackController
     # This function needs to returns a list of object.
     # This list must support the each function.
     address
+  end
+
+  def allocate_new_ip(compute_connect)
+    # Create a new public IP to add in the pool.
+    pools = compute_connect.addresses.get_address_pools
+    controller_error('No IP Pool found') if pools.length == 0
+    # TODO: Be able to support choice of pool at setup time.
+    if pools.length > 1
+      Lorj.warning('Several pools found. Selecting the first one.')
+    end
+    compute_connect.addresses.create 'pool' => pools[0]['name']
   end
 
   def get_next_subnet(oNetworkConnect)
