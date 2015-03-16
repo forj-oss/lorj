@@ -25,10 +25,22 @@ require File.join(hpcloud_path, 'openstack_query.rb')
 require File.join(hpcloud_path, 'openstack_get.rb')
 require File.join(hpcloud_path, 'openstack_delete.rb')
 require File.join(hpcloud_path, 'openstack_create.rb')
+require File.join(hpcloud_path, 'openstack_update.rb')
 
 # Defines Meta Openstack object
 class Openstack
   process_default :use_controller => true
+
+  define_obj :services
+  # Define Data used by service
+
+  obj_needs :data, :account_id,  :mapping => :openstack_username
+  obj_needs :data, :account_key, :mapping => :openstack_api_key
+  obj_needs :data, :auth_uri,    :mapping => :openstack_auth_uri
+  obj_needs :data, :tenant,      :mapping => :openstack_tenant
+  obj_needs :data, ':excon_opts/:connect_timeout', :default_value => 30
+  obj_needs :data, ':excon_opts/:read_timeout',    :default_value => 240
+  obj_needs :data, ':excon_opts/:write_timeout',   :default_value => 240
 
   define_obj :compute_connection
   # Defines Data used by compute.
@@ -157,8 +169,7 @@ class Openstack
             :external_gateway_id,
             :mapping => [:external_gateway_info, 'network_id']
 
-  def_attr_mapping :gateway_network_id,
-                   [:external_gateway_info, 'network_id']
+  def_attr_mapping :gateway_network_id, [:external_gateway_info, 'network_id']
 
   # Port attributes used specifically by openstack fog API.
   define_obj :port
@@ -179,31 +190,66 @@ class OpenstackController
     crud_types.each do |crud_type|
       case crud_type
       when :create, :delete
-        define_method(crud_type) do |sObjectType, hParams|
-          method_name = "#{crud_type}_#{sObjectType}"
-          if self.class.method_defined? method_name
-            send(method_name, hParams)
-          else
-            controller_error "'%s' is not a valid object for '%s'",
-                             sObjectType, crud_type
-          end
-        end
+        base_method(crud_type)
       when :query, :get
-        define_method(crud_type) do |sObjectType, sCondition, hParams|
-          method_name = "#{crud_type}_#{sObjectType}"
-          if self.class.method_defined? method_name
-            send(method_name, hParams, sCondition)
-          else
-            controller_error "'%s' is not a valid object for '%s'",
-                             sObjectType, crud_type
-          end
-        end
+        query_method(crud_type)
+      when :update
+        update_method(crud_type)
       end
     end
   end
 
+  def self.update_method(crud_type)
+    define_method(crud_type) do |sObjectType, obj, hParams|
+      method_name = "#{crud_type}_#{sObjectType}"
+      if self.class.method_defined? method_name
+        send(method_name, obj, hParams)
+      else
+        controller_error "'%s' is not a valid object for '%s'",
+                         sObjectType, crud_type
+      end
+    end
+  end
+
+  def self.query_method(crud_type)
+    define_method(crud_type) do |sObjectType, sCondition, hParams|
+      method_name = "#{crud_type}_#{sObjectType}"
+      if self.class.method_defined? method_name
+        send(method_name, hParams, sCondition)
+      else
+        controller_error "'%s' is not a valid object for '%s'",
+                         sObjectType, crud_type
+      end
+    end
+  end
+
+  def self.base_method(crud_type)
+    define_method(crud_type) do |sObjectType, hParams|
+      method_name = "#{crud_type}_#{sObjectType}"
+      if self.class.method_defined? method_name
+        send(method_name, hParams)
+      else
+        controller_error "'%s' is not a valid object for '%s'",
+                         sObjectType, crud_type
+      end
+    end
+  end
+
+  # Define the Openstack controller handlers
+  def_cruds :create, :delete, :get, :query, :update
+
   def connect(sObjectType, hParams)
     case sObjectType
+    when :services
+      # Fog use URI type for auth uri: URI.parse(:auth_uri)
+      # Convert openstack_auth_uri to type URI
+      hParams[:hdata][:openstack_auth_uri] =
+          URI.parse(hParams[:hdata][:openstack_auth_uri])
+      retrieve_result =
+          Fog::OpenStack.retrieve_tokens_v2(hParams[:hdata],
+                                            hParams[:excon_opts])
+      creds = format_retrieve_result(retrieve_result)
+      return creds
     when :compute_connection
       Fog::Compute.new(
         hParams[:hdata].merge(:provider => :openstack)
@@ -214,8 +260,6 @@ class OpenstackController
       controller_error "'%s' is not a valid object for 'connect'", sObjectType
     end
   end
-
-  def_cruds :create, :delete, :get, :query
 
   def set_attr(oControlerObject, key, value)
     if oControlerObject.is_a?(Excon::Response)

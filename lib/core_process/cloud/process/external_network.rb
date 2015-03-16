@@ -40,7 +40,7 @@ class CloudProcess
       external_network = forj_query_external_network(:network, {}, hParams)
       if !external_network.empty?
         router_obj[:gateway_network_id] = external_network[:id]
-        forj_update_router(:router, hParams)
+        controller_update(:router, router_obj)
         PrcLib.info("Router '%s' attached to the "\
                     "external network '%s'.",
                     router_name, external_network[:name])
