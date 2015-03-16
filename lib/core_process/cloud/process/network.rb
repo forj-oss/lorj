@@ -72,7 +72,8 @@ class Lorj::BaseDefinition
   obj_needs_optional
   obj_needs :data,         :subnetwork_name,     :for => [:create_e]
 
-  def_query_attribute :external # true if network is external or not.
+  # Any attribute are queriable
+  def_attribute :external # true if network is external or not.
 end
 
 # Network Process internal functions #

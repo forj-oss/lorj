@@ -74,8 +74,8 @@ class Lorj::BaseDefinition
   obj_needs :CloudObject,  :network_connection
   def_attribute :device_id
 
-  def_query_attribute :network_id
-  def_query_attribute :device_owner
+  def_attribute :network_id
+  def_attribute :device_owner
 end
 
 # Router interface Object

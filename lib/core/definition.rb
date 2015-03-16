@@ -153,6 +153,16 @@ module Lorj
     end
 
     # Application process to defines query attributes.
+    #
+    # This function is depreciated.
+    #
+    # def_attribute or def_attr_mapping already set the attribute as
+    # queriable. If the controller needs to redefine how the attribute is
+    # queried, use it will needs to call query_mapping.
+    #
+    # But from process point of view, all attribute must be queriable.
+    #
+    # So, use def_attribute(process), then query_mapping(controller)
     def self.def_query_attribute(key)
       PrcLib.model.heap true
       query_mapping(key, key)
@@ -343,6 +353,8 @@ module Lorj
     # Controller declaration to map an query attribute
     # By default, def_attribute configure those attributes as queriable.
     # The controller can redefine the query part.
+    # Use def_attribute or def_attr_mapping
+    # All attributes are considered as queriable.
     def self.query_mapping(key, map)
       PrcLib.model.heap true
       _query_mapping(key, map)

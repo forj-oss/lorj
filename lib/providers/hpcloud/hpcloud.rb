@@ -61,7 +61,7 @@ class Hpcloud
   # If the query is not push through and Hash object, the Provider
   # will needs to create his own mapping function.
   define_obj :network
-  query_mapping :external, :router_external
+  def_attr_mapping :external, :router_external
 
   define_obj :rule
   obj_needs :data, :dir,        :mapping => :direction

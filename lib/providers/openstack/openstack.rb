@@ -56,7 +56,7 @@ class Openstack
   # Openstack Network
   define_obj :network
   def_hdata :network_name, :mapping => :name
-  query_mapping :external, :router_external
+  def_attr_mapping :external, :router_external
 
   define_obj :keypairs
 

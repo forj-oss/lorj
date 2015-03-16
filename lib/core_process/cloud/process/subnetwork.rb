@@ -47,8 +47,6 @@ class Lorj::BaseDefinition
   obj_needs :CloudObject,  :network
   obj_needs :data,         :subnetwork_name
 
-  def_query_attribute :network_id
-
   def_attribute :network_id
 end
 
