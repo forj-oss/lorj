@@ -168,7 +168,7 @@ module Lorj
       @object_data.add data_objects
     end
 
-    # Function to get Lorj core data cache.
+    # Function to get attributes of objects stored in the Lorj core data cache.
     #
     # *Args*
     # - object_type : Object type to get
@@ -180,6 +180,17 @@ module Lorj
     #
     def data_objects(sObjectType, *key)
       @object_data[sObjectType, *key]
+    end
+
+    # Function to get Lorj core data cache keys.
+    #
+    # *Args*
+    #
+    # *Return*
+    # - List of objects in cache.
+    #
+    def cache_objects_keys
+      @object_data[].keys
     end
 
     # get an attribute/object/... from an object.

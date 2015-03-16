@@ -40,37 +40,37 @@ module Lorj
 
     attr_writer :base_object
 
-    def controller_connect(sObjectType, params = nil)
+    def controller_connect(sObjectType, params = nil) #:doc:
       process_error 'No Controler object loaded.' unless @base_object
       params = nil unless params.is_a?(Hash)
       @base_object.controller_connect(sObjectType, params)
     end
 
-    def controller_create(sObjectType, params = nil)
+    def controller_create(sObjectType, params = nil) #:doc:
       process_error 'No Controler object loaded.' unless @base_object
       params = nil unless params.is_a?(Hash)
       @base_object.controller_create(sObjectType, params)
     end
 
-    def controller_query(sObjectType, sQuery, params = nil)
+    def controller_query(sObjectType, sQuery, params = nil) #:doc:
       process_error 'No Controler object loaded.' unless @base_object
       params = nil unless params.is_a?(Hash)
       @base_object.controller_query(sObjectType, sQuery, params)
     end
 
-    def controller_update(sObjectType, params = nil)
+    def controller_update(sObjectType, params = nil) #:doc:
       process_error 'No Controler object loaded.' unless @base_object
       params = nil unless params.is_a?(Hash)
       @base_object.controller_update(sObjectType, params)
     end
 
-    def controller_delete(sObjectType, params = nil)
+    def controller_delete(sObjectType, params = nil) #:doc:
       process_error 'No Controler object loaded.' unless @base_object
       params = nil unless params.is_a?(Hash)
       @base_object.controller_delete(sObjectType, params)
     end
 
-    def controller_get(sObjectType, sId, params = nil)
+    def controller_get(sObjectType, sId, params = nil) #:doc:
       process_error 'No Controler object loaded.' unless @base_object
       params = nil unless params.is_a?(Hash)
       @base_object.controller_get(sObjectType, sId, params)
@@ -80,27 +80,27 @@ module Lorj
   # class describing generic Object Process
   # with process calls
   class BaseProcess
-    def process_create(sObjectType, hConfig = nil)
+    def process_create(sObjectType, hConfig = nil) #:doc:
       process_error 'No Base object loaded.' unless @base_object
       @base_object.process_create(sObjectType, hConfig)
     end
 
-    def process_query(sObjectType, sQuery, hConfig = nil)
+    def process_query(sObjectType, sQuery, hConfig = nil) #:doc:
       process_error 'No Base object loaded.' unless @base_object
       @base_object.process_query(sObjectType, sQuery, hConfig)
     end
 
-    def process_update(sObjectType, hConfig = nil)
+    def process_update(sObjectType, hConfig = nil) #:doc:
       process_error 'No Base object loaded.' unless @base_object
       @base_object.process_update(sObjectType, hConfig)
     end
 
-    def process_get(sObjectType, sId, hConfig = nil)
+    def process_get(sObjectType, sId, hConfig = nil) #:doc:
       process_error 'No Base object loaded.' unless @base_object
       @base_object.process_get(sObjectType, sId, hConfig)
     end
 
-    def process_delete(sObjectType, hConfig = nil)
+    def process_delete(sObjectType, hConfig = nil) #:doc:
       process_error 'No Base object loaded.' unless @base_object
       @base_object.process_delete(sObjectType, hConfig)
     end
@@ -111,12 +111,12 @@ module Lorj
   class BaseProcess
     private
 
-    def query_cache_cleanup(sObjectType)
+    def query_cache_cleanup(sObjectType) #:doc:
       fail Lorj::PrcError.new, 'No Base object loaded.' unless @base_object
       @base_object.query_cleanup(sObjectType)
     end
 
-    def object_cache_cleanup(sObjectType)
+    def object_cache_cleanup(sObjectType) #:doc:
       fail Lorj::PrcError.new, 'No Base object loaded.' unless @base_object
       @base_object.object_cleanup(sObjectType)
     end
@@ -135,19 +135,42 @@ module Lorj
       @base_object
     end
 
-    def format_object(sObjectType, oMiscObj)
+    def format_object(sObjectType, oMiscObj) #:doc:
       PrcLib.runtime_fail 'No Base object loaded.' unless @base_object
       @base_object.format_object(sObjectType, oMiscObj)
     end
 
-    def format_query(sObjectType, oMiscObj, hQuery)
+    def format_query(sObjectType, oMiscObj, hQuery) #:doc:
       PrcLib.runtime_fail 'No Base object loaded.' unless @base_object
       @base_object.format_list(sObjectType, oMiscObj, hQuery)
     end
 
-    def data_objects(sObjectType, *key)
+    # Function to provides Lorj Core data cache access.
+    #
+    # See BaseDefinition#data_objects for details.
+    #
+    # AVOID CALLING THIS FUNCTION, except in debug case.
+    # Usually, if you are using this function to access some data,
+    # it means you need to declare those data in your object model.
+    #
+    # As normally this data should be accessible to the function parameter
+    # call. Please review.
+    #
+    def data_objects(sObjectType, *key) #:doc:
+      PrcLib.debug('data_objects is depreciated. To access "%s", you should '\
+                   'declare it with obj_needs of "%s". Please update your code'\
+                   "\n%s", sObjectType, sObjectType, caller)
       PrcLib.runtime_fail 'No Base object loaded.' unless @base_object
       @base_object.data_objects(sObjectType, *key)
+    end
+
+    # Function to provides Lorj Core data cache access.
+    #
+    # See BaseDefinition#cache_objects_keys for details.
+    #
+    def cache_objects_keys #:doc:
+      PrcLib.runtime_fail 'No Base object loaded.' unless @base_object
+      @base_object.cache_objects_keys
     end
 
     def get_data(oObj, *key)
@@ -157,12 +180,12 @@ module Lorj
       @base_object.get_data(oObj, :attrs, key)
     end
 
-    def register(oObject, sObjectType = nil)
+    def register(oObject, sObjectType = nil) #:doc:
       PrcLib.runtime_fail 'No Base object loaded.' unless @base_object
       @base_object.register(oObject, sObjectType)
     end
 
-    def config
+    def config #:doc:
       PrcLib.runtime_fail 'No Base object loaded.' unless @base_object
       @base_object.config
     end
@@ -172,9 +195,9 @@ module Lorj
     # * *Args*
     #   - +type+   : Symbol. meta object type to query.
     #   - +sQuery+ : Hash. Represents the query to execute
-    #   - +name+   : String. Name of the object.
+    #   - +name+   : String. Human name of the object to search.
     #   - +info+   : List of message to format. This string is printed out
-    #      thanks to #Lorj.debug or #PrcLib.info
+    #     thanks to #Lorj.debug or #PrcLib.info
     #     - :notfound   : not found string formated with: type, name
     #     - :checkmatch : checking match string formated with: type, name
     #     - :nomatch    : No match string formated with: type, name
@@ -191,10 +214,44 @@ module Lorj
     #       by default, the element extracted is :name and :items_form is '%s'.
     #
     # * *returns*
-    # - Lorj::Data of type :list. It represents the query result.
-    #   It contains 0 or more Lorj::Data of type :data
+    #   - Lorj::Data of type :list. It represents the query result.
+    #     It contains 0 or more Lorj::Data of type :data
     #
-    def query_single(sCloudObj, sQuery, name, sInfoMsg = {})
+    # Example: following info is the default setting. If this setting is what
+    # want, then info can be missed. Otherwise, set one or all of this setting
+    # to change the default query_single print out.
+    #
+    #    info = {
+    #            :notfound => "No %s '%s' found",
+    #            :checkmatch => "Found 1 %s. checking exact match for '%s'.",
+    #            :nomatch => "No %s '%s' match",
+    #            :found => "Found %s '%s'.",
+    #            :more => "Found several %s. Searching for '%s'.",
+    #            :items_form => '%s',
+    #            :items => [:name]
+    #           }
+    #    item_searched = 'forj'
+    #    query = { :name => item_searched }
+    #    query_single(:network, query, item_searched, info)
+    #    # if no record is found
+    #    # => Will print "No network 'forj' found"
+    #
+    #    # If found one record.
+    #    # => Will print "Found 1 network. checking exact match for 'forj'."
+    #
+    #    # if found but no match the query.
+    #    # => Will print "No network 'forj' match"
+    #
+    #    # if several record is returned:
+    #    # => Will print "Found several network. Searching for 'forj'."
+    #
+    #    # Considering query should return records with at least the attribute
+    #    # :name, if the query return the wanted record, :name should be 'forj'.
+    #    #
+    #    # As defined by :items and :items_form, an item string will be set
+    #    # with format('%s', record[:name]). ie 'forj'
+    #    # So, in this case, query_single will print "Found network 'forj'."
+    def query_single(sCloudObj, sQuery, name, sInfoMsg = {}) #:doc:
       list = controller_query(sCloudObj, sQuery)
 
       info = _qs_info_init(sInfoMsg)
