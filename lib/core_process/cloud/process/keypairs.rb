@@ -70,6 +70,7 @@ class CloudProcess
     if keypair[:coherent]
       keypair[:private_key_name] = loc_kpair[:private_key_name]
       keypair[:public_key_name] = loc_kpair[:public_key_name]
+      keypair[:keypair_path] = loc_kpair[:keypair_path]
     end
     keypair
   end
