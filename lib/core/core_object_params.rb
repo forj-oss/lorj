@@ -19,6 +19,25 @@
 module Lorj
   # Class Definition internal function.
   class BaseDefinition
+    # function to update an existing ObjectData used as parameters to
+    # process or controller
+    #
+    # *parameters*:
+    # - data_to_refresh: ObjectData to refresh
+    # - refresh_par    : Hash providing the parameter context used to refresh it
+    #
+    # *return*:
+    # - data refreshed.
+    #
+    def update_params(data_to_refresh, refresh_par) # :nodoc:
+      object_type = refresh_par[:object_type]
+      event_type = refresh_par[:event_type]
+      as_controller = refresh_par[:controller]
+
+      _get_object_params(object_type, event_type, __callee__, as_controller,
+                         data_to_refresh)
+    end
+
     private
 
     # internal runtime function for process call
@@ -118,7 +137,7 @@ module Lorj
     #
     #
     # *return*:
-    # - value : return the parameter value.
+    # - value : return the parameter value or nil if is :CloudObject type.
     #
     # *raise*:
     #
@@ -186,6 +205,10 @@ module Lorj
       _get_object_params(object_type, sEventType, fname, true)
     end
 
+    # TODO: Fix the Complexity
+    # rubocop: disable Metrics/CyclomaticComplexity
+    # rubocop: disable Metrics/PerceivedComplexity
+
     # internal runtime function for process call
     # Build a process/controller parameters object (ObjectData)
     #
@@ -204,7 +227,8 @@ module Lorj
     # *raise*:
     # - runtime error if required data is not set. (empty or nil)
     #
-    def _get_object_params(object_type, sEventType, fname, as_controller)
+    def _get_object_params(object_type, sEventType, fname, as_controller,
+                           new_params = nil)
       # Building handler parameters
       # hdata is built for controller. ie, ObjectData is NOT internal.
 
@@ -213,7 +237,9 @@ module Lorj
       PrcLib.runtime_fail "%s:'%s' Object data needs not set. Forgot "\
                            'obj_needs?', fname, object_type if obj_params.nil?
 
-      new_params = _obj_param_init(object_type, sEventType, as_controller)
+      if new_params.nil?
+        new_params = _obj_param_init(object_type, sEventType, as_controller)
+      end
 
       obj_params.each do |param_path, param_options|
         if param_options.key?(:for)
@@ -228,8 +254,14 @@ module Lorj
           _build_hdata(object_type, new_params, param_obj, param_options, value)
         end
       end
+      unless fname == :update_params
+        new_params.refresh_set(self, object_type, sEventType, as_controller)
+      end
       new_params
     end
+
+    # rubocop: enable Metrics/CyclomaticComplexity
+    # rubocop: enable Metrics/PerceivedComplexity
 
     # Internal runtime function for process call
     #

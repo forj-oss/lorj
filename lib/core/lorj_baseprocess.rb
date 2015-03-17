@@ -158,8 +158,9 @@ module Lorj
     #
     def data_objects(sObjectType, *key) #:doc:
       PrcLib.debug('data_objects is depreciated. To access "%s", you should '\
-                   'declare it with obj_needs of "%s". Please update your code'\
-                   "\n%s", sObjectType, sObjectType, caller)
+                   'declare it with obj_needs of "%s" and if needed, refresh '\
+                   'hParams with hParams.refresh. Please update your code'\
+                   "\nSee %s", sObjectType, sObjectType, caller[0])
       PrcLib.runtime_fail 'No Base object loaded.' unless @base_object
       @base_object.data_objects(sObjectType, *key)
     end

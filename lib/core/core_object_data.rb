@@ -78,6 +78,24 @@ module Lorj
       @params = {}
       @params[:hdata] = {} unless internal
       @internal = internal
+      @refresh = nil
+    end
+
+    # Refresh setting
+    #
+    # This function is used to provide capability to an Object to be refreshed
+    # from Lorj Cache.
+    #
+    def refresh_set(base_def_instance, object_type, sEventType, as_controller)
+      @refresh = { :bd_obj => base_def_instance, :object_type => object_type,
+                   :event_type => sEventType, :controller => as_controller
+                 }
+    end
+
+    def refresh
+      return self if @refresh.nil?
+      # Do the refresh itself.
+      @refresh[:bd_obj].update_params(self, @refresh)
     end
 
     # Get function
