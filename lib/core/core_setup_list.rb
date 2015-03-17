@@ -39,7 +39,7 @@ module Lorj
     #
     # * *Raises* :
     #
-    def _setup_list_from_controller_call(obj_to_load, list_options)
+    def _setup_list_from_controller_call(obj_to_load, list_options, default)
       PrcLib.message("Loading #{obj_to_load}.")
 
       object = @object_data[obj_to_load, :ObjectData]
@@ -61,7 +61,7 @@ module Lorj
       rescue => e
         PrcLib.runtime_fail "Error during call of '%s':\n%s", proc, e.message
       end
-      { :list => list, :default_value => nil }
+      { :list => list, :default_value => default }
     end
 
     # Internal setup function to build the list from a query call.
@@ -77,7 +77,7 @@ module Lorj
     #
     # * *Raises* :
     #
-    def _setup_list_from_query_call(obj_to_load, list_options)
+    def _setup_list_from_query_call(obj_to_load, list_options, default)
       PrcLib.message("Querying #{obj_to_load}.")
 
       query_hash = list_options[:query_params]
@@ -88,21 +88,21 @@ module Lorj
       list = []
       object_list.each { |oElem| list << oElem[list_options[:value]] }
 
-      { :list => list.sort!, :default_value => nil }
+      { :list => list.sort!, :default_value => default }
     end
 
     def _setup_build_process_params(option_params, params)
       return if option_params.nil?
 
       option_params.each do |key, value|
-        match_res = value.match(/lorj::config\[(.*)\]/)
-        if match_res
-          extract = match_res[1].split(', ')
-          extract.map! { |v| v[1..-1].to_sym if v[0] == ':' }
-          params << { key => config[extract] }
-        else
-          params << { key => value }
+        next if value.nil?
+        begin
+          value = erb(value)
+        rescue => e
+          Prclib.warning("ERB:process parameter failed to set '%s' with '%s'."\
+                         "\n%s", key, value, e.message)
         end
+        params << { key => value }
       end
     end
 
@@ -119,17 +119,18 @@ module Lorj
     #
     # * *Raises* :
     #
-    def _setup_list_from_process_call(obj_to_load, list_options)
+    def _setup_list_from_process_call(obj_to_load, list_options, default)
       PrcLib.runtime_fail '%s: query_type => :process_call'\
                    ' requires missing :query_call declaration'\
                    ' (Provider function)',
                           data if list_options[:query_call].nil?
       proc = list_options[:query_call]
       obj_to_load = list_options[:object]
-      PrcLib.debug(2, "Running process '#{proc}' on '#{obj_to_load}'.")
+      Lorj.debug(2, "Running process '#{proc}' on '#{obj_to_load}'.")
 
       # Building Process function attr_params parameter
       params = ObjectData.new
+
       params << { :default_value => default }
 
       _setup_build_process_params(list_options[:query_params], params)

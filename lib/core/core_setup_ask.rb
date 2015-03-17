@@ -96,15 +96,19 @@ module Lorj
     #
     # * *Raises* :
     #
-    def _setup_choose_list_process(obj_to_load, list_options)
+    def _setup_choose_list_process(obj_to_load, list_options,
+                                   default_value = nil)
       result = { :list => [], :default_value => nil }
       case list_options[:query_type]
       when :controller_call
-        result = _setup_list_from_controller_call(obj_to_load, list_options)
+        result = _setup_list_from_controller_call(obj_to_load, list_options,
+                                                  default_value)
       when :query_call
-        result = _setup_list_from_query_call(obj_to_load, list_options)
+        result = _setup_list_from_query_call(obj_to_load, list_options,
+                                             default_value)
       when :process_call
-        result = _setup_list_from_process_call(obj_to_load, list_options)
+        result = _setup_list_from_process_call(obj_to_load, list_options,
+                                               default_value)
       else
         PrcLib.runtime_fail "%s: '%s' invalid query type. valid is: '%s'.",
                             obj_to_load, list_options[:values_type],
@@ -130,7 +134,8 @@ module Lorj
     def _setup_ask_data_from_list(data, list_options, desc, options)
       obj_to_load = list_options[:object]
 
-      result = _setup_choose_list_process(obj_to_load, list_options)
+      result = _setup_choose_list_process(obj_to_load, list_options,
+                                          options[:default_value])
 
       list = result[:list]
 
@@ -191,6 +196,22 @@ module Lorj
     #   - +options+: list and validation options
     #     - :ask_function: Replace the _ask default call by a process function
     #       This function should return a string or nil, if no value.
+    #   - +default+: Default value.
+    #
+    #     setup will present a default value. This value can come from several
+    #     places, as follow in that order:
+    #     1. if a value is found from config layers => choose it as default
+    #     2. if default parameter is not nil => choose it as default
+    #     3. if data model defines :default_value. => choose it
+    #       In this last case, the :default_value is interpreted by ERB.
+    #       ERB context contains:
+    #       - config : data config layer.
+    #
+    #       Ex: So you can set :default_value like:
+    #
+    #            :default_value: "~/.ssh/<%= config[:keypair_name] %>-id_rsa"
+    #       This may assume that keypair_name is setup before abd would need:
+    #       - :after: <datas>
     #
     # * *Returns*:
     #   - value : value entered by the end user or nil if no value.
@@ -204,7 +225,14 @@ module Lorj
       is_required = (options[:required] == true)
       is_encrypted = options[:encrypted]
 
-      default = options[:default_value] if default.nil?
+      if default.nil? && !options[:default_value].nil?
+        begin
+          default = erb(options[:default_value])
+        rescue => e
+          PrcLib.warning("ERB error with :%s/:default_value '%s'.\n%s",
+                         data, options[:default_value], e.message)
+        end
+      end
       default = @config.get(data, default)
 
       # validate_proc = options[:validate_function]

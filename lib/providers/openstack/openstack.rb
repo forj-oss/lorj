@@ -131,19 +131,27 @@ class Openstack
 
   define_data(:compute,
               :account => true,
+              :default_value => '<%= config[:network] %>',
               :explanation => 'Depending on your installation, you may need to'\
-                ' provide a Region name. This information shown under your '\
+                ' provide a Region name. This information is shown under your '\
                 'horizon UI - close right to the project name (top left).'\
+                "\nYou can also get it from Project-Compute-Access & Security-"\
+                'API, then download the Openstack RC file. The Region name is '\
+                'set as OS_REGION_NAME.'\
                 "\nIf there is no region shown, you can ignore it.",
-              :desc => 'Openstack Compute Region (Ex: regionOne)'
+              :desc => 'Openstack Compute Region (Ex: RegionOne)'
   )
 
   define_data(:network,
               :account => true,
-              :desc => 'Openstack Network Region (Ex: regionOne)',
+              :default_value => '<%= config[:compute] %>',
+              :desc => 'Openstack Network Region (Ex: RegionOne)',
               :explanation => 'Depending on your installation, you may need to'\
-                ' provide a Region name. This information shown under your '\
+                ' provide a Region name. This information is shown under your '\
                 'horizon UI - close right to the project name (top left).'\
+                "\nYou can also get it from Project-Compute-Access & Security-"\
+                'API, then download the Openstack RC file. The Region name is '\
+                'set as OS_REGION_NAME.'\
                 "\nIf there is no region shown, you can ignore it."
   )
 

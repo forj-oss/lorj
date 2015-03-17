@@ -231,11 +231,15 @@ module Lorj
     # * *Args* :
     #   - +order_array+   : Array of data classified per level/order
     #   - +data_to_check+ : data to check
+    #
+    # * *returns* :
+    #   - true if found. false otherwise.
     def _setup_attr_already_added?(order_array, data_to_check)
       order_array.each_index do |order_index|
         attributes = order_array[order_index]
         return true unless attributes.index(data_to_check).nil?
       end
+      false
     end
 
     # Add the attribute parameter to setup list

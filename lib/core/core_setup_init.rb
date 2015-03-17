@@ -64,7 +64,7 @@ module Lorj
     #
     def _setup_check_additional(setup_steps)
       setup_steps.each_index do |step|
-        value = setup_steps[step]
+        value = Lorj.data.setup_data(:ask_step)[step]
         next unless value.rh_exist?(:add)
 
         datas_to_add = value.rh_get(:add)
