@@ -33,6 +33,19 @@ clouds providers.
 Currently, forj cli has implemented *hpcloud* and *openstack* providers, using
 *fog*. Docker controller is under development.
 
+### embedded process/controllers
+
+Currently, lorj embed a Cloud process and 3 providers (controllers: hpcloud/openstack/mock)
+
+The cloud process is used by [forj cli|http://www.rubydoc.info/gems/forj] - the DevOps forge builder,
+to execute cloud task transparently against hpcloud or openstack.
+
+To support a new cloud provider, you need to write your own cloud controller.
+Look in [lib/providers] to clone an existing one and update to use your own cloud.
+
+TODO: Move process and controller to new gem libraries.
+TODO: write up cloud controller documentation for contributors.
+
 ## Getting started
 
 As playing by example is better than a long discussion, let's start playing with a simple example.
