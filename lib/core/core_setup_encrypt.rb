@@ -84,9 +84,9 @@ module Lorj
       value_hidden = ''
       begin
         value_hidden = '*' * _get_encrypted_value(enc_value, entr).length
-      rescue
-        PrcLib.error('Unable to decrypt your %s. You will need to re-enter it.',
-                     sDesc)
+      rescue => e
+        PrcLib.error('Unable to decrypt your %s. You will need to re-enter it.'\
+                     '\n%s', sDesc, e.message)
       else
         PrcLib.message("'%s' is already set. If you want to keep it,"\
                        ' just press Enter', sDesc)
