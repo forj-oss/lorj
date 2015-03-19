@@ -137,7 +137,7 @@ module Lorj
     def _ask_encrypted(sDesc, default)
       entr = _get_encrypt_key
 
-      enc_value = default
+      enc_value = default unless default == ''
 
       value_hidden = _get_encrypted_value_hidden(sDesc, default, entr)
 

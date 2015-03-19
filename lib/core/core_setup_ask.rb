@@ -117,14 +117,31 @@ module Lorj
       result
     end
 
+    # rubocop: disable Metrics/CyclomaticComplexity
+    # rubocop: disable Metrics/PerceivedComplexity
+
     # Internal setup function to ask to the end user from a list.
     #
     # * *Args* :
     #  - +data+        : Data to ask.
     #  - +list_options+: list and validation options
+    #    - +:validate+ : Can be :list_strict to restrict possible value to only
+    #      those listed.
     #  - +desc+        : Data description
     #  - +options+     : Used when user have to enter a string instead of
     #                    selecting from a list.
+    #   - +:default_value+ : predfined default value.
+    #
+    #     if data model defines :default_value. => choose it
+    #     In this last case, the :default_value is interpreted by ERB.
+    #     ERB context contains:
+    #       - config : data config layer.
+    #
+    #       Ex: So you can set :default_value like:
+    #
+    #            :default_value: "~/.ssh/<%= config[:keypair_name] %>-id_rsa"
+    #       This may assume that keypair_name is setup before abd would need:
+    #       - :after: <datas>
     #
     # * *Returns*:
     #   - value : value entered by the end user.
@@ -138,8 +155,17 @@ module Lorj
                                           options[:default_value])
 
       list = result[:list]
-      unless result[:default_value].nil?
-        options[:default_value] = result[:default_value]
+      default = options[:default_value]
+      default = result[:default_value] unless result[:default_value].nil?
+
+      begin
+        default = erb(default)
+      rescue => e
+        PrcLib.warning("ERB error with :%s/:default_value '%s'.\n%s",
+                       data, result[:default_value], e.message)
+      else
+        default = nil if default == ''
+        options[:default_value] = default
       end
 
       is_strict_list = (list_options[:validate] == :list_strict)
@@ -158,11 +184,12 @@ module Lorj
       value = _setup_choose_data_from_list(data, desc, list, options)
 
       if !is_strict_list && value == 'Not in this list'
-        value = _setup_ask_data_from_keyboard(desc, data, options,
-                                              result[:default_value])
+        value = _setup_ask_data_from_keyboard(desc, data, options)
       end
       value
     end
+    # rubocop: enable Metrics/CyclomaticComplexity
+    # rubocop: enable Metrics/PerceivedComplexity
 
     # Internal setup function to present the list to the user and ask to choose.
     #
@@ -197,8 +224,9 @@ module Lorj
     #   - +desc+   : Data description
     #   - +data+   : Data to ask.
     #   - +options+: list and validation options
-    #     - :ask_function: Replace the _ask default call by a process function
+    #     - :ask_function : Replace the _ask default call by a process function
     #       This function should return a string or nil, if no value.
+    #     - :default_value: Predefined default value.
     #   - +default+: Default value.
     #
     #     setup will present a default value. This value can come from several
