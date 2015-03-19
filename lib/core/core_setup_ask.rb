@@ -138,6 +138,9 @@ module Lorj
                                           options[:default_value])
 
       list = result[:list]
+      unless result[:default_value].nil?
+        options[:default_value] = result[:default_value]
+      end
 
       is_strict_list = (list_options[:validate] == :list_strict)
 
