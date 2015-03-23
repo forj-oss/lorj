@@ -188,27 +188,36 @@ class CloudProcess
     end
   end
 
+  # Function to get the router ID in the network
+  # from the list of routers found.
+  # Query ports devices.
   def get_router_interface_attached(sCloudObj, hParams)
     name = hParams[:network, :name]
     PrcLib.state("Searching for router port attached to the network '%s'", name)
-    begin
-      # Searching for router port attached
-      #################
-      query = { :network_id => hParams[
-                               :network, :id],
-                :device_owner => 'network:router_interface' }
-      info = {
-        :notfound => "No router %s for network '%s' found",
-        :checkmatch => 'Found 1 router %s. '\
-                             "Checking exact match for network '%s'.",
-        :nomatch => "No router %s for network '%s' match",
-        :found => "Found router %s ID %s attached to network '#{name}'.",
-        :more => "Found several router %s. Searching for network '%s'.",
-        :items => [:id]
-      }
-      query_single(sCloudObj, query, name, info)
-    rescue => e
-      PrcLib.error("%s\n%s", e.message, e.backtrace.join("\n"))
+    routers = controller_query(:router, {})
+    routers.each do |router|
+      begin
+        router_name = router[:name]
+        # Searching for router port attached
+        #################
+        query = { :network_id => hParams[:network, :id],
+                  :device_id => router[:id] }
+        info = {
+          :notfound => "Network '#{name}' not attached to router "\
+                       "'#{router_name}'",
+          :checkmatch => 'Found 1 router %s. '\
+                               "Checking exact match for network '%s'.",
+          :nomatch => "No router %s for network '%s' match",
+          :found => "Found router %s ID (#{router_name}) %s attached to "\
+                    "network '#{name}'.",
+          :more => "Found several router %s. Searching for network '%s'.",
+          :items => [:id]
+        }
+        interfaces = query_single(sCloudObj, query, name, info)
+        return interfaces unless interfaces.length == 0
+      rescue => e
+        PrcLib.error("%s\n%s", e.message, e.backtrace.join("\n"))
+      end
     end
   end
 
