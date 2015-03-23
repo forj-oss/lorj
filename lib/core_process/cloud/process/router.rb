@@ -32,9 +32,13 @@ class CloudProcess
       router_name = hParams[:router_name]
     end
 
+    _get_router(router_name, sub_net_obj, hParams)
+  end
+
+  def _get_router(router_name, sub_net_obj, hParams)
     router_port = get_router_interface_attached(:port, hParams)
 
-    if router_port.length == 0
+    if router_port.nil? || router_port.length == 0
       # Trying to get router
       router = get_router(router_name)
       router = create_router(router_name) if router.empty?
