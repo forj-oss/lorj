@@ -22,7 +22,7 @@
 class CloudProcess
   # KeyPair Create Process Handler
   # The process implemented is:
-  # * Check local SSH keypairs
+  # * Check local SSH keypairs with given ':keypair_name'
   # * Check remote keypair existence
   # * Compare and warn if needed.
   # * Import public key found if missing remotely and name it.
@@ -40,56 +40,113 @@ class CloudProcess
   #
   def forj_get_or_create_keypair(sCloudObj, hParams)
     keypair_name = hParams[:keypair_name]
-    # setup has configured and copied the appropriate key to forj keypairs.
-
-    loc_kpair = keypair_detect(keypair_name,
-                               File.expand_path(hParams[:keypair_path]))
-
-    private_key_file = File.join(loc_kpair[:keypair_path],
-                                 loc_kpair[:private_key_name])
-    public_key_file = File.join(loc_kpair[:keypair_path],
-                                loc_kpair[:public_key_name])
-
-    PrcLib.info("Found openssh private key file '%s'.",
-                private_key_file) if loc_kpair[:private_key_exist?]
-    PrcLib.info("Found openssh public key file '%s'.",
-                public_key_file) if loc_kpair[:public_key_exist?]
-
     PrcLib.state("Searching for keypair '%s'", keypair_name)
 
-    keypairs = forj_query_keypair(sCloudObj,
-                                  { :name => keypair_name }, hParams)
-
-    if keypairs.length == 0
+    keypair = forj_get_keypair(sCloudObj, keypair_name, hParams)
+    if keypair.empty?
       keypair = keypair_import(hParams, loc_kpair)
     else
-      keypair = keypairs[0]
-      keypair[:coherent] = coherent_keypair?(loc_kpair, keypair)
-      # Adding information about key files.
-    end
-    if keypair[:coherent]
-      keypair[:private_key_name] = loc_kpair[:private_key_name]
-      keypair[:public_key_name] = loc_kpair[:public_key_name]
-      keypair[:keypair_path] = loc_kpair[:keypair_path]
+      keypair_display(keypair)
     end
     keypair
   end
 
-  def forj_query_keypair(sCloudObj, sQuery, hParams)
-    key_name = hParams[:keypair_name]
+  # Query cloud keypairs and check coherence with local files
+  # of same name in forj files located by :keypair_path
+  def forj_query_keypairs(sCloudObj, sQuery, hParams)
+    keypair_path = File.expand_path(hParams[:keypair_path])
+    keypair_base = File.expand_path(hParams[:keypair_base])
+
     ssl_error_obj = SSLErrorMgt.new
     begin
-      #  list = controller_query(sCloudObj, sQuery)
-      #  query_single(sCloudObj, list, sQuery, key_name)
-      query_single(sCloudObj, sQuery, key_name)
+      keypairs = controller_query(sCloudObj, sQuery)
     rescue => e
       retry unless ssl_error_obj.error_detected(e.message, e.backtrace, e)
     end
+    # Looping on keypairs to identify if they have a valid local ssh key.
+    keypairs.each do |keypair|
+      loc_kpair = keypair_detect(keypair_name, keypair_path, keypair_base)
+      keypair_files_detected(keypair, loc_kpair)
+    end
+    keypairs
   end
+
+  # Get cloud keypair and check coherence with local files
+  # of same name in forj files
+  def forj_get_keypair(sCloudObj, keypair_name, hParams)
+    ssl_error_obj = SSLErrorMgt.new
+    begin
+      keypair = controller_get(sCloudObj, keypair_name)
+    rescue => e
+      retry unless ssl_error_obj.error_detected(e.message, e.backtrace, e)
+    end
+
+    keypair_path = File.expand_path(hParams[:keypair_path])
+    loc_kpair = keypair_detect(keypair_name, keypair_path, keypair_name)
+    keypair_files_detected(keypair, loc_kpair) unless keypair.empty?
+    keypair
+  end
+end
+
+# ************************************ keypairs Object
+# Identify keypairs
+class Lorj::BaseDefinition
+  define_obj(:keypairs,
+
+             :create_e => :forj_get_or_create_keypair,
+             :query_e => :forj_query_keypairs,
+             :get_e => :forj_get_keypair
+             #         :delete_e   => :forj_delete_keypair
+             )
+
+  obj_needs :CloudObject,  :compute_connection
+  obj_needs :data,         :keypair_name,        :for => [:create_e]
+  obj_needs :data,         :keypair_path
+
+  def_attribute :public_key
 end
 
 # Keypair management: Internal process functions
 class CloudProcess
+  # Function to display information about keypair object found.
+  #
+  def keypair_display(keypair)
+    PrcLib.info("Found keypair '%s'.", keypair[:name])
+
+    private_key_file = File.join(keypair[:keypair_path],
+                                 keypair[:private_key_name])
+    public_key_file = File.join(keypair[:keypair_path],
+                                keypair[:public_key_name])
+
+    PrcLib.info("Found openssh private key file '%s'.",
+                private_key_file) if keypair[:private_key_exist?]
+    PrcLib.info("Found openssh public key file '%s'.",
+                public_key_file) if keypair[:public_key_exist?]
+    if keypair[:coherent]
+      PrcLib.info("keypair '%s' local files are coherent with keypair in "\
+                  'your cloud service. You will be able to use your local '\
+                  'keys to connect to any box configured with this keypair '\
+                  'name, over SSH.', keypair[:name])
+    else
+      PrcLib.warning("Your local public key file '%s' is incoherent with "\
+                     "public key attached to the keypair '%s' in your cloud."\
+                     " You won't be able to access your box with this keypair."\
+                     "\nPublic key found in the cloud:\n%s",
+                     public_key_file, keypair[:name], keypair[:public_key])
+    end
+  end
+
+  # Function to update a keypair object with ssh files found in :keypair_path
+  #
+  def keypair_files_detected(keypair, loc_kpair)
+    keypair[:private_key_exist?] = loc_kpair[:private_key_exist?]
+    keypair[:public_key_exist?] = loc_kpair[:public_key_exist?]
+    keypair[:private_key_name] = loc_kpair[:private_key_name]
+    keypair[:public_key_name] = loc_kpair[:public_key_name]
+    keypair[:keypair_path] = loc_kpair[:keypair_path]
+    keypair[:coherent] = coherent_keypair?(loc_kpair, keypair)
+  end
+
   def keypair_import(hParams, loc_kpair)
     PrcLib.fatal(1, "Unable to import keypair '%s'. "\
                     'Public key file is not found. '\
@@ -100,22 +157,20 @@ class CloudProcess
                                 loc_kpair[:public_key_name])
 
     begin
-      config[:public_key] = File.read(public_key_file)
+      public_key = File.read(public_key_file)
     rescue => e
       PrcLib.fatal(1, "Unable to import keypair '%s'. '%s' is "\
                       "unreadable.\n%s", hParams[:keypair_name],
                    loc_kpair[:public_key_file],
                    e.message)
     end
-    keypair = create_keypair(:keypairs, hParams)
+    keypair = create_keypair(:keypairs, :public_key => public_key)
 
     return nil if keypair.nil?
 
-    if !loc_kpair[:private_key_exist?]
-      keypair[:coherent] = false
-    else
-      keypair[:coherent] = true
-    end
+    # Adding information about SSH key files.
+    keypair_files_detected(keypair, loc_kpair)
+
     keypair
   end
 
@@ -124,7 +179,7 @@ class CloudProcess
     PrcLib.state("Importing keypair '%s'", key_name)
     ssl_error_obj = SSLErrorMgt.new
     begin
-      keypair = controller_create(sCloudObj)
+      keypair = controller_create(sCloudObj, hParams)
       PrcLib.info("Keypair '%s' imported.", keypair[:name])
     rescue StandardError => e
       retry unless ssl_error_obj.error_detected(e.message, e.backtrace, e)
@@ -136,9 +191,18 @@ class CloudProcess
   # Build keypair data information structure with files found in
   # local filesystem. Take care of priv with or without .pem
   # and pubkey with pub.
-  def keypair_detect(keypair_name, key_fullpath)
-    key_basename = File.basename(key_fullpath)
-    key_path = File.expand_path(File.dirname(key_fullpath))
+  # :keypair_path data settings is changing to become just a path to
+  # the keypair files, the base keypair.
+  # Which will introduce a :keypair_base in the setup.
+  def keypair_detect(keypair_name, key_fullpath, key_basename = nil)
+    # When uses key_basename, we switch to the new model
+    # using :keypair_path and :keypair_base in setup
+    if key_basename.nil?
+      key_basename = File.basename(key_fullpath)
+      key_path = File.expand_path(File.dirname(key_fullpath))
+    else
+      key_path = File.expand_path(key_fullpath)
+    end
 
     obj_match = key_basename.match(/^(.*?)(\.pem|\.pub)?$/)
     key_basename = obj_match[1]
@@ -184,15 +248,6 @@ class CloudProcess
     [found_ext, files]
   end
 
-  def forj_get_keypair(sCloudObj, sName, _hParams)
-    ssl_error_obj = SSLErrorMgt.new
-    begin
-      controller_get(sCloudObj, sName)
-    rescue => e
-      retry unless ssl_error_obj.error_detected(e.message, e.backtrace, e)
-    end
-  end
-
   def get_keypairs_path(hParams, hKeys)
     keypair_name = hParams[:keypair_name]
 
@@ -225,8 +280,6 @@ class CloudProcess
   # - coherent : Boolean. True if same public key.
   def coherent_keypair?(loc_kpair, keypair)
     # send keypairs by parameter
-
-    keypair_name = loc_kpair[:keypair_name]
     is_coherent = false
 
     pub_keypair = keypair[:public_key]
@@ -241,17 +294,7 @@ class CloudProcess
                     loc_kpair[:public_key_file], e.message)
       else
         if loc_pubkey.split(' ')[1].strip == pub_keypair.split(' ')[1].strip
-          PrcLib.info("keypair '%s' local files are coherent with keypair in "\
-                      'your cloud service. You will be able to connect to '\
-                      'your box over SSH.', keypair_name)
           is_coherent = true
-        else
-          PrcLib.warning("Your local keypair file '%s' are incoherent with "\
-                         "public key '%s' found in your cloud. You won't be "\
-                         "able to access your box with this keypair.\nPublic "\
-                         "key found in the cloud:\n%s",
-                         loc_kpair[:public_key_file], keypair_name,
-                         keypair[:public_key])
         end
       end
     else
@@ -260,25 +303,4 @@ class CloudProcess
     end
     is_coherent
   end
-end
-
-# ************************************ keypairs Object
-# Identify keypairs
-class Lorj::BaseDefinition
-  define_obj(:keypairs,
-
-             :create_e => :forj_get_or_create_keypair,
-             :query_e => :forj_query_keypair,
-             :get_e => :forj_get_keypair
-             #         :delete_e   => :forj_delete_keypair
-             )
-
-  obj_needs :CloudObject,  :compute_connection
-  obj_needs :data,         :keypair_name,        :for => [:create_e]
-  obj_needs :data,         :keypair_path,        :for => [:create_e]
-
-  obj_needs_optional
-  obj_needs :data,         :public_key,          :for => [:create_e]
-
-  def_attribute :public_key
 end

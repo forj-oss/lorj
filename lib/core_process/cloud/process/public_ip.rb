@@ -34,6 +34,7 @@ class CloudProcess
     end
   end
 
+  # Function to query the list of addresses for one server
   def forj_query_public_address(sCloudObj, sQuery, hParams)
     server_name = hParams[:server, :name]
     ssl_error_obj = SSLErrorMgt.new
@@ -54,6 +55,7 @@ class CloudProcess
     end
   end
 
+  # Function to get the IP address
   def forj_get_public_address(sCloudObj, sId, _hParams)
     ssl_error_obj = SSLErrorMgt.new
     begin
