@@ -159,7 +159,7 @@ module Lorj
       default = result[:default_value] unless result[:default_value].nil?
 
       begin
-        default = erb(default)
+        default = erb(default) unless default.nil?
       rescue => e
         PrcLib.warning("ERB error with :%s/:default_value '%s'.\n%s",
                        data, result[:default_value], e.message)
