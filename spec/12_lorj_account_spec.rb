@@ -172,8 +172,15 @@ describe 'class: Lorj::Account,' do
       expect(@account.where?(:keypair_name)).to eq(%w(account local default))
     end
 
+    it "account.set(:keypair_name, 'nova_test3') return "\
+       " 'nova_test3'" do
+      expect(@account.set(:keypair_name, 'nova_test3')).to eq('nova_test3')
+      expect(@account.where?(:keypair_name)).to eq(%w(runtime account
+                                                      local default))
+    end
+
     it "account.get(:keypair_name, :name => 'account') return 'nova_test2'" do
-      expect(@account.get(:keypair_name,
+      expect(@account.get(:keypair_name, nil,
                           :name => 'account')).to eq('nova_test2')
     end
 
@@ -193,7 +200,7 @@ describe 'class: Lorj::Account,' do
 
     it "account.get(:keypair_name, :name => 'account') return "\
        "saved 'nova_test2'" do
-      expect(@account.get(:keypair_name,
+      expect(@account.get(:keypair_name, nil,
                           :name => 'account')).to eq('nova_test2')
     end
   end

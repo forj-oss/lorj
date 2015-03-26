@@ -175,7 +175,7 @@ module Lorj
       section = options[:section]
       section = Lorj.data.first_section(key) if section.nil?
 
-      options = { :keys => [key], :section => section }
+      options = options.merge(:keys => [key], :section => section)
 
       indexes = _identify_array_indexes(options, exclusive?(key, section))
       names = []
