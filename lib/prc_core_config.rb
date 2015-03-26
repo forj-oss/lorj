@@ -424,7 +424,7 @@ module PRC
       return nil if keys.length == 0 || keys[0].nil? || config_layers[0].nil?
 
       config_layers.each_index do |index|
-        config = @config_layers[index][:config]
+        config = config_layers[index][:config]
 
         data_options = options.clone
         data_options.delete_if do |key|

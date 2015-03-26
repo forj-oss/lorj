@@ -57,6 +57,10 @@ describe 'class: PRC::CoreConfig,' do
           initialize_layers(layers)
         end
 
+        def iexist?(options)
+          p_exist?(options)
+        end
+
         def set(options)
           p_set(options)
         end
@@ -75,6 +79,26 @@ describe 'class: PRC::CoreConfig,' do
 
     it 'config.exist?(:test) returns true' do
       expect(@config.exist?(:test)).to equal(true)
+    end
+
+    it 'config.p_exist?(:keys => [:test]) returns true' do
+      expect(@config.iexist?(:keys => [:test])).to equal(true)
+    end
+
+    it 'config.p_exist?(:keys => [:test], :name => "runtime") returns false' do
+      expect(@config.iexist?(:keys => [:test],
+                             :name => 'runtime')).to equal(false)
+    end
+
+    it 'config.p_exist?(:keys => [:test], :names => ["runtime"])'\
+       ' returns false' do
+      expect(@config.iexist?(:keys => [:test],
+                             :names => ['runtime'])).to equal(false)
+    end
+
+    it 'config.p_exist?(:keys => [:test], :names => ["local"]) returns true' do
+      expect(@config.iexist?(:keys => [:test],
+                             :names => ['local'])).to equal(true)
     end
 
     it 'config.exist?(:test2, :test) returns true' do

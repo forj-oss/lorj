@@ -161,7 +161,9 @@ module Lorj
     #   - +options+ : Options for get:
     #     - +:section+ : Get will use this section name instead of searching it.
     #     - +:names+   : array of layers name to exclusively get data.
+    #     - +:name+    : layer name to exclusively get data.
     #     - +:indexes+ : array of layers index to exclusively get data.
+    #     - +:index+   : layer index to exclusively get data.
     #       If neither :name or :index is set, get will search
     #       data on all predefined layers, first found.
     # * *Returns* :
@@ -177,7 +179,7 @@ module Lorj
 
       options = options.merge(:keys => [key], :section => section)
 
-      indexes = _identify_array_indexes(options, exclusive?(key, section))
+      indexes = _identify_indexes(options, exclusive?(key, section))
       names = []
       indexes.each { |index| names << @config_layers[index][:name] }
 
@@ -205,11 +207,13 @@ module Lorj
     #   - +options+ : possible options:
     #     - +:section+ : Force to use a specific section name.
     #     - +:names+   : array of layers name to exclusively get data.
+    #     - +:name+    : layer name to exclusively get data.
     #     - +:indexes+ : array of layers index to exclusively get data.
+    #     - +:index+   : layer index to exclusively get data.
     #       If neither :name or :index is set, get will search data on all
     #       predefined layers, first found, first listed.
     # * *Returns* :
-    #   - key value.
+    #   - config name found.
     # * *Raises* :
     #   Nothing
     def where?(key, options = {})
@@ -217,9 +221,9 @@ module Lorj
       options = {} unless options.is_a?(Hash)
 
       section = options[:section]
-      section = Lorj.defaults.get_meta_section(key) if section.nil?
+      section = Lorj.data.first_section(key) if section.nil?
 
-      indexes = _identify_array_indexes(options, exclusive?(key, section))
+      indexes = _identify_indexes(options, exclusive?(key, section))
 
       names = []
       indexes.each { |index| names << @config_layers[index][:name] }
@@ -242,17 +246,20 @@ module Lorj
     #   - +options+ : possible options:
     #     - +:section+ : Force to use a specific section name.
     #     - +:names+   : array of layers name to exclusively get data.
+    #     - +:name+    : layer name to exclusively get data.
     #     - +:indexes+ : array of layers index to exclusively get data.
+    #     - +:index+   : layer index to exclusively get data.
     #       If neither :name or :index is set, get will search data on all
     #       predefined layers, first found.
     #
     # * *Returns* :
-    #   - 'runtime'       : if found in runtime.
-    #   - '<AccountName>' : if found in the Account data structure.
-    #   - 'local'         : if found in the local configuration file.
-    #                       Usually ~/.forj/config.yaml
-    #   - 'default'       : if found in the Application default
-    #                       (File 'defaults.yaml') (class Default)
+    #   - true : if found in runtime.
+    #   - true : if found in the Account data structure.
+    #   - true : if found in the local configuration file.
+    #     Usually ~/.forj/config.yaml
+    #   - true : if found in the Application default
+    #     (File 'defaults.yaml') (class Default)
+    #   - false otherwise.
     # * *Raises* :
     #   Nothing
     def exist?(key, options = nil)
@@ -261,9 +268,9 @@ module Lorj
 
       section = options[:section]
       section = Lorj.data.first_section(key) if section.nil?
-      options = { :keys => [key], :section => section }
+      options = options.merge(:keys => [key], :section => section)
 
-      indexes = _identify_array_indexes(options, exclusive?(key, section))
+      indexes = _identify_indexes(options, exclusive?(key, section))
 
       names = []
       indexes.each { |index| names << @config_layers[index][:name] }
@@ -549,6 +556,8 @@ module Lorj
 
       indexes = exclusive_indexes(account_exclusive)
       indexes = [index] if !index.nil? && indexes.include?(index)
+
+      return _identify_array_indexes(options, account_exclusive) if index.nil?
 
       options[:indexes] = indexes
       indexes

@@ -184,6 +184,23 @@ describe 'class: Lorj::Account,' do
                           :name => 'account')).to eq('nova_test2')
     end
 
+    it "account.get(:keypair_name, :names => ['account']) return "\
+       "'nova_test2'" do
+      expect(@account.get(:keypair_name, nil,
+                          :names => ['account'])).to eq('nova_test2')
+    end
+
+    it "account.get(:keypair_name, :name => 'runtime') return 'nova_test3'" do
+      expect(@account.get(:keypair_name, nil,
+                          :name => 'runtime')).to eq('nova_test3')
+    end
+
+    it "account.get(:keypair_name, :names => ['runtime']) return "\
+       "'nova_test3'" do
+      expect(@account.get(:keypair_name, nil,
+                          :names => ['runtime'])).to eq('nova_test3')
+    end
+
     it 'account.ac_save return true' do
       expect(@account.ac_save).to equal(true)
     end
