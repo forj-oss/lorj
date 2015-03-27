@@ -44,6 +44,8 @@ class CloudProcess
 
     keypair = forj_get_keypair(sCloudObj, keypair_name, hParams)
     if keypair.empty?
+      loc_kpair = keypair_detect(keypair_name, hParams[:keypair_path],
+                                 hParams[:keypair_base])
       keypair = keypair_import(hParams, loc_kpair)
     else
       keypair_display(keypair)
@@ -102,6 +104,11 @@ class Lorj::BaseDefinition
   obj_needs :CloudObject,  :compute_connection
   obj_needs :data,         :keypair_name,        :for => [:create_e]
   obj_needs :data,         :keypair_path
+  obj_needs :data,         :keypair_base
+
+  # By default optional. But required by the import case if needed.
+  obj_needs_optional
+  obj_needs :data,         :public_key,          :for => [:create_e]
 
   def_attribute :public_key
 end
