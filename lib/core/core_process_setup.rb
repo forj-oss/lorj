@@ -89,6 +89,15 @@ module Lorj
     # - :validate:          Regular expression to validate end user input
     #                       during setup.
     # - :list_values:       Additional options to get a list of possible values.
+    # - :post_step_function Function to call after data asked to the user.
+    #   This function must return a boolean:
+    #   - true : The data is accepted and setup will go further.
+    #   - false: The data is NOT accepted and setup will ask the data again.
+    #     setup will loop until the function is happy with (return true)
+    # - :pre_step_function  Function to call before data is asked to the user.
+    #   This function must return a boolean:
+    #   - true : setup will ask the data.
+    #   - false: setup will skip asking the data.
     #
     # For details or more options, see core_model.rb
     #
