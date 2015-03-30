@@ -60,21 +60,70 @@ module Lorj
   #   and eventually :default:
   #   For details, see Lorj::MetaAppConfig
   #
-  # :setup:                  This section describes group of fields to ask,
-  #                          step by step.
-  #     :ask_step:           Define an Array of setup steps to ask to the
-  #                          end user. The step order is respected, and
-  #                          start at 0
-  #     -  :desc:            Define the step description. ERB template
-  #                          enable. To get config data, type config[...]
-  #        :explanation:  |- Define a multiline explanation. This is printed
-  #                          out in brown color.
-  #                          ERB template enable. To get config data, type
-  #                          <%= config[...] %>
-  #        :add:             Define a list of additionnal fields to ask.
-  #        - <Data>          Data to ask.
-  #
   class Defaults < PRC::SectionConfig
+    # Get function
+    # It implements the following:
+    # 1. Search in data_options[:section] section or :default section if missing
+    # 2. otherwise, provide the metadata default value, erb like.
+    #   It uses data_options[:metadata_section]
+    #
+    # * *Args*
+    #   - +keys+ : Array of key path to found
+    #
+    # * *Returns*
+    #   - value
+    #
+    def [](*keys)
+      return nil if keys.length == 0
+
+      if @data_options[:section].nil?
+        section = :default
+      else
+        section = @data_options[:section]
+      end
+
+      return p_get(section, *keys) if p_exist?(section, *keys)
+
+      metadata_section = @data_options[:metadata_section]
+
+      return nil if metadata_section.nil?
+      default = Lorj.data.section_data(metadata_section, keys[0],
+                                       :default_value)
+      return nil if default.nil?
+      default
+    end
+
+    # Check if data found in this default layer has a value.
+    #
+    # It implements the following:
+    # 1. Search in data_options[:section] section or :default section if missing
+    # 2. otherwise, provide the metadata default value, erb like.
+    #   It uses data_options[:metadata_section]
+    #
+    # * *Args*
+    #   - +keys+ : Array of key path to found
+    #
+    # * *Returns*
+    #   - boolean : true if the key path was found
+    #
+    def exist?(*keys)
+      return nil if keys.length == 0
+
+      if @data_options[:section].nil?
+        section = :default
+      else
+        section = @data_options[:section]
+      end
+
+      return true if p_exist?(section, *keys)
+
+      metadata_section = @data_options[:metadata_section]
+
+      return false if metadata_section.nil?
+
+      Lorj.data.exist?(:sections, metadata_section, keys[0], :default_value)
+    end
+
     # Remove inherited method []=
     def []=(*_keys, _value)
     end

@@ -17,6 +17,8 @@
 
 require 'rubygems'
 
+require 'erb'
+
 # Lorj implements Lorj::Accounts
 module Lorj
   # Simple List of accounts class.
@@ -53,6 +55,22 @@ module Lorj
 
     def data_options(options = { :section => :default })
       p_data_options(options)
+    end
+  end
+end
+
+module Lorj
+  # This class limits ERB template to access only to config object data.
+  class ERBConfig
+    attr_reader :config
+
+    def initialize(config)
+      @config = config
+    end
+
+    # Bind this limited class with ERB templates
+    def get_binding # rubocop: disable AccessorMethodName
+      binding
     end
   end
 end
@@ -156,6 +174,8 @@ module Lorj
     # :account_exclusive => true, get will limit to runtime then account.
     # otherwise, search in all layers.
     #
+    # The data found is parse through ERB with self as context.
+    #
     # * *Args*    :
     #   - +key+     : key name. It do not support it to be a key tree (Arrays of
     #     keys).
@@ -185,10 +205,13 @@ module Lorj
       names = []
       indexes.each { |index| names << @config_layers[index][:name] }
 
-      options[:data_options] = _set_data_options_per_names(names)
+      options[:data_options] = _set_data_options_per_names(names, section)
 
-      return p_get(options) if p_exist?(options)
-
+      if p_exist?(options)
+        value = p_get(options)
+        return value unless value.is_a?(String)
+        return ERB.new(value).result ERBConfig.new(self).get_binding
+      end
       default
     end
 
@@ -234,7 +257,7 @@ module Lorj
         :keys => [key],
         :section => section,
         :indexes => indexes,
-        :data_options => _set_data_options_per_names(names)
+        :data_options => _set_data_options_per_names(names, section)
       }
 
       p_where?(where_options)
@@ -277,7 +300,7 @@ module Lorj
       names = []
       indexes.each { |index| names << @config_layers[index][:name] }
 
-      options[:data_options] = _set_data_options_per_names(names)
+      options[:data_options] = _set_data_options_per_names(names, section)
 
       p_exist?(options)
     end
@@ -565,30 +588,37 @@ module Lorj
       indexes
     end
 
-    def _set_data_options_per_names(names)
+    def _set_data_options_per_names(names, section)
       data_options = []
 
-      names.each { |name| data_options <<  _data_options_per_layer(name) }
+      names.each do |name|
+        data_options << _data_options_per_layer(name, section)
+      end
 
       data_options
     end
 
-    # TODO: Change local and default way to get default values, not in /:default
-
     # This internal function defines default section name per config index.
-    def _data_options_per_layer(layer_name)
+    def _data_options_per_layer(layer_name, section)
       # runtime and local and default uses :default section
       case layer_name
-      when 'local', 'default'
+      when 'default'
+        return { :section => :default, :metadata_section => section }
+      when 'local'
         # local & default are SectionConfig and is forced to use :default as
         # section name for each data.
-        { :section => :default }
+        return { :section => :default }
       end
       # nil: layer_index = 0 => runtime. runtime is not a SectionConfig.
 
       # nil: layer_index = 1 => account
+      # If no section is provided, 'account' layer will use the first section
+      # name
+      # otherwise, it will used the section provided.
+      return { :section => section } unless section.nil?
       # account is a SectionConfig and use section value defined by the
       # lorj data model. So the section name is not forced.
+      nil
     end
 
     def _do_load(config, account_file)

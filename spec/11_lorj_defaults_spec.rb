@@ -16,7 +16,7 @@
 #    limitations under the License.
 
 # require 'rubygems'
-#  require 'byebug'
+# require 'byebug'
 # require 'bundler/setup'
 
 app_path = File.dirname(__FILE__)
@@ -79,6 +79,37 @@ describe 'class: Lorj::Default loaded lorj_spec/defaults.yaml, '\
 
       it 'get_meta_section(:data) return :credentials' do
         expect(@defaults.get_meta_section(:data)).to eq(:credentials)
+      end
+
+      it 'with :metadata_section => :lorj_default_missing, '\
+         'exist?[:default_case] return false' do
+        @defaults.data_options(:metadata_section => :lorj_default_missing)
+        expect(@defaults.exist?(:default_case)).to equal(false)
+      end
+    end
+    context 'defaults.yaml loaded, with :metadata_section => :lorj_default,' do
+      before(:all) do
+        @defaults.data_options(:metadata_section => :lorj_default)
+      end
+
+      it 'exist?[:default_case] return true' do
+        expect(@defaults.exist?(:default_case)).to equal(true)
+      end
+
+      it 'exist?[:default_case2] return true' do
+        expect(@defaults.exist?(:default_case2)).to equal(true)
+      end
+
+      it 'exist?[:default_case3] return false' do
+        expect(@defaults.exist?(:default_case3)).to equal(false)
+      end
+
+      it 'get[:default_case] return "success"' do
+        expect(@defaults[:default_case]).to eq('success')
+      end
+
+      it 'get[:default_case2] return "success"' do
+        expect(@defaults[:default_case2]).to eq('success')
       end
     end
   end

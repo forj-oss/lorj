@@ -17,6 +17,7 @@
   :maestro_url: http://example.org
   :keypair_name: default_key
   :data: None
+  :default_case2: 'success'
 :description:
   :FORJ_HPC: Testing extra application default value.
 :setup:
@@ -34,3 +35,8 @@
       :account_exclusive: true
   :maestro:
     :maestro_url:
+  :lorj_default:
+    :default_case:
+      :default_value: 'success'
+    :default_case2:
+      :default_value: 'incorrect - meta-default value'

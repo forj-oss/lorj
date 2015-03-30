@@ -18,20 +18,6 @@
 # Lorj::BaseDefinition
 #
 module Lorj
-  # This class limits ERC template to access only to config object data.
-  class ERBConfig
-    attr_reader :config
-
-    def initialize(config)
-      @config = config
-    end
-
-    # Bind this limited class with ERB templates
-    def get_binding # rubocop: disable AccessorMethodName
-      binding
-    end
-  end
-
   # Following class defines class levels function to
   # declare framework objects.
   # As each process needs to define new object to deal with

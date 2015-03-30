@@ -206,9 +206,14 @@ describe 'class: Lorj::Config,' do
       expect(@config.where?(:test1)).to equal(false)
     end
 
-    it 'default_dump return all in a Hash' do
+    it 'default_dump return all in a Hash, without :setup and :sections' do
       default_file = @config.config_filename('default')
+      # Following will split defaults.yaml to 2 differents config
+      # values config layers and metadata config layers.
+      Lorj.defaults
       default = YAML.load_file(default_file)
+      default.delete(:setup)
+      default.delete(:sections)
 
       res = { 'local' => { :default => {} },
               'default' => default
