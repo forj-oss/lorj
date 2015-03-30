@@ -129,6 +129,21 @@ class CloudProcess
                 private_key_file) if keypair[:private_key_exist?]
     PrcLib.info("Found openssh public key file '%s'.",
                 public_key_file) if keypair[:public_key_exist?]
+
+    unless keypair[:public_key_exist?]
+      name = keypair[:name]
+      PrcLib.warning("The local public key file '%s' is missing.\n"\
+                     "As the keypair name '%s' already exists in your cloud, "\
+                     'you will need to get the original SSH keypair files '\
+                     "used to create the keypair name '%s'. Otherwise, you "\
+                     "won't be able to use it to connect to a box configured"\
+                     " with '%s'."\
+                     "\nPublic key found in the cloud:\n%s",
+                     public_key_file, name, name, name,
+                     keypair[:public_key])
+      return
+    end
+
     if keypair[:coherent]
       PrcLib.info("keypair '%s' local files are coherent with keypair in "\
                   'your cloud service. You will be able to use your local '\
@@ -142,7 +157,10 @@ class CloudProcess
                      public_key_file, keypair[:name], keypair[:public_key])
     end
   end
+end
 
+# Keypair management: Internal process functions
+class CloudProcess
   # Function to update a keypair object with ssh files found in :keypair_path
   #
   def keypair_files_detected(keypair, loc_kpair)
@@ -293,6 +311,7 @@ class CloudProcess
 
     # Check the public key with the one found here, locally.
     if !pub_keypair.nil? && pub_keypair != ''
+      return false unless loc_kpair[:public_key_exist?]
       begin
         loc_pubkey = File.read(File.join(loc_kpair[:keypair_path],
                                          loc_kpair[:public_key_name]))
