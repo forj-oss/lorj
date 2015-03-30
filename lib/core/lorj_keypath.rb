@@ -38,6 +38,7 @@ module Lorj
   # puts oKey.key[1]   # => nil
   # puts oKey.fpath    # => ':test'
   # puts oKey.tree     # => [:test]
+  # puts oKey.key_tree # => :test
   #
   # oKey = KeyPath([:test,:test2,:test3])
   # puts oKey.to_s      # => 'test/test2/test3'
@@ -46,6 +47,7 @@ module Lorj
   # puts oKey.key[1]    # => :test2
   # puts oKey.fpath     # => ':test/:test2/:test3'
   # puts oKey.tree      # => [:test,:test2,:test3]
+  # puts oKey.key_tree  # => ':test/:test2/:test3'
   #
   class KeyPath
     def initialize(sKeyPath = nil, max_level = -1)
@@ -72,6 +74,11 @@ module Lorj
 
     def tree # rubocop: disable TrivialAccessors
       @keypath
+    end
+
+    def key_tree
+      return @keypath[0] if @keypath.length == 1
+      fpath
     end
 
     def fpath
