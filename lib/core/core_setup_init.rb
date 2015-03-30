@@ -217,14 +217,20 @@ module Lorj
             options = _get_meta_data(data)
             options = {} if options.nil?
 
+            Lorj.data.layer_add(:name => :setup)
+
             if options[:pre_step_function]
               proc = options[:pre_step_function]
               next unless @process.method(proc).call(data)
+              # Get any update from pre_step_function
+              options = _get_meta_data(data)
             end
 
             data_desc = _setup_display_data(data, options)
 
             _setup_ask_data(data_desc, data, options)
+
+            Lorj.data.layer_remove(:name => :setup)
           end
         end
       end
