@@ -50,6 +50,12 @@ describe 'class: PRC::BaseConfig,' do
       @config[:test1, :test2] = 'value'
       expect(@config.data).to eq(:test1 => { :test2 => 'value' })
     end
+
+    it 'version = "0.1" can be set and get' do
+      expect(@config.version).to equal(nil)
+      @config.version = '0.1'
+      expect(@config.version).to eq('0.1')
+    end
   end
 
   context 'config.del(*keys)' do
@@ -120,8 +126,11 @@ describe 'class: PRC::BaseConfig,' do
   context "config.erase on :test1 => { :test2 => 'value' }" do
     it 'with no parameter should return {} and cleanup internal data.' do
       config = PRC::BaseConfig.new(:test1 => { :test2 => 'value' })
+      config.version = '0.1'
+
       expect(config.erase).to eq({})
       expect(config.data).to eq({})
+      expect(config.version).to eq(nil)
     end
   end
 
@@ -150,6 +159,7 @@ describe 'class: PRC::BaseConfig,' do
       old_file = @config.filename
       filename = File.expand_path(file)
 
+      @config.version = '1'
       expect(@config.save(file)).to equal(true)
       expect(@config.filename).not_to eq(old_file)
       expect(@config.filename).to eq(filename)
@@ -160,6 +170,7 @@ describe 'class: PRC::BaseConfig,' do
 
       expect(@config.load).to equal(true)
       expect(@config.data).to eq(:test1 => { :test2 => 'value' })
+      expect(@config.version).to eq('1')
 
       File.delete(@config.filename)
     end

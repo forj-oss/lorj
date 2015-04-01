@@ -42,6 +42,9 @@ module PRC
     # * *get*: get the config file name used by #load and #save.
     attr_accessor :filename
 
+    # config layer version
+    attr_accessor :version
+
     # initialize BaseConfig
     #
     # * *Args*
@@ -114,14 +117,13 @@ module PRC
       p_exist?(*keys)
     end
 
-    # Erase function
-    #
-    # * *Args*
+    # Erase the data in the object. internal version is cleared as well.
     #
     # * *Returns*
-    #   -
+    #   - Hash : {}.
     #
     def erase
+      @version = nil
       @data = {}
     end
 
@@ -275,6 +277,10 @@ module PRC
       fail 'Config filename not set.' if @filename.nil?
 
       @data = YAML.load_file(File.expand_path(@filename))
+      if @data.key?(:file_version)
+        @version = @data[:file_version]
+        @data.delete(:file_version)
+      end
       true
     end
 
@@ -283,6 +289,9 @@ module PRC
       self.filename = file unless file.nil?
 
       fail 'Config filename not set.' if @filename.nil?
+
+      @data.delete(:file_version)
+      @data[:file_version] = @version unless @version.nil?
 
       File.open(@filename, 'w+') { |out| YAML.dump(@data, out) }
       true

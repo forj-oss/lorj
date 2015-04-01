@@ -77,6 +77,28 @@ describe 'class: PRC::CoreConfig,' do
       expect(@config.layers).to eq(%w(runtime local))
     end
 
+    it 'config.version("local") return nil' do
+      expect(@config.version('local')).to equal(nil)
+    end
+
+    it 'config.version("runtime") return nil' do
+      expect(@config.version('runtime')).to equal(nil)
+    end
+
+    it 'config.version["inexistent"] return nil' do
+      expect(@config.version('inexistent')).to equal(nil)
+    end
+
+    it 'only config.version_set("local") = "1"' do
+      expect(@config.version_set('local', '1')).to eq('1')
+    end
+
+    it 'only config.version("local") return "1"' do
+      expect(@config.version('local')).to eq('1')
+      expect(@config.version('runtime')).to equal(nil)
+      expect(@config.version('inexistent')).to equal(nil)
+    end
+
     it 'config.exist?(:test) returns true' do
       expect(@config.exist?(:test)).to equal(true)
     end
