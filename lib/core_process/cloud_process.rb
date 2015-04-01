@@ -26,5 +26,5 @@ lorj_objects = %w(common connection network subnetwork router
                   server_log internet_server)
 
 lorj_objects.each do |name|
-  require File.join(cloud_path, 'cloud', 'process', name + '.rb')
+  load File.join(cloud_path, 'cloud', 'process', name + '.rb')
 end

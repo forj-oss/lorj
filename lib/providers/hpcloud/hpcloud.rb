@@ -21,9 +21,9 @@ require 'fog' # We use fog to access HPCloud
 
 hpcloud_path = File.expand_path(File.dirname(__FILE__))
 
-require File.join(hpcloud_path, 'compute.rb')
-require File.join(hpcloud_path, 'network.rb')
-require File.join(hpcloud_path, 'security_groups.rb')
+load File.join(hpcloud_path, 'compute.rb')
+load File.join(hpcloud_path, 'network.rb')
+load File.join(hpcloud_path, 'security_groups.rb')
 
 # Defines Meta HPCloud object
 class Hpcloud
