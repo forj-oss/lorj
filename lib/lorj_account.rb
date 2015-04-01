@@ -27,6 +27,8 @@ module Lorj
     end
 
     def dump
+      return [] unless File.directory?(@account_path)
+
       accounts = []
       Dir.foreach(@account_path) do |x|
         accounts << x unless x.match(/^\..?$/)
