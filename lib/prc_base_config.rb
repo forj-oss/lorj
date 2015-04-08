@@ -45,6 +45,9 @@ module PRC
     # config layer version
     attr_accessor :version
 
+    # config layer latest version
+    attr_reader :latest_version
+
     # initialize BaseConfig
     #
     # * *Args*
@@ -56,10 +59,11 @@ module PRC
     # ex:
     # value = CoreConfig.New({ :test => {:titi => 'found'}})
     # # => creates a CoreConfig with this Hash of Hash
-    def initialize(value = nil)
+    def initialize(value = nil, latest_version = nil)
       @data = {}
       @data = value if value.is_a?(Hash)
       @data_options = {} # Options for exist?/set/get/load/save
+      @latest_version = latest_version  unless latest_version.nil?
     end
 
     # data_options set data options used by exist?, get, set, load and save
@@ -123,7 +127,7 @@ module PRC
     #   - Hash : {}.
     #
     def erase
-      @version = nil
+      @version = @latest_version
       @data = {}
     end
 
@@ -239,6 +243,11 @@ module PRC
       msg
     end
 
+    def latest_version?
+      return true if @version == @latest_version
+      false
+    end
+
     private
 
     def p_data_options(options = nil)
@@ -277,6 +286,7 @@ module PRC
       fail 'Config filename not set.' if @filename.nil?
 
       @data = YAML.load_file(File.expand_path(@filename))
+
       if @data.key?(:file_version)
         @version = @data[:file_version]
         @data.delete(:file_version)
@@ -289,11 +299,10 @@ module PRC
       self.filename = file unless file.nil?
 
       fail 'Config filename not set.' if @filename.nil?
+      @data_dup = @data.dup
+      @data_dup[:file_version] = @version unless @version.nil?
 
-      @data.delete(:file_version)
-      @data[:file_version] = @version unless @version.nil?
-
-      File.open(@filename, 'w+') { |out| YAML.dump(@data, out) }
+      File.open(@filename, 'w+') { |out| YAML.dump(@data_dup, out) }
       true
     end
   end

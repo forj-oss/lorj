@@ -1219,6 +1219,15 @@ module PRC
       @config_layers[index][:config].version = version
     end
 
+    def latest_version?(name)
+      return nil unless name.is_a?(String)
+
+      index = layer_index(name)
+      return nil if index.nil?
+
+      @config_layers[index][:config].latest_version?
+    end
+
     # List all config layers defined in this instance.
     def layers
       result = []

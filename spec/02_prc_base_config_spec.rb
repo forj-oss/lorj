@@ -34,6 +34,11 @@ describe 'class: PRC::BaseConfig,' do
       config = PRC::BaseConfig.new(:test => :toto)
       expect(config.data).to eq(:test => :toto)
     end
+
+    it 'should be initialized with latest_version.' do
+      config = PRC::BaseConfig.new(nil, '0.1')
+      expect(config.latest_version).to eq('0.1')
+    end
   end
 
   context 'config[*keys] = value' do
@@ -125,12 +130,12 @@ describe 'class: PRC::BaseConfig,' do
 
   context "config.erase on :test1 => { :test2 => 'value' }" do
     it 'with no parameter should return {} and cleanup internal data.' do
-      config = PRC::BaseConfig.new(:test1 => { :test2 => 'value' })
-      config.version = '0.1'
+      config = PRC::BaseConfig.new({ :test1 => { :test2 => 'value' } }, '0.1')
+      config.version = '0.0'
 
       expect(config.erase).to eq({})
       expect(config.data).to eq({})
-      expect(config.version).to eq(nil)
+      expect(config.version).to eq('0.1')
     end
   end
 
@@ -158,7 +163,6 @@ describe 'class: PRC::BaseConfig,' do
       file = '~/.lorj_rspec2.yaml'
       old_file = @config.filename
       filename = File.expand_path(file)
-
       @config.version = '1'
       expect(@config.save(file)).to equal(true)
       expect(@config.filename).not_to eq(old_file)
@@ -167,11 +171,10 @@ describe 'class: PRC::BaseConfig,' do
 
     it 'load returns true and file is loaded.' do
       @config.erase
-
       expect(@config.load).to equal(true)
       expect(@config.data).to eq(:test1 => { :test2 => 'value' })
       expect(@config.version).to eq('1')
-
+      expect(@config.latest_version).to eq(nil)
       File.delete(@config.filename)
     end
 
@@ -179,6 +182,71 @@ describe 'class: PRC::BaseConfig,' do
       @config.erase
 
       expect { @config.load('~/.lorj_rspec.yaml') }.to raise_error
+    end
+  end
+
+  context 'new and save a config, with latest_version initialized' do
+    before(:all) do
+      @config = PRC::BaseConfig.new({ :test1 => { :test2 => 'value' } }, '1')
+    end
+
+    it 'save, file has version set' do
+      file = "~/.lorj_rspec_#{Process.pid}.yaml"
+      @config.filename = file
+      @config.version = @config.latest_version
+      @config.save
+      @config.erase
+      @config.load
+      expect(@config.data).to eq(:test1 => { :test2 => 'value' })
+      expect(@config.version).to eq('1')
+    end
+  end
+
+  context 'load and upgrade an old config' do
+    before(:all) do
+      @config = PRC::BaseConfig.new
+    end
+
+    it 'load old config, version is not change without version update' do
+      file = "~/.lorj_rspec_#{Process.pid}.yaml"
+      @config.filename = file
+      @config.load
+      old_version = @config.version
+      old_data = @config.data
+      @config.save
+      @config.erase
+      @config.load
+      expect(@config.version).to eq(old_version)
+      expect(@config.data).to eq(old_data)
+    end
+
+    it 'version upgrade and save, file has new version set' do
+      @config.version = '2'
+      old_data = @config.data
+      @config.save
+      @config.erase
+      @config.load
+      expect(@config.version).to eq('2')
+      expect(@config.data).to eq(old_data)
+      File.delete(@config.filename)
+    end
+  end
+
+  context 'new and save a config, without latest_version initialized' do
+    before(:all) do
+      @config = PRC::BaseConfig.new(:test1 => { :test2 => 'value' })
+    end
+
+    it 'save, file has no version set' do
+      file = "~/.lorj_rspec_#{Process.pid}.yaml"
+      @config.filename = file
+      @config.save
+      @config.erase
+      @config.load
+      expect(@config.latest_version).to eq(nil)
+      expect(@config.version).to eq(nil)
+      expect(@config.data).to eq(:test1 => { :test2 => 'value' })
+      File.delete(@config.filename)
     end
   end
 

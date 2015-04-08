@@ -138,9 +138,10 @@ module Lorj
                                    :set => false, :load => true)
     end
 
-    def define_local_layer
+    def define_local_layer(latest_version = nil)
       PRC::CoreConfig.define_layer(:name => 'local',
-                                   :config => PRC::SectionConfig.new,
+                                   :config => \
+                                    PRC::SectionConfig.new(nil, latest_version),
                                    :load => true, :save => true)
     end
 

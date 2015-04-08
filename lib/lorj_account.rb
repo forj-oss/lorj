@@ -47,6 +47,7 @@ module Lorj
     # Function to initialize read only account attribute.
     def ac_new(account_name, provider = 'lorj')
       @data = {}
+      @version = @latest_version unless @latest_version.nil?
       data_options :section => :account
       self[:name] = account_name
       self[:provider] = provider
@@ -139,7 +140,7 @@ module Lorj
     # - local      : Represents the config.yaml located in ~/.forj
     # - account    : Represents an Account data located in ~/.forj/accounts
     # - runtime    : Represents the runtime in memory data settings.
-    def initialize(config_name = nil)
+    def initialize(config_name = nil, latest_version = nil)
       config_layers = []
 
       # Application layer
@@ -149,11 +150,11 @@ module Lorj
       config_layers << define_controller_data_layer
 
       # Local Config layer
-      local = define_local_layer
+      local = define_local_layer(latest_version)
       config_layers << local
 
       # Account config layer
-      config_layers << define_account_layer
+      config_layers << define_account_layer(latest_version)
 
       # runtime Config layer
       config_layers << define_runtime_layer
@@ -650,9 +651,10 @@ module Lorj
       index
     end
 
-    def define_account_layer
+    def define_account_layer(latest_version = nil)
       PRC::CoreConfig.define_layer(:name     => 'account',
-                                   :config   => Lorj::AccountConfig.new,
+                                   :config   => \
+                                   Lorj::AccountConfig.new(nil, latest_version),
                                    :file_set => true,
                                    :load     => true, :save     => true)
     end
