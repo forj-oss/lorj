@@ -79,7 +79,7 @@ student_core.create(:student,
                     :first_name => 'Anthony',
                     :last_name => 'Hopkins',
                     :course => 'Art Drama'
-)
+                   )
 # config[:student_name] = "Anthony Hopkins"
 # config[:course] = "Art Drama"
 # student_core.Create(:student)
@@ -90,7 +90,7 @@ student_core.create(:student,
                     :first_name => 'Marilyn',
                     :last_name => 'Monroe',
                     :course => 'Art Drama'
-)
+                   )
 # replaced the following :
 # config[:student_name] = "Anthony Hopkins"
 # student_core.Create(:student)
@@ -101,7 +101,7 @@ student = student_core.create(:student,
                               :first_name => 'Anthony',
                               :last_name => 'Mistake',
                               :course => 'what ever you want!!!'
-)
+                             )
 
 puts format("Student created '%s'", student[:attrs])
 

@@ -236,8 +236,8 @@ module Lorj
 
     def type?(key)
       return nil unless @params.rh_exist?(key)
+      return :DataObject if @params[key].type == :object
       :data
-      :DataObject if @params[key].type == :object
     end
 
     def to_s

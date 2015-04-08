@@ -76,8 +76,8 @@ class Lorj::BaseDefinition
 
              :create_e => :forj_get_or_create_rule,
              :query_e => :forj_query_rule
-             #         :delete_e   => :forj_delete_rule
-             )
+            #         :delete_e   => :forj_delete_rule
+            )
 
   undefine_attribute :name  # Do not return any predefined name attribute
 

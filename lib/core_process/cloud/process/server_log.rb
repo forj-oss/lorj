@@ -24,7 +24,7 @@ class Lorj::BaseDefinition
   define_obj(:server_log,
 
              :get_e => :forj_get_server_log
-             )
+            )
 
   obj_needs :CloudObject,  :server
   obj_needs :data,         :log_lines

@@ -103,6 +103,7 @@ class Hpcloud
   attr_value_mapping :create, 'BUILD'
   attr_value_mapping :boot,   :boot
   attr_value_mapping :active, 'ACTIVE'
+  attr_value_mapping :error,  'ERROR'
 
   # ************************************ SERVER log Object
   define_obj :server_log
@@ -121,14 +122,14 @@ class Hpcloud
               :desc => 'HPCloud Access Key (From horizon, user drop down, '\
                        'manage keys)',
               :validate => /^[A-Z0-9]*$/
-  )
+             )
   define_data(:account_key,
               :account => true,
               :desc => 'HPCloud secret Key (From horizon, user drop down, '\
                        'manage keys)',
               :encrypted => false,
               :validate => /^.+/
-  )
+             )
   define_data(:auth_uri,
               :account => true,
               :desc => 'HPCloud Authentication service URL (default is HP '\
@@ -136,13 +137,13 @@ class Hpcloud
               :validate => %r{^http(s)?://.*$},
               :default_value => 'https://region-a.geo-1.identity.hpcloudsvc'\
                                 '.com:35357/v2.0/'
-  )
+             )
   define_data(:tenant,
               :account => true,
               :desc => 'HPCloud Tenant ID (from horizon, identity, projecs,'\
                        ' Project ID)',
               :validate => /^[0-9]+$/
-  )
+             )
 
   define_data(:compute,
               :account => true,
@@ -155,7 +156,7 @@ class Hpcloud
                 :query_params => { :list_services => [:Compute, :compute] },
                 :validate => :list_strict
               }
-  )
+             )
 
   define_data(:network,
               :account => true,
@@ -168,7 +169,7 @@ class Hpcloud
                 :query_params => { :list_services => [:Networking, :network] },
                 :validate => :list_strict
               }
-  )
+             )
 
   data_value_mapping 'xsmall', 'standard.xsmall'
   data_value_mapping 'small',  'standard.small'

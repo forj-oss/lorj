@@ -33,7 +33,7 @@ class Lorj::BaseDefinition # rubocop:disable Style/ClassAndModuleChildren
   define_obj(:student,
              # The function to call in the class Students
              :create_e => :create_student
-             )
+            )
 
   obj_needs :data,         :student_name,         :for => [:create_e]
 end

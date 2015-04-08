@@ -547,7 +547,7 @@ module Lorj
 
     def elem_exist?(*key)
       return true if key[0] == :object && @data.key?(key[0])
-      return true if key[0] == :attrs  && @data.rh_exist?(key)
+      return true if key[0] == :attrs && @data.rh_exist?(key)
       (@data.rh_lexist?(:attrs, key) == key.length + 1)
     end
 

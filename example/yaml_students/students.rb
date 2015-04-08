@@ -31,7 +31,7 @@ if school.query_student(:name => 'Robert Redford').length == 0
                         :first_name => 'Robert',
                         :last_name => 'Redford',
                         :training => 'Art Comedy'
-  )
+                       )
 end
 
 puts ANSI.bold('Create 2nd student:')
@@ -40,7 +40,7 @@ if school.query_student(:name => 'Anthony Hopkins').length == 0
                         :first_name => 'Anthony',
                         :last_name => 'Hopkins',
                         :training => 'Art Drama'
-  )
+                       )
 end
 
 puts ANSI.bold('Create 3rd student:')
@@ -49,7 +49,7 @@ if school.query_student(:name => 'Marilyn Monroe').length == 0
                         :first_name => 'Marilyn',
                         :last_name => 'Mistake',
                         :training => 'Art Drama'
-  )
+                       )
 end
 
 puts ANSI.bold('Create mistake')
@@ -57,7 +57,7 @@ student = school.create_student('Anthony Mistake',
                                 :first_name => 'Anthony',
                                 :last_name => 'Mistake',
                                 :training => 'what ever you want!!!'
-)
+                               )
 
 puts format("Student created: '%s'", student)
 

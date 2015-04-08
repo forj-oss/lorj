@@ -90,9 +90,9 @@ class Lorj::BaseDefinition # rubocop: disable Style/ClassAndModuleChildren
              :create_e => :forj_get_or_create_image,
              :query_e => :forj_query_image,
              :get_e => :forj_get_image
-             #         :update_e   => :forj_update_image
-             #         :delete_e   => :forj_delete_image
-             )
+            #         :update_e   => :forj_update_image
+            #         :delete_e   => :forj_delete_image
+            )
 
   obj_needs :CloudObject,  :compute_connection
   obj_needs :data,         :image_name,          :for => [:create_e]

@@ -30,7 +30,7 @@ class Lorj::BaseDefinition # rubocop: disable Style/ClassAndModuleChildren
              :get_e => :controller_get,
              # We use predefined call to the controller delete
              :delete_e => :controller_delete
-             )
+            )
 
   # obj_needs is used to declare parameters to pass to handlers.
   # :for indicates those parameters to be passed to create_e handler only.

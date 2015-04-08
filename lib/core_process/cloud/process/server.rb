@@ -74,7 +74,7 @@ class Lorj::BaseDefinition
              :get_e => :forj_get_server,
              #         :update_e   => :forj_update_server,
              :delete_e => :forj_delete_server
-             )
+            )
 
   obj_needs :CloudObject,  :compute_connection
   obj_needs :CloudObject,  :flavor,              :for => [:create_e]
@@ -92,6 +92,7 @@ class Lorj::BaseDefinition
   predefine_data_value :create,   :desc => 'Server is creating.'
   predefine_data_value :boot,     :desc => 'Server is booting.'
   predefine_data_value :active,   :desc => 'Server is started.'
+  predefine_data_value :error,    :desc => 'Server is in error.'
   def_attribute :private_ip_address
   def_attribute :public_ip_address
 

@@ -72,10 +72,10 @@ class Lorj::BaseDefinition
   define_obj(:public_ip,
              :create_e => :forj_get_or_assign_public_address,
              :query_e => :forj_query_public_address
-  #      :get_e      => :forj_get_address
-  #      :update_e   => :forj_update_address
-  #      :delete_e   => :forj_delete_address
-  )
+            #      :get_e      => :forj_get_address
+            #      :update_e   => :forj_update_address
+            #      :delete_e   => :forj_delete_address
+            )
 
   obj_needs :CloudObject,  :compute_connection
   obj_needs :CloudObject,  :server

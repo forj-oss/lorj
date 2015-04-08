@@ -97,7 +97,7 @@ class Lorj::BaseDefinition
              :create_e => :forj_get_or_create_sg,
              :query_e => :forj_query_sg,
              :delete_e => :forj_delete_sg
-             )
+            )
 
   obj_needs :CloudObject,  :network_connection
   obj_needs :data,         :security_group,      :for => [:create_e]

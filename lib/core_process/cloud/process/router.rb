@@ -59,8 +59,8 @@ class Lorj::BaseDefinition
              #         :query_e    => :forj_query_router,
              #         :get_e      => :forj_get_router,
              :update_e => :controller_update
-             #         :delete_e   => :forj_delete_router
-             )
+            #         :delete_e   => :forj_delete_router
+            )
   obj_needs :CloudObject,  :network_connection
   obj_needs :CloudObject,  :network,             :for => [:create_e]
   obj_needs :CloudObject,  :subnetwork,          :for => [:create_e]

@@ -83,7 +83,7 @@ class Lorj::BaseDefinition
 
              :create_e => :forj_get_or_create_ext_net,
              :query_e => :forj_query_external_network
-             )
+            )
 
   obj_needs :CloudObject,  :network_connection
   obj_needs :CloudObject,  :router

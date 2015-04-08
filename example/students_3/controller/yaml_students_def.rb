@@ -41,7 +41,7 @@ class YamlStudents
   define_obj(:connection,
              # Nothing complex to do. So, simply call the controller create.
              :create_e => :controller_create
-  )
+            )
 
   obj_needs :data,   :connection_string,  :mapping => :file_name
   undefine_attribute :id    # Do not return any predefined ID

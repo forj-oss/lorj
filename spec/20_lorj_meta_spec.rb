@@ -237,7 +237,7 @@ YAMLDOC
        'returns :option1 => :value1' do
       expect(@metadata.where?(:any, :kind_of, :data1, :option1)).to equal(false)
       expect(@metadata.set(:any, :kind_of, :data1, :option1 => :value1
-                           )).to eq(:option1 => :value1)
+                          )).to eq(:option1 => :value1)
       expect(@metadata.where?(:any, :kind_of, :data1,
                               :option1)).to eq(['controller'])
     end

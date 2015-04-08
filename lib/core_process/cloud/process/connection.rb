@@ -49,7 +49,7 @@ class Lorj::BaseDefinition
   define_obj(:services,
 
              :create_e => :connect
-             )
+            )
   obj_needs :data, :auth_uri
   obj_needs :data, :account_id
   obj_needs :data, :account_key
@@ -64,7 +64,7 @@ class Lorj::BaseDefinition
   define_obj(:compute_connection,
 
              :create_e => :connect # Will call ForjProcess connect
-             )
+            )
   obj_needs :data, :account_id
   obj_needs :data, :account_key
   obj_needs :data, :auth_uri
@@ -80,7 +80,7 @@ class Lorj::BaseDefinition
   define_obj(:network_connection,
 
              :create_e => :connect
-             )
+            )
   obj_needs :data, :account_id
   obj_needs :data, :account_key
   obj_needs :data, :auth_uri

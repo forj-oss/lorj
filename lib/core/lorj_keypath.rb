@@ -113,7 +113,7 @@ module Lorj
     private
 
     def string_to_sarray(sKeyPath)
-      if %r{[^\\/]?/[^/]} =~ sKeyPath || /:[^:\/]/ =~ sKeyPath
+      if %r{[^\\/]?/[^/]} =~ sKeyPath || %r{:[^:/]} =~ sKeyPath
         # keypath to interpret
         res = sKeyPath.split('/')
         res.each_index do |iIndex|

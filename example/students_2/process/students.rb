@@ -42,7 +42,7 @@ class Lorj::BaseDefinition # rubocop: disable Style/ClassAndModuleChildren
              :get_e => :controller_get,
              # We use predefined call to the controller delete
              :delete_e => :controller_delete
-             )
+            )
 
   obj_needs :data, :student_name, :for => [:create_e], :mapping => :name
 end

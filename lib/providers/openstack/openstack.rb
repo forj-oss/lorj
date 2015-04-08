@@ -106,13 +106,13 @@ class Openstack
               :account => true,
               :desc => 'Openstack Username',
               :validate => /^.+/
-  )
+             )
 
   define_data(:account_key,
               :account => true,
               :desc => 'Openstack Password',
               :validate => /^.+/
-  )
+             )
   define_data(:auth_uri,
               :account => true,
               :explanation => "The authentication service is identified as '"\
@@ -121,14 +121,14 @@ class Openstack
               :desc => 'Openstack Authentication service URL. '\
                 'Ex: https://mycloud:5000/v2.0/tokens',
               :validate => %r{^http(s)?:\/\/.*\/tokens$}
-  )
+             )
   define_data(:tenant,
               :account => true,
               :explanation => 'The Project name is shown from your horizon UI'\
                 ', on top left, close to the logo',
               :desc => 'Openstack Tenant Name',
               :validate => /^.+/
-  )
+             )
 
   define_data(:compute,
               :account => true,
@@ -149,7 +149,7 @@ class Openstack
                 :query_params => { :list_services => [:Compute, :compute] },
                 :validate => :list_strict
               }
-  )
+             )
 
   define_data(:network,
               :account => true,
@@ -170,7 +170,7 @@ class Openstack
                 :query_params => { :list_services => [:Networking, :network] },
                 :validate => :list_strict
               }
-  )
+             )
 
   define_obj :server
   def_attr_mapping :status, :state

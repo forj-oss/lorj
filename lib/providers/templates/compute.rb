@@ -35,6 +35,6 @@ class Mycloud
       :auth_uri => @oForjAccount.get(:auth_uri),
       :project => @oForjAccount.get(:tenant),
       :compute_service => @oForjAccount.get(:compute)
-       )
+    )
   end
 end

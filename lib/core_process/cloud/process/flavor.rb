@@ -68,10 +68,10 @@ class Lorj::BaseDefinition # rubocop: disable ClassAndModuleChildren
 
              :create_e => :forj_get_or_create_flavor,
              :query_e => :forj_query_flavor
-             #         :get_e      => :forj_get_flavor,
-             #         :update_e   => :forj_update_flavor,
-             #         :delete_e   => :forj_delete_flavor
-             )
+            #         :get_e      => :forj_get_flavor,
+            #         :update_e   => :forj_update_flavor,
+            #         :delete_e   => :forj_delete_flavor
+            )
 
   obj_needs :CloudObject,  :compute_connection
   obj_needs :data,         :flavor_name,         :for => [:create_e]

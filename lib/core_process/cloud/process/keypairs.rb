@@ -98,8 +98,8 @@ class Lorj::BaseDefinition
              :create_e => :forj_get_or_create_keypair,
              :query_e => :forj_query_keypairs,
              :get_e => :forj_get_keypair
-             #         :delete_e   => :forj_delete_keypair
-             )
+            #         :delete_e   => :forj_delete_keypair
+            )
 
   obj_needs :CloudObject,  :compute_connection
   obj_needs :data,         :keypair_name,        :for => [:create_e]

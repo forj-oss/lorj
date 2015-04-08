@@ -149,7 +149,7 @@ module Lorj
                :query_e => :controller_query,
                # We use predefined call to the controller delete
                :delete_e => :controller_delete
-               )
+              )
 
     # obj_needs is used to declare parameters to pass to handlers.
     # :for indicates those parameters to be passed to create_e handler only.
