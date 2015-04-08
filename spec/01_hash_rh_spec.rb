@@ -15,7 +15,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-#  require 'byebug'
+# require 'byebug'
 
 $LOAD_PATH << File.join(File.dirname(__FILE__), '..', 'lib')
 
@@ -232,6 +232,199 @@ describe 'Recursive Hash/Array extension,' do
       hclone = @hdata.rh_clone
       hclone[:array][0][:test] = 'value2'
       expect(@hdata[:array][0][:test]).to eq(:value1)
+    end
+  end
+
+  context 'with orig = [:data1, :data2, :data3]' do
+    before(:all) do
+      @orig = [:data1, :data2, :data3]
+    end
+
+    it 'update([:data4]) => [:data1, :data2, :data3, :data4]' do
+      expect(@orig.update([:data4])).to eq([:data1, :data2, :data3, :data4])
+      expect(@orig).to eq([:data1, :data2, :data3])
+    end
+
+    it 'update([{:unset => [:data2]}]) => [:data1, :data3]' do
+      expect(@orig.update([{ :unset => [:data2] }])).to eq([:data1, :data3])
+    end
+
+    it 'update([{:unset => [:data2]}, :data4]) =>'\
+       ' [:data1, :data3, :data4]' do
+      expect(@orig.update([{ :unset => [:data2] }, :data4])
+            ).to eq([:data1, :data3, :data4])
+    end
+
+    it 'update([{:blabla => [:data2]}, :data4]) =>'\
+       ' [:data1, :data2, :data3, {:blabla => [:data2]}, :data4]' do
+      expect(@orig.update([{ :blabla => [:data2] }, :data4])
+            ).to eq([:data1, :data2, :data3,
+                     { :blabla => [:data2] }, :data4])
+    end
+  end
+
+  context 'with orig = {:data1 => {:prop1 => :val1}}' do
+    before(:all) do
+      @orig = { :data1 => { :prop1 => :val1 } }
+    end
+
+    it 'rh_merge(:data2 => {:prop1 => :val2}) return '\
+       '{:data1 => {:prop1 => :val1}, :data2 => {:prop1 => :val2}}' do
+      expect(@orig.rh_merge(:data2 => { :prop1 => :val2 }
+                           )).to eq(:data1 => { :prop1 => :val1 },
+                                    :data2 => { :prop1 => :val2 })
+    end
+
+    it 'rh_merge(:data1 => {:prop1 => :val2}) return '\
+       '{:data1 => {:prop1 => :val2}}' do
+      expect(@orig.rh_merge(:data1 => { :prop1 => :val2 }
+                           )).to eq(:data1 => { :prop1 => :val2 })
+    end
+
+    it 'rh_merge(:data1 => {:prop1 => :unset}) return '\
+       '{:data1 => {}}' do
+      expect(@orig.rh_merge(:data1 => { :prop1 => :unset }
+                           )).to eq(:data1 => {})
+    end
+
+    it 'rh_merge(:data1 => {:__protected => [:prop1],'\
+                           ':prop1 => :unset}) return '\
+       '{:data1 => {:__protected => [:prop1]}}' do
+      expect(@orig.rh_merge(:data1 => { :__protected => [:prop1],
+                                        :prop1 => :unset }
+                           )).to eq(:data1 => { :__protected => [:prop1] })
+    end
+
+    it 'rh_merge(:data1 => :val2) return '\
+       '{:data1 => {:prop1 => :val1}}' do
+      expect(@orig.rh_merge(:data1 => :val2
+                           )).to eq(:data1 => { :prop1 => :val1 })
+    end
+
+    it 'rh_merge(:data1 => :unset) return '\
+       '{:data1 => {:prop1 => :val1}}' do
+      expect(@orig.rh_merge(:data1 => :unset
+                           )).to eq(:data1 => { :prop1 => :val1 })
+    end
+
+    it 'rh_merge(:data1 => {:prop1 => {}}) return '\
+        ':data1 => {:prop1 => :val1}}' do
+      expect(@orig.rh_merge(:data1 => { :prop1 => {} }
+                           )).to eq(:data1 => { :prop1 => :val1 })
+    end
+  end
+
+  context 'with orig = {:__struct_changing => [:data1], '\
+                  ':data1 => {:prop1 => :val1}}' do
+    before(:all) do
+      @orig = { :__struct_changing => [:data1], :data1 => { :prop1 => :val1 } }
+    end
+
+    it 'rh_merge(:data1 => :val2) return '\
+       '{:__struct_changing => [:data1], '\
+        ':data1 => :val2}' do
+      expect(@orig.rh_merge(:data1 => :val2
+                           )).to eq(:__struct_changing => [:data1],
+                                    :data1 => :val2)
+    end
+
+    it 'rh_merge(:data1 => {}) return '\
+       '{:__struct_changing => [:data1], '\
+        ':data1 => { :prop1 => :val1 }}' do
+      expect(@orig.rh_merge(:data1 => {}
+                           )).to eq(:__struct_changing => [:data1],
+                                    :data1 => { :prop1 => :val1 })
+    end
+
+    it 'rh_merge(:data1 => {:prop1 => :unset}) return '\
+       '{:__struct_changing => [:data1], '\
+        ':data1 => {}}' do
+      expect(@orig.rh_merge(:data1 => { :prop1 => :unset }
+                           )).to eq(:__struct_changing => [:data1],
+                                    :data1 => {})
+    end
+
+    it 'rh_merge(:data1 => :unset) return '\
+       '{:__struct_changing => [:data1]}' do
+      expect(@orig.rh_merge(:data1 => :unset
+                           )).to eq(:__struct_changing => [:data1])
+    end
+
+    it 'rh_merge(:data2 => {:prop1 => :val2}) return '\
+       '{:__struct_changing => [:data1], '\
+        ':data1 => {:prop1 => :val1}, '\
+        ':data2 => {:prop1 => :val2}}' do
+      expect(@orig.rh_merge(:data2 => { :prop1 => :val2 }
+                           )).to eq(:__struct_changing => [:data1],
+                                    :data1 => { :prop1 => :val1 },
+                                    :data2 => { :prop1 => :val2 })
+    end
+
+    it 'rh_merge(:__struct_changing => [:data2], '\
+                     ':data2 => {:prop1 => :val2}) return '\
+       '{:__struct_changing => [:data1, :data2], '\
+        ':data1 => {:prop1 => :val1}, '\
+        ':data2 => {:prop1 => :val2}}' do
+      expect(@orig.rh_merge(:__struct_changing => [:data2],
+                            :data2 => { :prop1 => :val2 }
+                           )).to eq(:__struct_changing => [:data1, :data2],
+                                    :data1 => { :prop1 => :val1 },
+                                    :data2 => { :prop1 => :val2 })
+    end
+
+    it 'rh_merge(:__struct_changing => [{:__unset => [:data1]}, :data2], '\
+                     ':data2 => {:prop1 => :val2}) return '\
+       '{:__struct_changing => [:data1, :data2], '\
+        ':data1 => {:prop1 => :val1}, '\
+        ':data2 => {:prop1 => :val2}}' do
+      expect(@orig.rh_merge(:__struct_changing => [{ :unset => [:data1] },
+                                                   :data2],
+                            :data2 => { :prop1 => :val2 }
+                           )).to eq(:__struct_changing => [:data2],
+                                    :data1 => { :prop1 => :val1 },
+                                    :data2 => { :prop1 => :val2 })
+    end
+
+    it 'rh_merge(:__struct_changing => [{:__unset => [:data1]}, :data2], '\
+                     ':data1 => :unset,'\
+                     ':data2 => {:prop1 => :val2}) return '\
+       '{:__struct_changing => [:data1, :data2], '\
+        ':data2 => {:prop1 => :val2}}' do
+      expect(@orig.rh_merge(:__struct_changing => [{ :unset => [:data1] },
+                                                   :data2],
+                            :data1 => :unset,
+                            :data2 => { :prop1 => :val2 }
+                           )).to eq(:__struct_changing => [:data2],
+                                    :data2 => { :prop1 => :val2 })
+    end
+  end
+
+  context 'with orig = {:data1 => {:__protected => [:prop1], '\
+          ':prop1 => :val1}}' do
+    before(:all) do
+      @orig = { :data1 => { :__protected => [:prop1], :prop1 => :val1 } }
+    end
+
+    it 'rh_merge(:data2 => {:prop1 => :val2}) return '\
+       '{:data1 => {:prop1 => :val1}, :data2 => {:prop1 => :val2}}' do
+      expect(@orig.rh_merge(:data2 => { :prop1 => :val2 }
+                           )).to eq(:data1 => { :__protected => [:prop1],
+                                                :prop1 => :val1 },
+                                    :data2 => { :prop1 => :val2 })
+    end
+
+    it 'rh_merge(:data1 => {:prop1 => :val2}) return '\
+       '{:data1 => {:prop1 => :val1}}' do
+      expect(@orig.rh_merge(:data1 => { :prop1 => :val2 }
+                           )).to eq(:data1 => { :__protected => [:prop1],
+                                                :prop1 => :val1 })
+    end
+
+    it 'rh_merge(:data1 => {:prop1 => :unset}) return '\
+       '{:data1 => {:prop1 => :val1}}' do
+      expect(@orig.rh_merge(:data1 => { :prop1 => :unset }
+                           )).to eq(:data1 => { :__protected => [:prop1],
+                                                :prop1 => :val1 })
     end
   end
 

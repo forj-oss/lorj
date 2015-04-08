@@ -248,8 +248,14 @@ module PRC
 
     # Internal function to provide a merge result for #_get_from_layers
     #
+    # It merges a +data+ to the previous cumulative layers +result+.
+    #
+    # +data+ is merged if:
+    # - result/data are both Arrays or Hashes.
+    # - The merge is possible only is the deeper layer data type merged
+    #
     # * *Args*
-    #   - +result+ : Cumulative Hash merged
+    #   - +result+ : Cumulative Hash/Array merged
     #   - +data+   : data to merge
     #
     # * *Returns*
@@ -279,14 +285,15 @@ module PRC
     # Internal function to do the merge result for #_get_build_merge
     #
     # * *Args*
-    #   - +result+ : Cumulative Hash merged
+    #   - +result+ : Cumulative Hash/Array merged
     #   - +data+   : data to merge
     #
     # * *Returns*
     # - Cloned Hash merged.
     #
     def _do_merge(result, data)
-      # data and result are of same type. Merge is possible.
+      # data and result are of same type thanks to #_get_build_merge.
+      # Merge is possible.
       return result.merge!(data.rh_clone) if result.is_a?(Hash)
 
       result.each_index do |index|

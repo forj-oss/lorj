@@ -383,6 +383,187 @@ class Hash
     end
     result
   end
+
+  # Merge the current Hash object (self) cloned with a Hash/Array tree contents
+  # (data).
+  #
+  # 'self' is used as original data to merge to.
+  # 'data' is used as data to merged to clone of 'self'. If you want to update
+  # 'self', use rh_merge!
+  #
+  # if 'self' or 'data' contains a Hash tree, the merge will be executed
+  # recursively.
+  #
+  # The current function will execute the merge of the 'self' keys with the top
+  # keys in 'data'
+  #
+  # The merge can be controlled by an additionnal Hash key '__*' in each
+  # 'self' key.
+  # If both a <key> exist in 'self' and 'data', the following decision is made:
+  # - if both 'self' and 'data' key contains an Hash or and Array, a recursive
+  #   merge if Hash or update if Array, is started.
+  #
+  # - if 'self' <key> contains an Hash or an Array, but not 'data' <key>, then
+  #   'self' <key> will be set to the 'data' <key> except if 'self' <Key> has
+  #   :__no_unset: true
+  #   data <key> value can set :unset value
+  #
+  # - if 'self' <key> is :unset and 'data' <key> is any value
+  #   'self' <key> value is set with 'data' <key> value.
+  #   'data' <key> value can contains a Hash with :__no_unset: true to
+  #     protect this key against the next merge. (next config layer merge)
+  #
+  # - if 'data' <key> exist but not in 'self', 'data' <key> is just added.
+  #
+  # - if 'data' & 'self' <key> exist, 'self'<key> is updated except if key is in
+  #   :__protected array list.
+  #
+  # * *Args*    :
+  #   - hash : Hash data to merge.
+  #
+  # * *Returns* :
+  #   - Recursive Array/Hash merged.
+  #
+  # * *Raises* :
+  #   Nothing
+  #
+  # examples:
+  #
+  def rh_merge(data)
+    _rh_merge(clone, data)
+  end
+
+  # Merge the current Hash object (self) with a Hash/Array tree contents (data).
+  #
+  # For details on this functions, see #rh_merge
+  #
+  def rh_merge!(data)
+    _rh_merge(self, data)
+  end
+
+  private
+
+  # Internal function which do the real merge task by #rh_merge and #rh_merge!
+  #
+  # See #rh_merge for details
+  #
+  def _rh_merge(result, data)
+    data.each do |key, value|
+      next if [:__struct_changing, :__protected].include?(key)
+
+      _do_rh_merge(result, key, value)
+    end
+    [:__struct_changing, :__protected].each do |key|
+      # Refuse merge by default if key data type are different.
+      # This assume that the first layer merge has set
+      # :__unset as a Hash, and :__protected as an Array.
+      _do_rh_merge(result, key, data[key], true) if data.key?(key)
+    end
+
+    result
+  end
+
+  # Internal function to execute the merge on one key provided by #_rh_merge
+  #
+  # if refuse_discordance is true, then result[key] can't be updated if
+  # stricly not of same type.
+  def _do_rh_merge(result, key, value, refuse_discordance = false)
+    return if _rh_merge_do_add_key(result, key, value)
+
+    return if _rh_merge_recursive(result, key, value)
+
+    return if refuse_discordance
+
+    return unless _rh_struct_changing_ok?(result, key, value)
+
+    return unless _rh_merge_ok?(result, key)
+
+    _rh_merge_do_upd_key(result, key, value)
+  end
+
+  def _rh_merge_do_add_key(result, key, value)
+    unless result.key?(key) || value == :unset
+      result[key] = value # New key added
+      return true
+    end
+    false
+  end
+
+  def _rh_merge_do_upd_key(result, key, value)
+    if value == :unset
+      result.delete(key) if result.key?(key)
+      return
+    end
+
+    result[key] = value # Key updated
+  end
+
+  # rubocop: disable Metrics/PerceivedComplexity
+
+  # Internal function to determine if result and data are both Hash or Array
+  # and if so, do the merge task
+  #
+  def _rh_merge_recursive(result, key, value)
+    return false unless [Array, Hash].include?(value.class) &&
+                        value.class == result[key].class
+
+    if value.is_a?(Hash)
+      if object_id == result.object_id
+        result[key].rh_merge!(value)
+      else
+        result[key] = result[key].rh_merge(value)
+      end
+      return true
+    end
+
+    # No recursivity possible for an Array. add/delete only
+    if object_id == result.object_id
+      result[key].update!(value)
+    else
+      result[key] = result[key].update(value)
+    end
+
+    true
+  end
+
+  # Internal function to determine if changing from Hash/Array to anything else
+  # is authorized or not.
+  #
+  # The structure is changing if `result` or `value` move from Hash/Array to any
+  # other type.
+  #
+  # * *returns*:
+  #   - +true+  : if :__struct_changing == true
+  #   - +false+ : otherwise.
+  def _rh_struct_changing_ok?(result, key, value)
+    return true unless [Array, Hash].include?(value.class) ||
+                       [Array, Hash].include?(result[key].class)
+
+    # result or value are structure (Hash or Array)
+    return true if result[:__struct_changing].is_a?(Array) &&
+                   result[:__struct_changing].include?(key)
+    false
+  end
+
+  # Internal function to determine if a data merged can be updated by any
+  # other object like Array, String, etc...
+  #
+  # The decision is given by a :__unset setting.
+  #
+  # * *Args*:
+  #   - Hash data to replace.
+  #   - key: string or symbol.
+  #
+  # * *returns*:
+  #   - +false+ : if key is found in :__protected Array.
+  #   - +true+ : otherwise.
+  def _rh_merge_ok?(result, key)
+    return false if result.is_a?(Hash) &&
+                    result[:__protected].is_a?(Array) &&
+                    result[:__protected].include?(key)
+
+    true
+  end
 end
 
 # Defines rh_clone for Array
@@ -420,6 +601,33 @@ class Array
       rescue
         result << value
       end
+    end
+    result
+  end
+
+  # Add/Remove elements in the current Array object (self) with another Array
+  # (data).
+  #
+  # one or more values in self Array can be removed by setting a Hash containing
+  # :unset => Array of objects to remove.
+  def update(data)
+    _update(clone, data)
+  end
+
+  def update!(data)
+    _update(self, data)
+  end
+
+  def _update(result, data)
+    data.each do |value|
+      if value.is_a?(Hash) && value.key?(:unset)
+        value[:unset].each { |toremove| result.delete(toremove) }
+        next
+      end
+
+      next if result.index(value)
+
+      result << value
     end
     result
   end
