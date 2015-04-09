@@ -190,7 +190,7 @@ module PRC
     # - Value, Hash merged or nil.
     #
     def _get_from_layers(keys, layers, data_opts, data_options, merge)
-      result = nil
+      result = {}
 
       # In merge case, we need to build from bottom to top
       if merge.is_a?(TrueClass)
@@ -209,9 +209,9 @@ module PRC
 
         return layer[:config][*keys] unless merge.is_a?(TrueClass)
 
-        result = _get_build_merge(result, layer[:config][*keys])
+        result = result.rh_merge(layer[:config][keys[0..-2]])
       end
-      result
+      result[keys[-1]]
     end
 
     # Return true if at least the first key value found is of type Hash/Array,
@@ -244,62 +244,6 @@ module PRC
         end
       end
       true
-    end
-
-    # Internal function to provide a merge result for #_get_from_layers
-    #
-    # It merges a +data+ to the previous cumulative layers +result+.
-    #
-    # +data+ is merged if:
-    # - result/data are both Arrays or Hashes.
-    # - The merge is possible only is the deeper layer data type merged
-    #
-    # * *Args*
-    #   - +result+ : Cumulative Hash/Array merged
-    #   - +data+   : data to merge
-    #
-    # * *Returns*
-    # - Cloned Hash merged or simple data updated if possible.
-    #
-    def _get_build_merge(result, data)
-      if [Hash, Array].include?(data.class) &&
-         [Hash, Array].include?(result.class) && result.is_a?(data.class)
-        return _do_merge(result, data)
-      end
-      _choose_data(result, data)
-    end
-
-    def _choose_data(result, data)
-      if result.nil?
-        return data.rh_clone if [Hash, Array].include?(data.class)
-        return data
-      end
-
-      # return result as first one impose the type between Hash/Array.
-      return result if [Hash, Array].include?(result.class) ||
-                       [Hash, Array].include?(data.class)
-
-      data
-    end
-
-    # Internal function to do the merge result for #_get_build_merge
-    #
-    # * *Args*
-    #   - +result+ : Cumulative Hash/Array merged
-    #   - +data+   : data to merge
-    #
-    # * *Returns*
-    # - Cloned Hash merged.
-    #
-    def _do_merge(result, data)
-      # data and result are of same type thanks to #_get_build_merge.
-      # Merge is possible.
-      return result.merge!(data.rh_clone) if result.is_a?(Hash)
-
-      result.each_index do |index|
-        result[index] = _get_build_merge(result[index], data[index])
-      end
-      result
     end
   end
 

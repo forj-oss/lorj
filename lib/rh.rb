@@ -24,6 +24,105 @@ class Object
   alias_method :rh_clone, :clone
 end
 
+# Rh common module included in Hash and Array class.
+module Rh
+  public
+
+  # Function which will parse arrays in hierarchie and will remove any control
+  # element (index 0)
+  def rh_remove_control(result)
+    return unless [Hash, Array].include?(result.class)
+
+    if result.is_a?(Hash)
+      result.each { |elem| rh_remove_control(elem) }
+    else
+      result.delete_at(0) if result[0].is_a?(Hash) && result[0].key?(:__control)
+      result.each_index { |index| rh_remove_control(result[index]) }
+    end
+  end
+
+  private
+
+  # Internal function to determine if result and data key contains both Hash or
+  # Array and if so, do the merge task on those sub Hash/Array
+  #
+  def _rh_merge_recursive(result, key, data)
+    return false unless [Array, Hash].include?(data.class)
+
+    value = data[key]
+    return false unless [Array, Hash].include?(value.class) &&
+                        value.class == result[key].class
+
+    if object_id == result.object_id
+      result[key].rh_merge!(value)
+    else
+      result[key] = result[key].rh_merge(value)
+    end
+
+    true
+  end
+
+  # Internal function to determine if changing from Hash/Array to anything else
+  # is authorized or not.
+  #
+  # The structure is changing if `result` or `value` move from Hash/Array to any
+  # other type.
+  #
+  # * *Args*:
+  #   - result: Merged Hash or Array structure.
+  #   - key   : Key in result and data.
+  #   - data  : Hash or Array structure to merge.
+  #
+  # * *returns*:
+  #   - +true+  : if :__struct_changing == true
+  #   - +false+ : otherwise.
+  def _rh_struct_changing_ok?(result, key, data)
+    return true unless [Array, Hash].include?(data[key].class) ||
+                       [Array, Hash].include?(result[key].class)
+
+    # result or value are structure (Hash or Array)
+    if result.is_a?(Hash)
+      control = result[:__struct_changing]
+    else
+      control = result[0][:__struct_changing]
+      key -= 1
+    end
+    return true if control.is_a?(Array) && control.include?(key)
+
+    false
+  end
+
+  # Internal function to determine if a data merged can be updated by any
+  # other object like Array, String, etc...
+  #
+  # The decision is given by a :__unset setting.
+  #
+  # * *Args*:
+  #   - Hash/Array data to replace.
+  #   - key: string or symbol.
+  #
+  # * *returns*:
+  #   - +false+ : if key is found in :__protected Array.
+  #   - +true+ : otherwise.
+  def _rh_merge_ok?(result, key)
+    if result.is_a?(Hash)
+      control = result[:__protected]
+    else
+      control = result[0][:__protected]
+      key -= 1
+    end
+
+    return false if control.is_a?(Array) && control.include?(key)
+
+    true
+  end
+
+  def _rh_control_tags
+    [:__remove, :__remove_index, :__add, :__add_index,
+     :__protected, :__struct_changing, :__control]
+  end
+end
+
 # Recursive Hash added to the Hash class
 class Hash
   # Recursive Hash deep level found counter
@@ -405,7 +504,7 @@ class Hash
   #
   # - if 'self' <key> contains an Hash or an Array, but not 'data' <key>, then
   #   'self' <key> will be set to the 'data' <key> except if 'self' <Key> has
-  #   :__no_unset: true
+  #   :__struct_changing: true
   #   data <key> value can set :unset value
   #
   # - if 'self' <key> is :unset and 'data' <key> is any value
@@ -440,7 +539,10 @@ class Hash
   def rh_merge!(data)
     _rh_merge(self, data)
   end
+end
 
+# Recursive Hash added to the Hash class
+class Hash
   private
 
   # Internal function which do the real merge task by #rh_merge and #rh_merge!
@@ -448,33 +550,48 @@ class Hash
   # See #rh_merge for details
   #
   def _rh_merge(result, data)
-    data.each do |key, value|
+    return _rh_merge_choose_data(result, data) unless data.is_a?(Hash)
+
+    data.each do |key, _value|
       next if [:__struct_changing, :__protected].include?(key)
 
-      _do_rh_merge(result, key, value)
+      _do_rh_merge(result, key, data)
     end
     [:__struct_changing, :__protected].each do |key|
       # Refuse merge by default if key data type are different.
       # This assume that the first layer merge has set
       # :__unset as a Hash, and :__protected as an Array.
-      _do_rh_merge(result, key, data[key], true) if data.key?(key)
+
+      _do_rh_merge(result, key, data, true) if data.key?(key)
+
+      # Remove all control element in arrays
+      rh_remove_control(result[key]) if result.key?(key)
     end
 
     result
   end
 
+  def _rh_merge_choose_data(result, data)
+    # return result as first one impose the type between Hash/Array.
+    return result if [Hash, Array].include?(result.class) ||
+                     [Hash, Array].include?(data.class)
+
+    data
+  end
   # Internal function to execute the merge on one key provided by #_rh_merge
   #
   # if refuse_discordance is true, then result[key] can't be updated if
   # stricly not of same type.
-  def _do_rh_merge(result, key, value, refuse_discordance = false)
+  def _do_rh_merge(result, key, data, refuse_discordance = false)
+    value = data[key]
+
     return if _rh_merge_do_add_key(result, key, value)
 
-    return if _rh_merge_recursive(result, key, value)
+    return if _rh_merge_recursive(result, key, data)
 
     return if refuse_discordance
 
-    return unless _rh_struct_changing_ok?(result, key, value)
+    return unless _rh_struct_changing_ok?(result, key, data)
 
     return unless _rh_merge_ok?(result, key)
 
@@ -498,72 +615,7 @@ class Hash
     result[key] = value # Key updated
   end
 
-  # rubocop: disable Metrics/PerceivedComplexity
-
-  # Internal function to determine if result and data are both Hash or Array
-  # and if so, do the merge task
-  #
-  def _rh_merge_recursive(result, key, value)
-    return false unless [Array, Hash].include?(value.class) &&
-                        value.class == result[key].class
-
-    if value.is_a?(Hash)
-      if object_id == result.object_id
-        result[key].rh_merge!(value)
-      else
-        result[key] = result[key].rh_merge(value)
-      end
-      return true
-    end
-
-    # No recursivity possible for an Array. add/delete only
-    if object_id == result.object_id
-      result[key].update!(value)
-    else
-      result[key] = result[key].update(value)
-    end
-
-    true
-  end
-
-  # Internal function to determine if changing from Hash/Array to anything else
-  # is authorized or not.
-  #
-  # The structure is changing if `result` or `value` move from Hash/Array to any
-  # other type.
-  #
-  # * *returns*:
-  #   - +true+  : if :__struct_changing == true
-  #   - +false+ : otherwise.
-  def _rh_struct_changing_ok?(result, key, value)
-    return true unless [Array, Hash].include?(value.class) ||
-                       [Array, Hash].include?(result[key].class)
-
-    # result or value are structure (Hash or Array)
-    return true if result[:__struct_changing].is_a?(Array) &&
-                   result[:__struct_changing].include?(key)
-    false
-  end
-
-  # Internal function to determine if a data merged can be updated by any
-  # other object like Array, String, etc...
-  #
-  # The decision is given by a :__unset setting.
-  #
-  # * *Args*:
-  #   - Hash data to replace.
-  #   - key: string or symbol.
-  #
-  # * *returns*:
-  #   - +false+ : if key is found in :__protected Array.
-  #   - +true+ : otherwise.
-  def _rh_merge_ok?(result, key)
-    return false if result.is_a?(Hash) &&
-                    result[:__protected].is_a?(Array) &&
-                    result[:__protected].include?(key)
-
-    true
-  end
+  include Rh
 end
 
 # Defines rh_clone for Array
@@ -605,30 +657,188 @@ class Array
     result
   end
 
-  # Add/Remove elements in the current Array object (self) with another Array
-  # (data).
+  # This function is part of the rh_merge functionnality adapted for Array.
   #
-  # one or more values in self Array can be removed by setting a Hash containing
-  # :unset => Array of objects to remove.
-  def update(data)
-    _update(clone, data)
+  # To provide Array recursivity, we uses the element index.
+  #
+  # **Warning!** If the Array order has changed (sort/random) the index changed
+  # and can generate unwanted result.
+  #
+  # To implement recursivity, and some specific Array management (add/remove)
+  # you have to create an Hash and insert it at position 0 in the 'self' Array.
+  #
+  # **Warning!** If you create an Array, where index 0 contains a Hash, this
+  # Hash will be considered as the Array control element.
+  # If the first index of your Array is not a Hash, an empty Hash will be
+  # inserted at position 0.
+  #
+  # 'data' has the same restriction then 'self' about the first element.
+  # 'data' can influence the rh_merge Array behavior, by updating the first
+  # element.
+  #
+  # The first Hash element has the following attributes:
+  #
+  # - :__struct_changing: Array of index which accepts to move from a structured
+  #   data (Hash/Array) to another structure or type.
+  #
+  #   Ex: Hash => Array, Array => Integer
+  #
+  # - :__protected: Array of index which protects against update from 'data'
+  #
+  # - :__remove: Array of elements to remove. each element are remove with
+  #   Array.delete function. See Array delete function for details.
+  #
+  # - :__remove_index: Array of indexes to remove.
+  #   Each element are removed with Array.delete_at function.
+  #   It starts from the highest index until the lowest.
+  #   See Array delete function for details.
+  #
+  # **NOTE**: __remove and __remove_index cannot be used together.
+  #   if both are set, __remove is choosen
+  #
+  # **NOTE** : __remove* is executed before __add*
+  #
+  # - :__add: Array of elements to add. Those elements are systematically added
+  #   at the end of the Array. See Array.<< for details.
+  #
+  # - :__add_index: Hash of index(key) + Array of data(value) to add.
+  #   The index listed refer to merged 'self' Array. several elements with same
+  #   index are grouply inserted in the index.
+  #   ex:
+  #     [:data3].rh_merge({:__add_index => [0 => [:data1, :data2]]})
+  #     => [{}, :data1, :data2, :data3]
+  #
+  # **NOTE**: __add and __add_index cannot be used together.
+  #   if both are set, __add is choosen
+  #
+  # How merge is executed:
+  #
+  # Starting at index 0, each index of 'data' and 'self' are used to compare
+  # indexed data.
+  # - If 'data' index 0 has not an Hash, the 'self' index 0 is just skipped.
+  # - If 'data' index 0 has the 'control' Hash, the array will be updated
+  #   according to :__add and :__remove arrays.
+  #   when done, those attributes are removed
+  #
+  # - For all next index (1 => 'data'.length), data are compared
+  #
+  #   - If the 'data' length is >  than 'self' length
+  #     addtionnal indexed data are added to 'self'
+  #
+  #   - If index element exist in both 'data' and 'self',
+  #     'self' indexed data is updated/merged according to control.
+  #     'data' indexed data can use :unset to remove the data at this index
+  #     nil is also supported. But the index won't be removed. data will just
+  #     be set to nil
+  #
+  # when all Arrays elements are merged, rh_merge will:
+  # - remove 'self' elements containing ':unset'
+  #
+  # - merge 'self' data at index 0 with 'data' found index 0
+  #
+  def rh_merge(data)
+    _rh_merge(clone, data)
   end
 
-  def update!(data)
-    _update(self, data)
+  def rh_merge!(data)
+    _rh_merge(self, data)
   end
 
-  def _update(result, data)
-    data.each do |value|
-      if value.is_a?(Hash) && value.key?(:unset)
-        value[:unset].each { |toremove| result.delete(toremove) }
-        next
-      end
+  private
 
-      next if result.index(value)
+  def _rh_merge(result, data)
+    data = data.clone
+    data_control = _rh_merge_control(data)
+    result_control = _rh_merge_control(result)
 
-      result << value
+    _rh_do_control_merge(result_control, result, data_control, data)
+
+    (1..(data.length - 1)).each do |index|
+      _rh_do_array_merge(result, index, data)
     end
+
+    (-(result.length - 1)..-1).each do |index|
+      result.delete_at(index.abs) if result[index.abs] == :unset
+    end
+
+    _rh_do_array_merge(result, 0, [data_control])
+    rh_remove_control(result[0]) # Remove all control elements in tree of arrays
+
     result
   end
+
+  def _rh_do_array_merge(result, index, data)
+    return if _rh_merge_recursive(result, index, data)
+
+    return unless _rh_struct_changing_ok?(result, index, data)
+
+    return unless _rh_merge_ok?(result, index)
+
+    result[index] = data[index] unless data[index] == :kept
+  end
+
+  #  Get the control element. or create it if missing.
+  def _rh_merge_control(array)
+    unless array[0].is_a?(Hash)
+      array.insert(0, :__control => true)
+      return array[0]
+    end
+
+    _rh_control_tags.each do |prop|
+      if array[0].key?(prop)
+        array[0][:__control] = true
+        return array[0]
+      end
+    end
+
+    array.insert(0, :__control => true)
+
+    array[0]
+  end
+
+  # Do the merge according to :__add and :__remove
+  def _rh_do_control_merge(_result_control, result, data_control, _data)
+    if data_control[:__remove].is_a?(Array)
+      _rh_do_control_remove(result, data_control[:__remove])
+    elsif data_control[:__remove_index].is_a?(Array)
+      index_to_remove = data_control[:__remove_index].uniq.sort.reverse
+      _rh_do_control_remove_index(result, index_to_remove)
+    end
+
+    data_control.delete(:__remove)
+    data_control.delete(:__remove_index)
+
+    if data_control[:__add].is_a?(Array)
+      data_control[:__add].each { |element| result << element }
+    elsif data_control[:__add_index].is_a?(Hash)
+      _rh_do_control_add_index(result, data_control[:__add_index].sort)
+    end
+
+    data_control.delete(:__add)
+    data_control.delete(:__add_index)
+  end
+
+  def _rh_do_control_add_index(result, add_index)
+    add_index.reverse_each do |elements_to_insert|
+      next unless elements_to_insert.is_a?(Array) &&
+                  elements_to_insert[0].is_a?(Fixnum) &&
+                  elements_to_insert[1].is_a?(Array)
+
+      index = elements_to_insert[0] + 1
+      elements = elements_to_insert[1]
+
+      elements.reverse_each { |element| result.insert(index, element) }
+    end
+  end
+
+  # do the element removal.
+  def _rh_do_control_remove(result, remove)
+    remove.each { |element| result.delete(element) }
+  end
+
+  def _rh_do_control_remove_index(result, index_to_remove)
+    index_to_remove.each { |index| result.delete_at(index + 1) }
+  end
+
+  include Rh
 end

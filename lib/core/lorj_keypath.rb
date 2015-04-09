@@ -113,7 +113,9 @@ module Lorj
     private
 
     def string_to_sarray(sKeyPath)
+      # rubocop: disable Style/RegexpLiteral
       if %r{[^\\/]?/[^/]} =~ sKeyPath || %r{:[^:/]} =~ sKeyPath
+        # rubocop: enable Style/RegexpLiteral
         # keypath to interpret
         res = sKeyPath.split('/')
         res.each_index do |iIndex|

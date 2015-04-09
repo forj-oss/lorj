@@ -263,6 +263,7 @@ describe 'class: PRC::CoreConfig,' do
 
       it 'config.merge() return "test_data3" a single data, first found in '\
          'the deepest layers.' do
+        #  byebug
         expect(@config.merge(:merge1, :data2)).to eq('test_data3')
       end
     end

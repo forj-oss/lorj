@@ -15,7 +15,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-# require 'byebug'
+#  require 'byebug'
 
 $LOAD_PATH << File.join(File.dirname(__FILE__), '..', 'lib')
 
@@ -28,27 +28,27 @@ describe 'Recursive Hash/Array extension,' do
       @hdata = { :test => { :test2 => 'value1', :test3 => 'value2' },
                  :test4 => 'value3' }
     end
-    it 'rh_lexist?(:test) return 1' do
+    it 'rh_lexist?(:test) '"\n    => "' 1' do
       expect(@hdata.rh_lexist?(:test)).to eq(1)
     end
 
-    it 'rh_lexist?(:test5) return 0' do
+    it 'rh_lexist?(:test5) '"\n    => "' 0' do
       expect(@hdata.rh_lexist?(:test5)).to eq(0)
     end
 
-    it 'rh_lexist?(:test, :test2) return 2' do
+    it 'rh_lexist?(:test, :test2) '"\n    => "' 2' do
       expect(@hdata.rh_lexist?(:test, :test2)).to eq(2)
     end
 
-    it 'rh_lexist?(:test, :test2, :test5) return 2' do
+    it 'rh_lexist?(:test, :test2, :test5) '"\n    => "' 2' do
       expect(@hdata.rh_lexist?(:test, :test2, :test5)).to eq(2)
     end
 
-    it 'rh_lexist?(:test, :test5 ) return 1' do
+    it 'rh_lexist?(:test, :test5 ) '"\n    => "' 1' do
       expect(@hdata.rh_lexist?(:test, :test5)).to eq(1)
     end
 
-    it 'rh_lexist? return 0' do
+    it 'rh_lexist? '"\n    => "' 0' do
       expect(@hdata.rh_lexist?).to eq(0)
     end
   end
@@ -59,27 +59,27 @@ describe 'Recursive Hash/Array extension,' do
       @hdata = { :test => { :test2 => 'value1', :test3 => 'value2' },
                  :test4 => 'value3' }
     end
-    it 'rh_exist?(:test) return true' do
+    it 'rh_exist?(:test) '"\n    => "' true' do
       expect(@hdata.rh_exist?(:test)).to equal(true)
     end
 
-    it 'rh_exist?(:test5) return false' do
+    it 'rh_exist?(:test5) '"\n    => "' false' do
       expect(@hdata.rh_exist?(:test5)).to equal(false)
     end
 
-    it 'rh_exist?(:test, :test2) return true' do
+    it 'rh_exist?(:test, :test2) '"\n    => "' true' do
       expect(@hdata.rh_exist?(:test, :test2)).to equal(true)
     end
 
-    it 'rh_exist?(:test, :test2, :test5) return false' do
+    it 'rh_exist?(:test, :test2, :test5) '"\n    => "' false' do
       expect(@hdata.rh_exist?(:test, :test2, :test5)).to equal(false)
     end
 
-    it 'rh_exist?(:test, :test5 ) return false' do
+    it 'rh_exist?(:test, :test5 ) '"\n    => "' false' do
       expect(@hdata.rh_exist?(:test, :test5)).to equal(false)
     end
 
-    it 'rh_exist? return nil' do
+    it 'rh_exist? '"\n    => "' nil' do
       expect(@hdata.rh_exist?).to eq(nil)
     end
   end
@@ -91,28 +91,28 @@ describe 'Recursive Hash/Array extension,' do
                             :test3 => 'value2' },
                  :test4 => 'value3' }
     end
-    it "rh_get(:test) return {:test2 => 'value1', :test3 => 'value2'}" do
+    it "rh_get(:test) \n    => {:test2 => 'value1', :test3 => 'value2'}" do
       expect(@hdata.rh_get(:test)).to eq(:test2 => 'value1',
                                          :test3 => 'value2')
     end
 
-    it 'rh_get(:test5) return nil' do
+    it 'rh_get(:test5) '"\n    => "' nil' do
       expect(@hdata.rh_get(:test5)).to equal(nil)
     end
 
-    it "rh_get(:test, :test2) return 'value1'" do
+    it "rh_get(:test, :test2) \n    => 'value1'" do
       expect(@hdata.rh_get(:test, :test2)).to eq('value1')
     end
 
-    it 'rh_get(:test, :test2, :test5) return nil' do
+    it 'rh_get(:test, :test2, :test5) '"\n    => "' nil' do
       expect(@hdata.rh_get(:test, :test2, :test5)).to equal(nil)
     end
 
-    it 'rh_get(:test, :test5) return nil' do
+    it 'rh_get(:test, :test5) '"\n    => "' nil' do
       expect(@hdata.rh_get(:test, :test5)).to equal(nil)
     end
 
-    it 'rh_get return original data' do
+    it 'rh_get '"\n    => "' original data' do
       expect(@hdata.rh_get).to eq(:test => { :test2 => 'value1',
                                              :test3 => 'value2' },
                                   :test4 => 'value3')
@@ -123,7 +123,7 @@ describe 'Recursive Hash/Array extension,' do
     before(:all) do
       @hdata = {}
     end
-    it 'rh_set(:test) return nil, with no change to hdata.' do
+    it 'rh_set(:test) '"\n    => "' nil, with no change to hdata.' do
       expect(@hdata.rh_set(:test)).to equal(nil)
       expect(@hdata).to eq({})
     end
@@ -167,14 +167,14 @@ describe 'Recursive Hash/Array extension,' do
                              'text' => 'blabla' },
                  :test5 => :test }
     end
-    it 'rh_del(:test) return nil, with no change to hdata.' do
+    it 'rh_del(:test) '"\n    => "' nil, with no change to hdata.' do
       expect(@hdata.rh_del(:test)).to equal(nil)
       expect(@hdata).to eq(:test2 => { :test5 => :test,
                                        'text' => 'blabla' },
                            :test5 => :test)
     end
 
-    it 'rh_del(:test, :test2) return nil, with no change to hdata.' do
+    it 'rh_del(:test, :test2) '"\n    => "' nil, with no change to hdata.' do
       expect(@hdata.rh_del(:test, :test2)).to eq(nil)
       expect(@hdata).to eq(:test2 => { :test5 => :test,
                                        'text' => 'blabla' },
@@ -235,82 +235,216 @@ describe 'Recursive Hash/Array extension,' do
     end
   end
 
-  context 'with orig = [:data1, :data2, :data3]' do
-    before(:all) do
-      @orig = [:data1, :data2, :data3]
-    end
-
-    it 'update([:data4]) => [:data1, :data2, :data3, :data4]' do
-      expect(@orig.update([:data4])).to eq([:data1, :data2, :data3, :data4])
-      expect(@orig).to eq([:data1, :data2, :data3])
-    end
-
-    it 'update([{:unset => [:data2]}]) => [:data1, :data3]' do
-      expect(@orig.update([{ :unset => [:data2] }])).to eq([:data1, :data3])
-    end
-
-    it 'update([{:unset => [:data2]}, :data4]) =>'\
-       ' [:data1, :data3, :data4]' do
-      expect(@orig.update([{ :unset => [:data2] }, :data4])
-            ).to eq([:data1, :data3, :data4])
-    end
-
-    it 'update([{:blabla => [:data2]}, :data4]) =>'\
-       ' [:data1, :data2, :data3, {:blabla => [:data2]}, :data4]' do
-      expect(@orig.update([{ :blabla => [:data2] }, :data4])
-            ).to eq([:data1, :data2, :data3,
-                     { :blabla => [:data2] }, :data4])
-    end
-  end
-
   context 'with orig = {:data1 => {:prop1 => :val1}}' do
     before(:all) do
       @orig = { :data1 => { :prop1 => :val1 } }
     end
 
-    it 'rh_merge(:data2 => {:prop1 => :val2}) return '\
+    it 'rh_merge(:data2 => {:prop1 => :val2}) '"\n    => "' '\
        '{:data1 => {:prop1 => :val1}, :data2 => {:prop1 => :val2}}' do
       expect(@orig.rh_merge(:data2 => { :prop1 => :val2 }
                            )).to eq(:data1 => { :prop1 => :val1 },
                                     :data2 => { :prop1 => :val2 })
     end
 
-    it 'rh_merge(:data1 => {:prop1 => :val2}) return '\
+    it 'rh_merge(:data1 => {:prop1 => :val2}) '"\n    => "' '\
        '{:data1 => {:prop1 => :val2}}' do
       expect(@orig.rh_merge(:data1 => { :prop1 => :val2 }
                            )).to eq(:data1 => { :prop1 => :val2 })
     end
 
-    it 'rh_merge(:data1 => {:prop1 => :unset}) return '\
+    it 'rh_merge(:data1 => {:prop1 => :unset}) '"\n    => "' '\
        '{:data1 => {}}' do
       expect(@orig.rh_merge(:data1 => { :prop1 => :unset }
                            )).to eq(:data1 => {})
     end
 
     it 'rh_merge(:data1 => {:__protected => [:prop1],'\
-                           ':prop1 => :unset}) return '\
+                           ':prop1 => :unset}) '"\n    => "' '\
        '{:data1 => {:__protected => [:prop1]}}' do
       expect(@orig.rh_merge(:data1 => { :__protected => [:prop1],
                                         :prop1 => :unset }
                            )).to eq(:data1 => { :__protected => [:prop1] })
     end
 
-    it 'rh_merge(:data1 => :val2) return '\
+    it 'rh_merge(:data1 => :val2) '"\n    => "' '\
        '{:data1 => {:prop1 => :val1}}' do
       expect(@orig.rh_merge(:data1 => :val2
                            )).to eq(:data1 => { :prop1 => :val1 })
     end
 
-    it 'rh_merge(:data1 => :unset) return '\
+    it 'rh_merge(:data1 => :unset) '"\n    => "' '\
        '{:data1 => {:prop1 => :val1}}' do
       expect(@orig.rh_merge(:data1 => :unset
                            )).to eq(:data1 => { :prop1 => :val1 })
     end
 
-    it 'rh_merge(:data1 => {:prop1 => {}}) return '\
+    it 'rh_merge(:data1 => {:prop1 => {}}) '"\n    => "' '\
         ':data1 => {:prop1 => :val1}}' do
       expect(@orig.rh_merge(:data1 => { :prop1 => {} }
                            )).to eq(:data1 => { :prop1 => :val1 })
+    end
+  end
+
+  context 'with orig = [:data1, :data2, :data3]' do
+    before(:all) do
+      @orig = [:data1, :data2, :data3]
+    end
+
+    # Replace index 0
+    it 'rh_merge([:data4])'\
+       "\n    => "'[{:__control => true}, :data4, :data2, :data3]' do
+      expect(@orig.rh_merge([:data4])
+            ).to eq([{ :__control => true }, :data4, :data2, :data3])
+      expect(@orig).to eq([:data1, :data2, :data3])
+    end
+
+    # add :data4 at the end
+    it 'rh_merge([{:__add => [:data4]}])'"\n    => "'[{:__control => true},'\
+                                            ':data1, :data2, :data3, :data4]' do
+      expect(@orig.rh_merge([{ :__add => [:data4] }])
+            ).to eq([{ :__control => true }, :data1, :data2, :data3, :data4])
+    end
+
+    # add :data4 at index 3
+    it 'rh_merge([:kept, :kept, :kept, :data4])'\
+       "\n    => "'[{:__control => true},'\
+                                            ':data1, :data2, :data3, :data4]' do
+      expect(@orig.rh_merge([{ :__add => [:data4] }])
+            ).to eq([{ :__control => true }, :data1, :data2, :data3, :data4])
+    end
+
+    # add :data4 at index 3
+    it 'rh_merge([{:__add_index => {3 => [:data4]}}]) '\
+       ''"\n    => "'[{:__control => true}, :data1, :data2, :data3, :data4]' do
+      expect(@orig.rh_merge([{ :__add_index => { 3 => [:data4] } }])
+            ).to eq([{ :__control => true }, :data1, :data2, :data3, :data4])
+    end
+
+    # add :data4, :data5 at index 3
+    it 'rh_merge([{:__add_index => {3 => [:data4, :data5]}}]) '\
+       "\n    => [{:__control => true}, "\
+                   ':data1, :data2, :data3, :data4, :data5]' do
+      expect(@orig.rh_merge([{ :__add_index => { 3 => [:data4, :data5] } }])
+            ).to eq([{ :__control => true },
+                     :data1, :data2, :data3, :data4, :data5])
+    end
+
+    # add :data4, :data5 at index 3 or :data6 element => choose :data6
+    it 'rh_merge([{:__add_index => {3 => [:data4, :data5]},'\
+                  ':__add => [:data6]}]) '\
+       ''"\n    => "'[{:__control => true}, :data1, :data2, :data3, :data6]' do
+      expect(@orig.rh_merge([{ :__add_index => { 3 => [:data4, :data5] },
+                               :__add => [:data6] }])
+            ).to eq([{ :__control => true }, :data1, :data2, :data3, :data6])
+    end
+
+    # Remove index 1
+    it 'rh_merge([{:__remove => [:data2]}])'\
+       "\n    => "'[{:__control => true}, '\
+       ':data1, :data3]' do
+      expect(@orig.rh_merge([{ :__remove => [:data2] }])
+            ).to eq([{ :__control => true }, :data1, :data3])
+    end
+
+    # replace index 0 and remove index 1
+    it 'rh_merge([{:__remove => [:data2]}, :data4])'"\n    => "''\
+       ' [{:__control => true}, :data4, :data3]' do
+      expect(@orig.rh_merge([{ :__remove => [:data2] }, :data4])
+            ).to eq([{ :__control => true }, :data4, :data3])
+    end
+
+    # remove index 0
+    it 'rh_merge([{:__remove_index => [0]}])'"\n    => "''\
+       ' [{:__control => true}, :data2, :data3]' do
+      expect(@orig.rh_merge([{ :__remove_index => [0] }])
+            ).to eq([{ :__control => true }, :data2, :data3])
+    end
+
+    # remove index 0
+    it 'rh_merge([{:__remove_index => [0, 0]}])'"\n    => "''\
+       ' [{:__control => true}, :data1, :data3]' do
+      expect(@orig.rh_merge([{ :__remove_index => [0, 0] }])
+            ).to eq([{ :__control => true }, :data2, :data3])
+    end
+
+    # remove index 1, 0
+    it 'rh_merge([{:__remove_index => [1, 0]}])'\
+       "\n    => "'[{:__control => true}, '\
+                                                   ':data3]' do
+      expect(@orig.rh_merge([{ :__remove_index => [1, 0] }])
+            ).to eq([{ :__control => true }, :data3])
+    end
+
+    # remove index 0, 1
+    it 'rh_merge([{:__remove_index => [0, 1]}])'\
+       "\n    => "'[{:__control => true}, '\
+                                                   ':data3]' do
+      expect(@orig.rh_merge([{ :__remove_index => [0, 1] }])
+            ).to eq([{ :__control => true }, :data3])
+    end
+
+    # remove element :data3, or index 0 => :data3
+    it 'rh_merge([{:__remove_index => [0],'\
+                  ':__remove => [:data3]}])'"\n    => "''\
+       ' [{:__control => true}, :data1, :data2]' do
+      expect(@orig.rh_merge([{ :__remove_index => [0],
+                               :__remove => [:data3] }])
+            ).to eq([{ :__control => true }, :data1, :data2])
+    end
+
+    # replace index 0 and 1. index 0: Refuse to change symbol to Hash
+    it 'rh_merge([{:blabla => [:data2]}, :data4])'"\n    => "''\
+       ' [{:__control => true}, :data1, :data4, :data3]' do
+      expect(@orig.rh_merge([{ :blabla => [:data2] }, :data4])
+            ).to eq([{ :__control => true }, :data1, :data4, :data3])
+    end
+
+    # replace index 0 and 1. index 0: Refuse to change symbol to Hash
+    it 'rh_merge([{:__struct_changing => [0]}, '\
+                 '{:blabla => [:data2]}, :data4])'"\n    => "''\
+       ' [{:__control => true, :__struct_changing => [0]}, '\
+         ':data1, :data4, :data3]' do
+      expect(@orig.rh_merge([{ :__struct_changing => [0] },
+                             { :blabla => [:data2] },
+                             :data4])
+            ).to eq([{ :__control => true, :__struct_changing => [0] },
+                     :data1, :data4, :data3])
+    end
+
+    # update control on @config
+    it 'rh_merge!([{:__struct_changing => [0]}])'"\n    => "''\
+       ' [{:__control => true, :__struct_changing => [0]}, '\
+         ':data1, :data2, :data3]' do
+      expect(@orig.rh_merge!([{ :__struct_changing => [0] }])
+            ).to eq([{ :__control => true, :__struct_changing => [0] },
+                     :data1, :data2, :data3])
+
+      expect(@orig).to eq([{ :__control => true, :__struct_changing => [0] },
+                           :data1, :data2, :data3])
+    end
+
+    # See struct_changing working
+    it 'rh_merge!([{:blabla => [:data2]}])'"\n    => "''\
+       ' [{:__control => true, :__struct_changing => [0]}, '\
+         '{:blabla => [:data2]}, :data2, :data3,  :data4]' do
+      expect(@orig.rh_merge!([{ :blabla => [:data2] }])
+            ).to eq([{ :__control => true, :__struct_changing => [0] },
+                     { :blabla => [:data2] }, :data2, :data3])
+    end
+
+    # See recursivity in place.
+    it 'rh_merge([{:blabla => [:data2]}])'"\n    => "''\
+       ' [{:__control => true, :__struct_changing => [0]},
+          {:blabla => [{:__control=>true}, :data1], '\
+          ':test => :ok }, '\
+         ':data2, :data3]' do
+      expect(@orig.rh_merge([{ :blabla => [:data1], :test => :ok }])
+            ).to eq([{ :__control => true, :__struct_changing => [0] },
+                     { :blabla => [{ :__control => true },
+                                   :data1],
+                       :test => :ok },
+                     :data2, :data3])
     end
   end
 
@@ -320,7 +454,7 @@ describe 'Recursive Hash/Array extension,' do
       @orig = { :__struct_changing => [:data1], :data1 => { :prop1 => :val1 } }
     end
 
-    it 'rh_merge(:data1 => :val2) return '\
+    it 'rh_merge(:data1 => :val2) '"\n    => "' '\
        '{:__struct_changing => [:data1], '\
         ':data1 => :val2}' do
       expect(@orig.rh_merge(:data1 => :val2
@@ -328,7 +462,7 @@ describe 'Recursive Hash/Array extension,' do
                                     :data1 => :val2)
     end
 
-    it 'rh_merge(:data1 => {}) return '\
+    it 'rh_merge(:data1 => {}) '"\n    => "' '\
        '{:__struct_changing => [:data1], '\
         ':data1 => { :prop1 => :val1 }}' do
       expect(@orig.rh_merge(:data1 => {}
@@ -336,7 +470,7 @@ describe 'Recursive Hash/Array extension,' do
                                     :data1 => { :prop1 => :val1 })
     end
 
-    it 'rh_merge(:data1 => {:prop1 => :unset}) return '\
+    it 'rh_merge(:data1 => {:prop1 => :unset}) '"\n    => "' '\
        '{:__struct_changing => [:data1], '\
         ':data1 => {}}' do
       expect(@orig.rh_merge(:data1 => { :prop1 => :unset }
@@ -344,13 +478,13 @@ describe 'Recursive Hash/Array extension,' do
                                     :data1 => {})
     end
 
-    it 'rh_merge(:data1 => :unset) return '\
+    it 'rh_merge(:data1 => :unset) '"\n    => "' '\
        '{:__struct_changing => [:data1]}' do
       expect(@orig.rh_merge(:data1 => :unset
                            )).to eq(:__struct_changing => [:data1])
     end
 
-    it 'rh_merge(:data2 => {:prop1 => :val2}) return '\
+    it 'rh_merge(:data2 => {:prop1 => :val2}) '"\n    => "' '\
        '{:__struct_changing => [:data1], '\
         ':data1 => {:prop1 => :val1}, '\
         ':data2 => {:prop1 => :val2}}' do
@@ -360,37 +494,37 @@ describe 'Recursive Hash/Array extension,' do
                                     :data2 => { :prop1 => :val2 })
     end
 
-    it 'rh_merge(:__struct_changing => [:data2], '\
-                     ':data2 => {:prop1 => :val2}) return '\
+    it 'rh_merge(:__struct_changing => [{:__add => [:data2]}], '\
+                     ':data2 => {:prop1 => :val2}) '"\n    => "' '\
        '{:__struct_changing => [:data1, :data2], '\
         ':data1 => {:prop1 => :val1}, '\
         ':data2 => {:prop1 => :val2}}' do
-      expect(@orig.rh_merge(:__struct_changing => [:data2],
+      expect(@orig.rh_merge(:__struct_changing => [{ :__add => [:data2] }],
                             :data2 => { :prop1 => :val2 }
                            )).to eq(:__struct_changing => [:data1, :data2],
                                     :data1 => { :prop1 => :val1 },
                                     :data2 => { :prop1 => :val2 })
     end
 
-    it 'rh_merge(:__struct_changing => [{:__unset => [:data1]}, :data2], '\
-                     ':data2 => {:prop1 => :val2}) return '\
+    it 'rh_merge(:__struct_changing => [{:__remove => [:data1]}, :data2], '\
+                     ':data2 => {:prop1 => :val2}) '"\n    => "' '\
        '{:__struct_changing => [:data1, :data2], '\
         ':data1 => {:prop1 => :val1}, '\
         ':data2 => {:prop1 => :val2}}' do
-      expect(@orig.rh_merge(:__struct_changing => [{ :unset => [:data1] },
+      expect(@orig.rh_merge(:__struct_changing => [{ :__remove => [:data1] },
                                                    :data2],
-                            :data2 => { :prop1 => :val2 }
-                           )).to eq(:__struct_changing => [:data2],
-                                    :data1 => { :prop1 => :val1 },
-                                    :data2 => { :prop1 => :val2 })
+                            :data2 => { :prop1 => :val2 })
+            ).to eq(:__struct_changing => [:data2],
+                    :data1 => { :prop1 => :val1 },
+                    :data2 => { :prop1 => :val2 })
     end
 
-    it 'rh_merge(:__struct_changing => [{:__unset => [:data1]}, :data2], '\
+    it 'rh_merge(:__struct_changing => [{:__remove => [:data1]}, :data2], '\
                      ':data1 => :unset,'\
-                     ':data2 => {:prop1 => :val2}) return '\
+                     ':data2 => {:prop1 => :val2}) '"\n    => "' '\
        '{:__struct_changing => [:data1, :data2], '\
         ':data2 => {:prop1 => :val2}}' do
-      expect(@orig.rh_merge(:__struct_changing => [{ :unset => [:data1] },
+      expect(@orig.rh_merge(:__struct_changing => [{ :__remove => [:data1] },
                                                    :data2],
                             :data1 => :unset,
                             :data2 => { :prop1 => :val2 }
@@ -405,7 +539,7 @@ describe 'Recursive Hash/Array extension,' do
       @orig = { :data1 => { :__protected => [:prop1], :prop1 => :val1 } }
     end
 
-    it 'rh_merge(:data2 => {:prop1 => :val2}) return '\
+    it 'rh_merge(:data2 => {:prop1 => :val2}) '"\n    => "' '\
        '{:data1 => {:prop1 => :val1}, :data2 => {:prop1 => :val2}}' do
       expect(@orig.rh_merge(:data2 => { :prop1 => :val2 }
                            )).to eq(:data1 => { :__protected => [:prop1],
@@ -413,14 +547,14 @@ describe 'Recursive Hash/Array extension,' do
                                     :data2 => { :prop1 => :val2 })
     end
 
-    it 'rh_merge(:data1 => {:prop1 => :val2}) return '\
+    it 'rh_merge(:data1 => {:prop1 => :val2}) '"\n    => "' '\
        '{:data1 => {:prop1 => :val1}}' do
       expect(@orig.rh_merge(:data1 => { :prop1 => :val2 }
                            )).to eq(:data1 => { :__protected => [:prop1],
                                                 :prop1 => :val1 })
     end
 
-    it 'rh_merge(:data1 => {:prop1 => :unset}) return '\
+    it 'rh_merge(:data1 => {:prop1 => :unset}) '"\n    => "' '\
        '{:data1 => {:prop1 => :val1}}' do
       expect(@orig.rh_merge(:data1 => { :prop1 => :unset }
                            )).to eq(:data1 => { :__protected => [:prop1],
@@ -436,32 +570,32 @@ describe 'Recursive Hash/Array extension,' do
                                         'text' => 'blabla' },
                             'test5' => 'test' } }
     end
-    it 'rh_key_to_symbol?(1) return false' do
+    it 'rh_key_to_symbol?(1) '"\n    => "' false' do
       expect(@hdata.rh_key_to_symbol?(1)).to equal(false)
     end
-    it 'rh_key_to_symbol?(2) return true' do
+    it 'rh_key_to_symbol?(2) '"\n    => "' true' do
       expect(@hdata.rh_key_to_symbol?(2)).to equal(true)
     end
-    it 'rh_key_to_symbol?(3) return true' do
+    it 'rh_key_to_symbol?(3) '"\n    => "' true' do
       expect(@hdata.rh_key_to_symbol?(3)).to equal(true)
     end
-    it 'rh_key_to_symbol?(4) return true' do
+    it 'rh_key_to_symbol?(4) '"\n    => "' true' do
       expect(@hdata.rh_key_to_symbol?(4)).to equal(true)
     end
 
-    it 'rh_key_to_symbol(1) return no diff' do
+    it 'rh_key_to_symbol(1) '"\n    => "' no diff' do
       expect(@hdata.rh_key_to_symbol(1)
             ).to eq(:test => { :test2 => { :test5 => :test,
                                            'text' => 'blabla' },
                                'test5' => 'test' })
     end
-    it 'rh_key_to_symbol(2) return "test5" is replaced by :ẗest5' do
+    it 'rh_key_to_symbol(2) '"\n    => "' "test5" is replaced by :ẗest5' do
       expect(@hdata.rh_key_to_symbol(2)
             ).to eq(:test => { :test2 => { :test5 => :test,
                                            'text' => 'blabla' },
                                :test5 => 'test' })
     end
-    it 'rh_key_to_symbol(3) return "test5" replaced by :ẗest5, '\
+    it 'rh_key_to_symbol(3) '"\n    => "' "test5" replaced by :ẗest5, '\
        'and "text" to :text' do
       expect(@hdata.rh_key_to_symbol(3)
             ).to eq(:test => { :test2 => { :test5 => :test,
