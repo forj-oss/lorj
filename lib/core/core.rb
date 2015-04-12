@@ -288,31 +288,28 @@ module Lorj
     # the_config : Optional. An instance of a configuration system which *HAVE*
     # to provide get/set/exist?/[]/[]=
     #
-    # processClass: Array of string or symbol, or string or symbol. Is the path
-    # or name of one or more ProcessClass to use.
-    #   This class is dynamically loaded and derived from BaseProcess class.
-    #   It loads the Process class content from a file
-    #   '$CORE_PROCESS_PATH/<process_class>.rb'
-    #   If process_class is a file path, this file will be loaded as a ruby
-    #   include.
+    # * *Args*:
+    # - +Processes+: Array of processes with controller
+    #   This array, contains a list of process to load and optionnaly a
+    #   controller.
     #
-    #   <process_class>.rb file name is case sensible and respect RUBY Class
-    #   name convention
+    #   You can define your own process or a process module.
+    #   The array is structured as follow:
+    #   - each element contains a Hash with:
+    #     If you are using a process module, set the following:
+    #     - :process_module : Name of the process module to load
     #
-    # controller_class: Optional. string or symbol. Is the path or name of
-    #                   ControllerClass to use.
-    #   This class is dynamically loaded and derived from BaseController class.
-    #   It loads the Controler class content from a file
-    #   '$PROVIDER_PATH/<controller_class>.rb'
+    #     If you are not using a Process module, you need to set the following:
+    #     - :process_path   : Path to a local process code.
+    #       This path must contains at least 'process' subdir. And if needed
+    #       a 'controllers' path
+    #     - :process_name   : Name of the local process
     #
-    #   The provider can redefine partially or totally some processes
-    #   Lorj::Core will load those redefinition from file:
-    #   $PROVIDER_PATH/<controller_class>Process.rb'
+    #     Optionnally, you can set a controller name to use with the process.
+    #     - :controller_name: Name of the controller to use.
+    #     - :controller_path: Path to the controller file.
     #
-    # <controller_class>.rb or <controller_class>Process.rb file name is case
-    # sensible and respect RUBY Class name convention
-    def initialize(the_config = nil, the_process_class = nil,
-                   controller_class = nil)
+    def initialize(the_config = nil, processes = nil, controller_class = nil)
       # Loading ProcessClass
       # Create Process derived from respectively BaseProcess
       PrcLib.core_level = 0 if PrcLib.core_level.nil?
@@ -323,65 +320,114 @@ module Lorj
 
       model = initialize_model
 
+      # Compatibility with old 'new syntax'
+      # `processes` will get an Array of string/symbol or simply a string/symbol
+      # `controller_class` is used to define the controller to load.
+      # string/symbol
+      processes = adapt_core_parameters(processes, controller_class)
+
       # Load Application processes
-      init_processes(model, the_process_class)
+      init_processes(model, processes)
 
       PrcLib.runtime_fail 'Lorj::Core: No valid process loaded. '\
                            'Aborting.' if model[:process_class].nil?
-
-      # Load Controller and Controller processes.
-      init_controller(model, controller_class) if controller_class
 
       # Create Core object with the application model loaded
       # (processes & controller)
       initialize_core_object(model)
       PrcLib.model.clear_heap
     end
-  end
-
-  # This class based on generic Core, defines a Cloud Process to use.
-  class CloudCore < Core
-    def initialize(oConfig, sAccount = nil, aProcesses = [])
-      config_account = init_config(oConfig, sAccount)
-
-      process_list = [:cloud_process]
-
-      controller_mod = config_account.get(:provider)
-
-      controller_mod = config_account.get(:provider_name) if controller_mod.nil?
-
-      PrcLib.runtime_fail 'Provider_name not set. Unable to create'\
-                           ' instance CloudCore.' if controller_mod.nil?
-
-      init_controller_mod(process_list, controller_mod)
-
-      super(config_account, process_list.concat(aProcesses), controller_mod)
-    end
 
     private
 
-    def init_config(oConfig, sAccount)
-      if oConfig.is_a?(Lorj::Account)
-        config_account = oConfig
-      else
-        config_account = Lorj::Account.new(oConfig)
+    # This function is used to keep compatibility with old way to load
+    # processes and controllers
+    # If processes is a Array of Hash => new way
+    # otherwise we need to create it.
+    def adapt_core_parameters(processes, controller)
+      return [] unless processes.is_a?(Array)
 
-        config_account.ac_load(sAccount) unless sAccount.nil?
+      return [] if processes.length == 0
+      return processes if processes[0].is_a?(Hash)
+
+      PrcLib.warning('lorj initialization with Process & controller parameters'\
+                     ' is obsolete. Read Lorj::Core.new to update it and '\
+                     'eliminate this warning')
+
+      # Declare processes
+      processes = processes_as_array(processes)
+
+      processes_built = []
+
+      processes.each do |process|
+        process = process.to_s if process.is_a?(Symbol)
+        a_process = {}
+
+        if process.include?('/')
+          a_process[:process_path] = process
+          a_process[:process_name] = File.basename(process)
+        else
+          a_process[:process_module] = process
+        end
+        processes_built << a_process
       end
-      config_account
+
+      _adapt_with_controller(processes_built, controller)
+
+      processes_built
     end
 
-    def init_controller_mod(process_list, controller_mod)
-      # TODO: Support for process full path, instead of predefined one.
-      controller_process_mod = File.join(PrcLib.controller_path, controller_mod,
-                                         controller_mod.capitalize +
-                                         'Process.rb')
-      if File.exist?(controller_process_mod)
-        process_list << controller_process_mod
+    def _adapt_with_controller(processes_built, controller)
+      return if controller.nil?
+
+      if controller.include?('/')
+        processes_built[-1][:controller_path] = controller
+        processes_built[-1][:controller_name] = File.basename(controller)
       else
-        Lorj.debug(1, format("No Provider process defined. File '%s' not "\
-                             'found.', controller_process_mod))
+        processes_built[-1][:controller_name] = controller
       end
     end
+  end
+
+  module_function
+
+  # Any Lorj process module will need to declare itself to Lorj
+  # with this function.
+  #
+  # * *args* :
+  #   - +process_name+: name of the process declared to Lorj. This name must be
+  #     unique. Otherwise the declaration won't happen.
+  #
+  #   - +path+        : Path where process dir structure are located.
+  #     at least, it expects to find the process/<name>.rb
+  #     Each controllers found will be added as well.
+  #     It must be controllers/<controller_name>/<controller_name>.rb
+  #     You can change 'controllers' by any name, with :controllers_dir
+  #
+  #   - +properties   : Optional.
+  #     - :controllers_dir : Name of the controllers directory.
+  #       By default 'controllers'
+  #
+  #  The process will be added in Lorj.processes Hash
+  #
+  def declare_process(process_name, path, properties = {})
+    process_data = Lorj::ProcessResource.new(process_name, path, properties)
+
+    return nil if process_data.nil?
+
+    @processes = {} if @processes.nil?
+
+    return nil if process_data.process.nil?
+
+    process_name = process_data.name
+
+    @processes[process_name] = process_data unless @processes.key?(process_name)
+
+    process_data
+  end
+
+  # Define module data for lorj library configuration
+  class << self
+    attr_reader :processes
   end
 end

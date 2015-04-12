@@ -30,10 +30,12 @@ require 'lorj'
 #  PrcLib.core_level = 3 # framework debug levels.
 
 # Initialize the framework
-processes = [File.join(app_path, 'process', 'students.rb')]
+processes = []
+processes << { :process_path => File.join(app_path, 'process', 'students.rb'),
+               :controller_name => :mock }
 
 #  byebug if ENV['BYEBUG'] # rubocop: disable Debugger
-student_core = Lorj::Core.new(nil, processes, :mock)
+student_core = Lorj::Core.new(nil, processes)
 # Ask the framework to create the object student 'Robert Redford'
 student_core.create(:student, :student_name => 'Robert Redford')
 

@@ -57,6 +57,7 @@ module Lorj
     #   - model : Basic model.
     def initialize_model
       { :def_class => BaseDefinition,
+        :processes => [],
         :process_class => nil, :process_class_name => nil,
         :controller_class => nil, :controller_class_name => nil }
     end
@@ -115,7 +116,7 @@ module Lorj
       if the_controller.include?('/')
         file = File.expand_path(the_controller)
       else
-        file = controllerfile_from_default(the_controller)
+        file = controllerfile_from_default(model, the_controller)
       end
 
       return PrcLib.warning('Controller not loaded: Controller file '\
@@ -146,7 +147,7 @@ module Lorj
         the_controller_process['.rb'] = '_process.rb'
         file = File.expand_path(the_controller_process)
       else
-        file = controllerfile_from_default(the_controller, '_process')
+        file = controllerfile_from_default(model, the_controller, '_process')
       end
 
       return Lorj.debug(2, 'Process not loaded: Process controller file '\
@@ -197,7 +198,7 @@ module Lorj
     #
     # * *Returns* :
     #   - file : absolute file path.
-    def controllerfile_from_default(the_controller, suffix = '')
+    def controllerfile_from_default(_model, the_controller, suffix = '')
       File.join(PrcLib.controller_path, the_controller,
                 the_controller + suffix + '.rb')
     end
@@ -211,24 +212,118 @@ module Lorj
     #
     # * *Args* :
     #   - +model+ : Application model loaded.
-    #   - +processes+ : Processes to load.
-    #     supports:
-    #              - nil => return []
-    #              - String/Symbol => return [String/Symbol]
-    #              - Array => return Array
+    #   - +processes+ : Array of processes and controller to load
+    #     - each element contains a Hash with:
+    #       If you are using a process module, set the following:
+    #       - :process_module : Name of the process module to load
+    #
+    #       If you are not using a Process module, you need to set the following
+    #       - :process_path   : Path to a local process code.
+    #         This path must contains at least 'process' subdir. And if needed
+    #         a 'controllers' path
+    #       - :process_name   : Name of the local process
+    #
+    #       Optionnally, you can set a controller name to use with the process.
+    #       - :controller_name: Name of the controller to use.
+    #       - :controller_path: Path to the controller file.
     #
     # * *Returns* :
     #   - model : Application model loaded.
     def init_processes(model, processes)
-      process_array = processes_as_array(processes)
+      processes.each do |a_process|
+        my_process = {}
 
-      process_array.each do |a_process|
-        a_process = a_process.to_s if a_process.is_a?(Symbol)
-        unless load_process(model, a_process)
-          PrcLib.warning("Process '%s' not properly loaded.", a_process)
+        if a_process.key?(:process_module)
+          my_process = _process_module_to_load(my_process, a_process)
+        else
+          my_process = _process_local_to_load(my_process, a_process)
         end
+
+        next if my_process.nil?
+
+        model[:processes] << my_process
+
+        _process_load(model, my_process)
       end
+
       model
+    end
+
+    # high level function to load process
+    def _process_load(model, my_process)
+      if load_process(model, my_process[:process_path])
+        controller_class = my_process[:controller_path]
+        controller_class = my_process[:controller_name] if controller_class.nil?
+
+        init_controller(model, controller_class) if controller_class
+      else
+        PrcLib.warning("Process '%s' not properly loaded.",
+                       my_process[:process_path])
+      end
+    end
+
+    # function prepare of loading a local process
+    def _process_local_to_load(my_process, a_process)
+      my_process[:process_path] = a_process[:process_path]
+
+      if a_process[:process_name].nil?
+        my_process[:process_name] = File.basename(a_process[:process_path])
+      else
+        my_process[:process_name] = a_process[:process_name]
+      end
+
+      if a_process[:controller_path]
+        my_process[:controller_path] = a_process[:controller_path]
+      else
+        my_process[:controller_name] = a_process[:controller_name]
+      end
+      my_process
+    end
+
+    # Function prepare of loading a module process.
+    def _process_module_to_load(my_process, a_process)
+      name = a_process[:process_module]
+
+      if name.nil?
+        PrcLib.warning(':process_module is empty. Process not properly loaded.')
+        return
+      end
+
+      name = name.to_s if name.is_a?(Symbol)
+
+      unless Lorj.processes.key?(name)
+        PrcLib.warning("Unable to find Process module '%s'. Process not "\
+                       'properly loaded.', name)
+        return
+      end
+
+      module_process = Lorj.processes[name]
+      my_process[:process_name] = name
+      my_process[:process_path] = module_process.process
+
+      if a_process[:controller_path]
+        my_process[:controller_path] = a_process[:controller_path]
+        return my_process
+      end
+
+      _process_module_set_ctr(my_process, module_process.controllers,
+                              a_process[:controller_name])
+
+      my_process
+    end
+
+    def _process_module_set_ctr(my_process, controllers, controller_name)
+      return if controller_name.nil?
+
+      controller_path = controllers[controller_name]
+
+      if controller_path.nil?
+        PrcLib.warning("Controller '%s' was not found. Please check. The "\
+                       'process may not work.', controller_name)
+        return
+      end
+
+      my_process[:controller_path] = controller_path
     end
 
     # Function analyzing the process class parameter
@@ -266,7 +361,7 @@ module Lorj
       if the_process.include?('/')
         file = File.expand_path(the_process)
       else
-        file = processfile_from_default(the_process)
+        file = processfile_from_default(model, the_process)
       end
 
       return PrcLib.warning("Process file definition '%s' is missing. ",
@@ -311,7 +406,7 @@ module Lorj
     # * *Returns* :
     #   - file : absolute file path composed by:
     #            PrcLib.process_path/the_process_class + '.rb'
-    def processfile_from_default(the_process_class)
+    def processfile_from_default(_model, the_process_class)
       File.join(PrcLib.process_path, the_process_class + '.rb')
     end
 

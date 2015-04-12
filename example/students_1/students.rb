@@ -30,7 +30,8 @@ require 'lorj'
 #  PrcLib.core_level = 3 # framework debug levels.
 
 # Initialize the framework
-processes = [File.join(app_path, 'process', 'students.rb')]
+processes = []
+processes << { :process_path => File.join(app_path, 'process', 'students.rb') }
 
 student_core = Lorj::Core.new(nil, processes)
 

@@ -35,10 +35,6 @@ Gem::Specification.new do |spec|
     '--title Lorj - The Process Controllers framework system' << \
     '--main README.md'
 
-  #  spec.add_runtime_dependency 'thor', '~>0.16.0'
-  #  spec.add_runtime_dependency 'nokogiri', '~>1.5.11'
-  #  spec.add_runtime_dependency 'fog', '~>1.19.0'
-  #  spec.add_runtime_dependency 'hpcloud', '~>2.0.9'
   spec.add_runtime_dependency 'config_layers', '~>0.1.0'
   #  spec.add_runtime_dependency 'git', '>=1.2.7'
   #  spec.add_runtime_dependency 'rbx-require-relative', '~>0.0.7'

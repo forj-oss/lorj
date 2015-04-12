@@ -50,11 +50,12 @@ config = Lorj::Config.new # Use Simple Config Object
 #  PrcLib.core_level = 5 # framework debug levels.
 
 # Initialize the framework
-processes = [File.join(app_path, 'process', 'students.rb')]
-controller = File.join(app_path, 'controller', 'yaml_students.rb')
-
+processes = []
+processes << { :process_path => File.join(app_path, 'process', 'students.rb'),
+               :controller_path => File.join(app_path, 'controller',
+                                             'yaml_students.rb') }
 # ~ student_core = Lorj::Core.new( config, processes, :mock)
-student_core = Lorj::Core.new(config, processes, controller)
+student_core = Lorj::Core.new(config, processes)
 
 student_core.create(:connection, :connection_string => '/tmp/students.yaml')
 

@@ -20,9 +20,11 @@ processes = [File.join(app_path, 'process', 'students.rb')]
 # now we changed from mock to our own controller, located in
 controller = File.join(app_path, 'controller', 'yaml_students.rb')
 
-# controller/yaml_students.rb
-#  student_core = Lorj::Core.new(nil, processes, :mock)
-student_core = Lorj::Core.new(nil, processes, controller)
+processes = []
+processes << { :process_path => File.join(app_path, 'process', 'students.rb'),
+               :controller_path => File.join(app_path, 'controller', 'yaml_students.rb') }
+
+student_core = Lorj::Core.new(nil, processes)
 ```
 
 Now, let's write the controller file.

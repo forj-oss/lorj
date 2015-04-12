@@ -52,6 +52,7 @@ require 'core/lorj_basecontroller' # Lorj Lorj::BaseController object
 require 'core/lorj_keypath'        # Lorj Lorj::BaseDefinition object
 require 'core/definition'          # Lorj Process definition
 require 'core/definition_internal' # Lorj internal functions
+require 'core/process'             # Lorj Process Module feature
 
 # lorj module
 module Lorj

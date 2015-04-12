@@ -18,6 +18,8 @@ First of all, write your first main. Create a file `example.rb` with following c
 
     # Initialize the framework
     processes = [ File.join(app_path, 'process', 'students.rb')]
+    processes = []
+    processes << { :process_path => File.join(app_path, 'process', 'students.rb') }
     student_core = Lorj::Core.new( nil, processes)
 
     # Ask the framework to create the object student 'Robert Redford'

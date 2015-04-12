@@ -136,12 +136,12 @@ This is a simple basic translation of `examples/yaml_students/students.rb`
     # PrcLib.level = Logger::DEBUG # Printed out to your console.
     # PrcLib.core_level = 3 # framework debug levels. Values between 0 to 5.
 
+    processes = []
+    processes << { :process_path => File.join(app_path, 'process', 'students.rb'),
+                   :controller_path => File.join(app_path, 'controller', 'yaml_students.rb') }
     # Initialize the framework
-    hProcesses = [ File.join($APP_PATH, 'process', 'students.rb')]
 
-    # You can try with mock instead. uncomment the next line and comment 2 next lines.
-    #~ oStudentCore = Lorj::Core.new( nil, hProcesses, :mock)
-    oStudentCore = Lorj::Core.new( nil, hProcesses, File.join($APP_PATH, 'controller', 'yaml_students.rb'))
+    oStudentCore = Lorj::Core.new( nil, processes)
     oStudentCore.Create(:connection, :connection_string => "/tmp/students.yaml")
 
     puts ANSI.bold("Create 1st student:")
