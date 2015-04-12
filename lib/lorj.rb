@@ -23,12 +23,10 @@ require 'lorj/version'
 
 # To use it, add require 'lorj'
 
+require 'config_layers'            # ConfigLayers
+
 require 'prc.rb'                   # PrcLib Base module
-require 'rh.rb'                    # recursive Hash
 require 'logging.rb'               # class PrcLib::Logging
-require 'prc_base_config.rb'       # PRC::BaseConfig class
-require 'prc_section_config.rb'    # PRC::SectionConfig class
-require 'prc_core_config.rb'       # PRC::CoreConfig class
 require 'lorj_meta.rb'             # PRC::Meta class - Application defaults
 require 'lorj_defaults.rb'         # PRC::Defaults class - Application defaults
 require 'lorj_config.rb'           # Lorj::Config class -
