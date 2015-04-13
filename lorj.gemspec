@@ -11,6 +11,7 @@ less_than_two = ruby_conf['MAJOR'].to_i < 2
 Gem::Specification.new do |spec|
   spec.name          = 'lorj'
   spec.version       = Lorj::VERSION
+  spec.date          = Lorj::DATE
   spec.authors       = ['forj team']
   spec.email         = ['forj@forj.io']
   spec.summary       = 'Process Controllers framework system'
