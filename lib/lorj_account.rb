@@ -47,7 +47,6 @@ module Lorj
     # Function to initialize read only account attribute.
     def ac_new(account_name, provider = 'lorj')
       @data = {}
-      @version = @latest_version unless @latest_version.nil?
       data_options :section => :account
       self[:name] = account_name
       self[:provider] = provider

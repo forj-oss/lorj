@@ -193,7 +193,6 @@ describe 'class: PRC::BaseConfig,' do
     it 'save, file has version set' do
       file = "~/.lorj_rspec_#{Process.pid}.yaml"
       @config.filename = file
-      @config.version = @config.latest_version
       @config.save
       @config.erase
       @config.load

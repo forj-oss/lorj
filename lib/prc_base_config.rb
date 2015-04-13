@@ -63,7 +63,8 @@ module PRC
       @data = {}
       @data = value if value.is_a?(Hash)
       @data_options = {} # Options for exist?/set/get/load/save
-      @latest_version = latest_version  unless latest_version.nil?
+      @latest_version = latest_version
+      @version = latest_version
     end
 
     # data_options set data options used by exist?, get, set, load and save
@@ -244,8 +245,7 @@ module PRC
     end
 
     def latest_version?
-      return true if @version == @latest_version
-      false
+      (@version == @latest_version)
     end
 
     private
