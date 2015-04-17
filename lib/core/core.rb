@@ -268,8 +268,8 @@ module Lorj
     #
     # * *Args* :
     #   - +oCloudObj+    : Name of the object to initialize.
-    #   - +sAccountName+ : Account file name. If not set, Config[:account_name]
-    #                      is used.
+    #   - +sAccountName+ : Obsolete. You have to load the account data before
+    #
     #     If you use this variable, any other runtime config defined
     #     by the Data model will be cleaned before
     #
@@ -279,9 +279,9 @@ module Lorj
     # * *Raises* :
     #   No exceptions
 
-    def setup(oCloudObj, sAccountName = nil)
+    def setup(oCloudObj, _sAccountName = nil)
       return nil if !oCloudObj || !@core_object
-      @core_object.process_setup(oCloudObj, sAccountName)
+      @core_object.process_setup(oCloudObj)
     end
 
     # Core parameters are:
