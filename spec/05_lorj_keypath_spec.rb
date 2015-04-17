@@ -15,7 +15,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-# require 'byebug'
+#    require 'byebug'
 
 $LOAD_PATH << File.join(File.dirname(__FILE__), '..', 'lib/core')
 
@@ -25,6 +25,9 @@ describe 'Lorj::KeyPath,' do
   context 'initialize with :test' do
     before(:all) do
       @o_key = Lorj::KeyPath.new(:test)
+    end
+    it 'Test method #length' do
+      expect(@o_key.length).to eq(1)
     end
     it 'Test method #to_s' do
       expect(@o_key.to_s).to eq('test')
@@ -45,13 +48,16 @@ describe 'Lorj::KeyPath,' do
       expect(@o_key.key).to eq(:test)
     end
     it 'Test method #key_tree' do
-      expect(@o_key.key).to eq(:test)
+      expect(@o_key.key_tree).to eq(:test)
     end
   end
 
   context 'initialize with [:test,:test2,:test3]' do
     before(:all) do
       @o_key = Lorj::KeyPath.new([:test, :test2, :test3])
+    end
+    it 'Test method #length' do
+      expect(@o_key.length).to eq(3)
     end
     it 'Test method #to_s' do
       expect(@o_key.to_s).to eq('test/test2/test3')
@@ -73,6 +79,126 @@ describe 'Lorj::KeyPath,' do
     end
     it 'Test method #key_tree' do
       expect(@o_key.key_tree).to eq(':test/:test2/:test3')
+    end
+  end
+
+  context 'initialize with string test1/test2' do
+    before(:all) do
+      @o_key = Lorj::KeyPath.new('test1/test2')
+    end
+    it 'Test method #length' do
+      expect(@o_key.length).to eq(2)
+    end
+    it 'Test method #to_s' do
+      expect(@o_key.to_s).to eq('test1/test2')
+    end
+    it 'Test method #key' do
+      expect(@o_key.key).to eq('test2')
+    end
+    it 'Test method #key(0)' do
+      expect(@o_key.key(0)).to eq('test1')
+    end
+    it 'Test method #key(1)' do
+      expect(@o_key.key(1)).to eq('test2')
+    end
+    it 'Test method #fpath' do
+      expect(@o_key.fpath).to eq('test1/test2')
+    end
+    it 'Test method #tree' do
+      expect(@o_key.tree).to eq(%w(test1 test2))
+    end
+    it 'Test method #key_tree' do
+      expect(@o_key.key_tree).to eq('test1/test2')
+    end
+  end
+
+  context 'initialize with string :test' do
+    before(:all) do
+      @o_key = Lorj::KeyPath.new(':test')
+    end
+    it 'Test method #length' do
+      expect(@o_key.length).to eq(1)
+    end
+    it 'Test method #to_s' do
+      expect(@o_key.to_s).to eq('test')
+    end
+    it 'Test method #key' do
+      expect(@o_key.key).to eq(:test)
+    end
+    it 'Test method #key(0)' do
+      expect(@o_key.key(0)).to eq(:test)
+    end
+    it 'Test method #key(1)' do
+      expect(@o_key.key(1)).to eq(nil)
+    end
+    it 'Test method #fpath' do
+      expect(@o_key.fpath).to eq(':test')
+    end
+    it 'Test method #tree' do
+      expect(@o_key.tree).to eq([:test])
+    end
+    it 'Test method #key_tree' do
+      expect(@o_key.key_tree).to eq(:test)
+    end
+  end
+
+  context 'initialize with string test' do
+    before(:all) do
+      @o_key = Lorj::KeyPath.new('test')
+    end
+    it 'Test method #length' do
+      expect(@o_key.length).to eq(1)
+    end
+    it 'Test method #to_s' do
+      expect(@o_key.to_s).to eq('test')
+    end
+    it 'Test method #key' do
+      expect(@o_key.key).to eq('test')
+    end
+    it 'Test method #key(0)' do
+      expect(@o_key.key(0)).to eq('test')
+    end
+    it 'Test method #key(1)' do
+      expect(@o_key.key(1)).to eq(nil)
+    end
+    it 'Test method #fpath' do
+      expect(@o_key.fpath).to eq('test')
+    end
+    it 'Test method #tree' do
+      expect(@o_key.tree).to eq(['test'])
+    end
+    it 'Test method #key_tree' do
+      expect(@o_key.key_tree).to eq('test')
+    end
+  end
+
+  context 'initialize with nil' do
+    before(:all) do
+      @o_key = Lorj::KeyPath.new(nil)
+    end
+    it 'Test method #length' do
+      expect(@o_key.length).to eq(0)
+    end
+    it 'Test method #to_s' do
+      expect(@o_key.to_s).to eq(nil)
+    end
+    it 'Test method #key' do
+      expect(@o_key.key).to eq(nil)
+    end
+    it 'Test method #key(0)' do
+      expect(@o_key.key(0)).to eq(nil)
+    end
+    it 'Test method #key(1)' do
+      expect(@o_key.key(1)).to eq(nil)
+    end
+    it 'Test method #fpath' do
+      expect(@o_key.fpath).to eq(nil)
+    end
+    it 'Test method #tree' do
+      expect(@o_key.tree).to eq([])
+    end
+    it 'Test method #key_tree' do
+      expect(@o_key.key_tree).to eq(nil)
     end
   end
 end
