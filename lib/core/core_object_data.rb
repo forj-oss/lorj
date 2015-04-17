@@ -172,7 +172,7 @@ module Lorj
       if obj.is_a?(Symbol)
         object_type = obj
         obj = @params[object_type]
-        @params[object_type] = nil
+        @params.delete(object_type)
       else
         object_data_delete(obj)
       end
@@ -327,10 +327,10 @@ module Lorj
                            " framework data Object. Is a '%s'",
                           obj.class unless obj.is_a?(Lorj::Data)
       if obj.type == :list
-        @params.rh_set(nil, :query, obj.object_type?)
+        @params.rh_del(:query, obj.object_type?)
       else
         object_type = obj.object_type?
-        @params[object_type] = nil
+        @params.delete(object_type)
       end
     end
 
