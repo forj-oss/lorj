@@ -35,6 +35,12 @@ module Lorj
       }
 
       @config = oForjConfig
+
+      @data = Lorj.data # Get data definition object
+      # data object is currently built by
+      # - global application defaults.yaml loaded in @config.
+      # - process data.yaml files
+
       @erb_config = ERBConfig.new(oForjConfig)
       if !oForjConfig.is_a?(Lorj::Account) && !oForjConfig.is_a?(Lorj::Config)
         PrcLib.runtime_fail "'%s' is not a valid ForjAccount or ForjConfig"\

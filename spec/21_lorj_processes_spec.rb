@@ -27,7 +27,7 @@ $LOAD_PATH << File.join(app_path, '..', 'lib')
 require 'lorj' # Load lorj framework
 
 describe 'Lorj::Process,' do
-  context 'with mock initialized,' do
+  context 'Lorj::ProcessResource,' do
     before(:all) do
       @lorj_spec = 'lorj-spec'
       @process_path = File.expand_path(File.join(app_path, '..', @lorj_spec))
@@ -35,13 +35,11 @@ describe 'Lorj::Process,' do
 
     it 'default initialization is ok' do
       process_file = File.join(@process_path, 'process', 'mock_process.rb')
-      controllers = { 'mock' => File.join(@process_path, 'controllers',
-                                          'mock', 'mock.rb') }
-      default = File.join(@process_path, 'defaults.yaml')
-      data = File.join(@process_path, 'data.yaml')
-      process_data = Lorj::ProcessResource.new('mock', File.join(app_path,
-                                                                 '..',
-                                                                 @lorj_spec))
+      controllers = { 'mock' => File.join(@process_path, 'process', 'mock',
+                                          'controllers', 'mock', 'mock.rb') }
+      default = File.join(@process_path, 'process', 'mock', 'defaults.yaml')
+      data = File.join(@process_path, 'process', 'mock', 'data.yaml')
+      process_data = Lorj::ProcessResource.new('mock', @process_path)
       expect(process_data).to be
       expect(process_data.name).to eq('mock')
       expect(process_data.process).to eq(process_file)
@@ -62,12 +60,11 @@ describe 'Lorj::Process,' do
 
     it 'accepts symbol as name, but converted.' do
       process_file = File.join(@process_path, 'process', 'mock_process.rb')
-      controllers = { 'mock' => File.join(@process_path, 'controllers',
-                                          'mock', 'mock.rb') }
-      default = File.join(@process_path, 'defaults.yaml')
-      data = File.join(@process_path, 'data.yaml')
-      process_data = Lorj::ProcessResource.new(:mock, File.join(app_path, '..',
-                                                                @lorj_spec))
+      controllers = { 'mock' => File.join(@process_path, 'process', 'mock',
+                                          'controllers', 'mock', 'mock.rb') }
+      default = File.join(@process_path, 'process', 'mock', 'defaults.yaml')
+      data = File.join(@process_path, 'process', 'mock', 'data.yaml')
+      process_data = Lorj::ProcessResource.new(:mock, @process_path)
       expect(process_data).to be
       expect(process_data.name).to eq('mock')
       expect(process_data.process).to eq(process_file)
@@ -77,19 +74,48 @@ describe 'Lorj::Process,' do
     end
 
     it 'initialization with :controllers_dir is ok' do
-      process_file = File.join(@process_path, 'process', 'mock_process.rb')
-      controllers = { 'mock2' => File.join(@process_path, 'providers',
-                                           'mock2', 'mock2.rb') }
-      default = File.join(@process_path, 'defaults.yaml')
-      data = File.join(@process_path, 'data.yaml')
+      controllers = { 'mock2' => File.join(@process_path, 'process', 'mock',
+                                           'providers', 'mock2', 'mock2.rb') }
+
       process_data = Lorj::ProcessResource.new('mock', @process_path,
                                                :controllers_dir => 'providers')
       expect(process_data).to be
       expect(process_data.name).to eq('mock')
-      expect(process_data.process).to eq(process_file)
       expect(process_data.controllers).to eq(controllers)
-      expect(process_data.defaults_file).to eq(default)
-      expect(process_data.data_file).to eq(data)
+    end
+
+    it 'initialization with :controllers_path is ok' do
+      controller_path = File.join(@process_path, 'providers_extra')
+      controllers = { 'mock3' => File.join(controller_path,
+                                           'mock3', 'mock3.rb') }
+      process_data = Lorj::ProcessResource.new('mock', @process_path,
+                                               :controllers_path =>
+                                                 controller_path)
+      expect(process_data).to be
+      expect(process_data.controllers).to eq(controllers)
+    end
+
+    it 'initialization with :default_file is ok' do
+      defaults_file = File.join(@process_path, 'defaults.yaml')
+      process_data = Lorj::ProcessResource.new('mock', @process_path,
+                                               :defaults_file => defaults_file)
+      expect(process_data).to be
+      expect(process_data.defaults_file).to eq(defaults_file)
+    end
+
+    it 'initialization with :data_file is ok' do
+      data_file = File.join(@process_path, 'process', 'mock', 'data.yaml')
+      process_data = Lorj::ProcessResource.new('mock', @process_path,
+                                               :data_file => data_file)
+      expect(process_data).to be
+      expect(process_data.data_file).to eq(data_file)
+    end
+  end
+
+  context('Lorj.declare_process, ') do
+    before(:all) do
+      @lorj_spec = 'lorj-spec'
+      @process_path = File.expand_path(File.join(app_path, '..', @lorj_spec))
     end
 
     it 'can declare a module process' do
@@ -101,10 +127,15 @@ describe 'Lorj::Process,' do
       expect(Lorj.processes['mock'].class).to equal(Lorj::ProcessResource)
     end
 
-    it 'can declare several module processes' do
+    it 'Lorj.declare_process, can declare several module processes' do
       expect(Lorj.declare_process('mock', @process_path)).to be
       expect(Lorj.declare_process(:mock2, @process_path)).to be
       expect(Lorj.declare_process('mock3', @process_path)).to equal(nil)
+    end
+
+    it 'become empty, if name or process_path are incorrect' do
+      expect(Lorj.declare_process(nil, @process_path)).to equal(nil)
+      expect(Lorj.declare_process('mock', nil)).to equal(nil)
     end
 
     it 'all kept module processes in Lorj.processes not duplicated.' do

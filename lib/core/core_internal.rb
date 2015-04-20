@@ -222,6 +222,8 @@ module Lorj
     #         This path must contains at least 'process' subdir. And if needed
     #         a 'controllers' path
     #       - :process_name   : Name of the local process
+    #       - :defaults       : Define the defaults data setting for the process
+    #       - :data           : Define process data definition.
     #
     #       Optionnally, you can set a controller name to use with the process.
     #       - :controller_name: Name of the controller to use.
@@ -230,13 +232,13 @@ module Lorj
     # * *Returns* :
     #   - model : Application model loaded.
     def init_processes(model, processes)
-      processes.each do |a_process|
+      processes.each_index do |index|
         my_process = {}
-
+        a_process = processes[index]
         if a_process.key?(:process_module)
-          my_process = _process_module_to_load(my_process, a_process)
+          my_process = _process_module_to_load(index, my_process, a_process)
         else
-          my_process = _process_local_to_load(my_process, a_process)
+          my_process = _process_local_to_load(index, my_process, a_process)
         end
 
         next if my_process.nil?
@@ -263,7 +265,7 @@ module Lorj
     end
 
     # function prepare of loading a local process
-    def _process_local_to_load(my_process, a_process)
+    def _process_local_to_load(index, my_process, a_process)
       my_process[:process_path] = a_process[:process_path]
 
       if a_process[:process_name].nil?
@@ -277,11 +279,36 @@ module Lorj
       else
         my_process[:controller_name] = a_process[:controller_name]
       end
+
+      defaults_file = a_process[:defaults]
+      if defaults_file.nil?
+        path = a_process[:process_path]
+        path['.rb'] = ''
+        defaults_file = File.join(path, 'defaults.yaml')
+      end
+
+      _process_load_data(config, index,
+                         a_process[:process_name], defaults_file)
+
+      data_file = a_process[:data]
+      if defaults_file.nil?
+        path = a_process[:process_path]
+        path['.rb'] = ''
+        data_file = File.join(path, 'data.yaml')
+      end
+
+      _process_load_data(Lorj.data, index,
+                         a_process[:process_name], data_file)
+
+      # TODO: Implement Object definition as a config layer.
+      # _process_load_definition(definition, index, a_process[:process_name],
+      #                          a_process[:definition])
+
       my_process
     end
 
     # Function prepare of loading a module process.
-    def _process_module_to_load(my_process, a_process)
+    def _process_module_to_load(index, my_process, a_process)
       name = a_process[:process_module]
 
       if name.nil?
@@ -309,8 +336,39 @@ module Lorj
       _process_module_set_ctr(my_process, module_process.controllers,
                               a_process[:controller_name])
 
+      _process_load_data(config, index, name, module_process.defaults_file)
+
+      _process_load_data(Lorj.data, index, name, module_process.data_file)
+
+      # TODO: Implement Object definition as a config layer.
+      # _process_load_definition(definition, index, name,
+      #                          module_process.definition)
+
       my_process
     end
+
+    # Load data definition in process data layers
+    def _process_load_data(config, index, name, file)
+      return unless config.layer_index(name).nil?
+
+      return if file.nil?
+
+      layer = PRC::CoreConfig.define_layer(:name => name,
+                                           :config => PRC::BaseConfig.new,
+                                           :load => true,
+                                           :set => false)
+      config.layer_add(layer.merge(:index => (config.layers.length - index)))
+      return if layer[:config].load(file)
+
+      PrcLib.warning("Process '%s', data file '%s' was not loaded.",
+                     name, file)
+    end
+
+    # Load process definition in process layers
+    # Function currently not developped.
+    #
+    # def _process_load_definition(a_process)
+    # end
 
     def _process_module_set_ctr(my_process, controllers, controller_name)
       return if controller_name.nil?

@@ -15,7 +15,7 @@
 #    limitations under the License.
 
 # Students process
-class StudentsProcess
+class MockProcess
   def create_student(sObjectType, hParams)
     PrcLib.state(format("Running creation process for object '%s' = '%s'",
                         sObjectType, hParams[:student_name]))
