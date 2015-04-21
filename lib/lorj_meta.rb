@@ -380,6 +380,22 @@ module Lorj
       build_section_mapping
     end
 
+    # Redefine CoreConfig#layer_add to add mapping build
+    #
+    # See CoreConfig#layer_add for details
+    def layer_add(options)
+      p_layer_add(options)
+      build_section_mapping
+    end
+
+    # Redefine CoreConfig#layer_remove to add mapping build
+    #
+    # See CoreConfig#layer_remove for details
+    def layer_remove(options)
+      p_layer_remove(options)
+      build_section_mapping
+    end
+
     # Loop on Config metadata
     #
     # * *Args*    :
