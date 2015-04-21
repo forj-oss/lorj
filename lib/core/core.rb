@@ -30,7 +30,7 @@ module Lorj
   # This is the main lorj class.
   # It interfaces your main code with the full lorj system as shown in the
   # concept document.
-  # It give you access to the lorj model object designed by your process.
+  # It gives you access to the lorj model object designed by your process.
   #
   # When you start using it, your main must be as simple as you can, as you will
   # need to move most of your application logic to the process.
@@ -46,19 +46,29 @@ module Lorj
   # Then, your application contributors can build their own controller and
   # extend your solution!
   #
-  # Here an example of creating a CloudServer, using CloudCore
-  # (derived from Core).
-  # CloudCore introduces lorj predefined CloudProcess used by forj cli.
+  # Here an example of creating a CloudServer, using Lorj_cloud module
+  # See http://github.com/forj-oss/lorj-cloud
   #
-  #   oCloud = Lorj::CloudCore.new(oConfig, 'myhpcloud')
-  #   oConfig.set(:server_name,'myservername')
-  #   oCloud.create(:server)
+  #   require 'lorj_cloud'
   #
-  # Another basic example (See example directory)
+  #   process = { :process_module => 'cloud',
+  #               :controller_name => 'openstack' }
+  #   cloud = Lorj::Core.new(nil, [process])
+  #   cloud.setup(:server) # Ask end user about required data
+  #   cloud.create(:server, :server_name => 'myservername')
   #
-  #   oConfig = Lorj::Account.new()
-  #   oPrc = Lorj::Core.new(oConfig, 'mySqlAccount')
-  #   oCloud.create(:student, { :student_name => "Robert Redford"})
+  # Another basic example.
+  #
+  #   require 'lorj'
+  #
+  #   process = { :process_name    => 'myprocess',
+  #               :process_path    => '<myprocess_path>',
+  #               :controller_name => :mock }
+  #
+  #   core = Lorj::Core.new(nil, [process])
+  #   core.create(:myobject, :parameter1 => "value")
+  #
+  # You can learn on lorj by example, see examples/
   #
   # See BaseProcess to check how you can write a process and what kind of
   # functions are available for your process to be kept controller independant.
@@ -71,8 +81,8 @@ module Lorj
     # following functions:
     #
     # - get(*key, default=nil) and [*key]  : function to get a value from a key.
-    #                                        default is a value to get if not
-    #                                        found.
+    #   default is a value to get if not found.
+    #
     # - set(*key, value) or [*key, value]= : function to set a value to a key.
     #   Ex: From processes, you can set a runtime data with:
     #
@@ -83,9 +93,9 @@ module Lorj
     #      config[key] = value
     #
     # - exist?(*key)                       : function which return false if not
-    #                                        found, or any other value if found.
+    #   found, or any other value if found.
     #   Ex: From processes, you can get a data (runtime/account/config.yaml or
-    #       defaults.yaml) with:
+    #   defaults.yaml) with:
     #
     #      config.get(key)
     #

@@ -140,7 +140,7 @@ YAMLDOC
 
     # To simplify spec code, app layer contains String values for each options
     # while controller options values are Symbol.
-    # This helps to identify if the merge feature result.
+    # This helps to identify if the merge works.
     it 'define_controller_data(:section2, :data2, :option2 => :value4) works' do
       data = { :option2 => :value4 }
       expect(@metadata[:sections, :section2, :data2, :option2]).to eq('value3')
