@@ -202,6 +202,7 @@ module Lorj
       options = options.merge(:keys => [key], :section => section)
 
       indexes = _identify_indexes(options, exclusive?(key, section))
+
       names = []
       indexes.each { |index| names << @config_layers[index][:name] }
 
@@ -580,8 +581,9 @@ module Lorj
     end
 
     def exclusive_indexes(account_exclusive)
-      return [0, 1] if account_exclusive
-      [0, 1, 2, 3, 4]
+      return layer_indexes { true } unless account_exclusive
+
+      layer_indexes { |n, _i| %w(runtime account).include?(n[:name]) }
     end
 
     def _identify_indexes(options, account_exclusive)
@@ -597,6 +599,9 @@ module Lorj
       indexes
     end
 
+    # Internal functions to generate the list of options
+    # for each layer name.
+    # The names order needs to be kept in options.
     def _set_data_options_per_names(names, section)
       data_options = []
 
@@ -617,16 +622,21 @@ module Lorj
         # local & default are SectionConfig and is forced to use :default as
         # section name for each data.
         return { :section => :default }
+      when 'account'
+        # If no section is provided, 'account' layer will use the first section
+        # name
+        # otherwise, it will used the section provided.
+        # account is a SectionConfig and use section value defined by the
+        # lorj data model. So the section name is not forced.
+        return { :section => section } unless section.nil?
+        return nil
       end
-      # nil: layer_index = 0 => runtime. runtime is not a SectionConfig.
-
-      # nil: layer_index = 1 => account
-      # If no section is provided, 'account' layer will use the first section
-      # name
-      # otherwise, it will used the section provided.
-      return { :section => section } unless section.nil?
-      # account is a SectionConfig and use section value defined by the
-      # lorj data model. So the section name is not forced.
+      # For SectionsConfig layer, :default is automatically set.
+      # Except if there is later a need to set a section, nil is enough.
+      # For BaseConfig, no options => nil
+      #
+      # Process/controller layers are SectionsConfig
+      # others (runtime/instant) are BaseConfig.
       nil
     end
 

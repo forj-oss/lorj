@@ -331,7 +331,11 @@ module Lorj
   #
   #         - :object:
   #
-  #           Used with :query_type=:query_call. object type symbol to query.
+  #           - When used with :query_type == :query_call or :controller_call,
+  #             :object is the object type symbol to query.
+  #
+  #           - When used with :query_type == :process_call, :object is the
+  #             object used in the process.
   #
   #         - :query
   #
@@ -469,9 +473,9 @@ module Lorj
     #     - key name
     def first_section(data)
       section, data = _detect_section(data, nil)
-      return [section, data] unless section.nil?
+      return [section, data] unless section.nil? &&
+                                    p_exist?(:keys => [:keys, data])
 
-      return nil unless p_exist?(:keys => [:keys, data])
       arr = p_get(:keys => [:keys, data])
       return nil unless arr.is_a?(Array) && arr[0]
       [arr[0], data]
@@ -488,6 +492,7 @@ module Lorj
     def sections(data = nil)
       return p_get(:keys => [:sections]).keys if data.nil?
 
+      _, data = _detect_section(data, nil)
       return nil unless p_exist?(:keys => [:keys, data])
       p_get(:keys => [:keys, data])
     end
@@ -524,7 +529,7 @@ module Lorj
       p_get(:keys => keys, :merge => true)
     end
 
-    # Get setup options. It returns the the top layer data for options requested
+    # Get setup options. It returns the top layer data for options requested
     #
     # * *Args*    :
     #   - +options+ : Array of options tree.
@@ -538,7 +543,7 @@ module Lorj
     def setup_data(*options)
       keys = [:setup]
       keys.concat(options)
-      p_get(:keys => keys)
+      p_get(:keys => keys, :merge => true)
     end
 
     # Get model section/data options. It returns the list of options, against
@@ -547,7 +552,7 @@ module Lorj
     # * *Args*    :
     #   - +section+ : section name
     #   - +data+    : data name
-    #   - +options+ : options tree.
+    #   - +options+ : Optionnal. List of sub keys in tree to get data.
     #
     # * *Returns* :
     #   - Merged cloned data options values.
@@ -569,14 +574,16 @@ module Lorj
     # data name
     #
     # auto_* functions, usually, will get the first section
-    # from a key/sections mapping Array.
+    # from a key/sections mapping Array. But it supports also 'Section#Name' to
+    # determine the section to use instead of first one.
+    #
     #
     # The list of sections for one key is build thanks to
     # build_section_mapping.
     #
     # * *Args*    :
-    #   - +data+   : data name
-    #   - options+ : options tree.
+    #   - +data+    : data name. Support 'Section#Name'
+    #   - +options+ : Optionnal. List of sub keys in tree to get data.
     # * *Returns* :
     #   - data options values
     #   OR

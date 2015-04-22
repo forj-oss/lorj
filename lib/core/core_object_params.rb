@@ -205,10 +205,6 @@ module Lorj
       _get_object_params(object_type, sEventType, fname, true)
     end
 
-    # TODO: Fix the Complexity
-    # rubocop: disable Metrics/CyclomaticComplexity
-    # rubocop: disable Metrics/PerceivedComplexity
-
     # internal runtime function for process call
     # Build a process/controller parameters object (ObjectData)
     #
@@ -241,12 +237,8 @@ module Lorj
         new_params = _obj_param_init(object_type, sEventType, as_controller)
       end
 
-      obj_params.each do |param_path, param_options|
-        if param_options.key?(:for)
-          next unless param_options[:for].include?(sEventType)
-        end
-
-        param_obj = KeyPath.new(param_path)
+      _object_params_event(object_type, sEventType).each do |param_obj|
+        param_options = obj_params[param_obj.fpath]
 
         value = _build_param(new_params, param_obj, param_options)
 
@@ -260,8 +252,47 @@ module Lorj
       new_params
     end
 
-    # rubocop: enable Metrics/CyclomaticComplexity
-    # rubocop: enable Metrics/PerceivedComplexity
+    # Function to provide a list of valid attributes for an event given.
+    #
+    # * *args* :
+    #   - +object_type+: object_type
+    #   - +event_type+ : Can be create_e, delete_e, query_e, get_e
+    #   - +param_type+ : Can be nil (default), :data or :CloudObject
+    #
+    # * *return*:
+    #   - params_obj : List of valid attributes (KeyPath type) for
+    #     the event given.
+    def _object_params_event(object_type, sEventType, param_type = nil)
+      obj_params = PrcLib.model.meta_obj.rh_get(object_type, :params, :keys)
+
+      attrs = []
+      obj_params.each do |param_path, param_options|
+        next unless _param_event?(param_options, sEventType)
+
+        next if param_type && param_type != param_options[:type]
+
+        attrs << KeyPath.new(param_path)
+      end
+      attrs
+    end
+
+    # Internal runtime function checking if the attribute is valid with event
+    # query
+    #
+    # * *args* :
+    #   - +param_options+: Parameter options to use.
+    #   - +param_path+   : Parameter path to check event
+    #   - +event_type+   : Can be create_e, delete_e, query_e, get_e
+    #
+    # * *return*:
+    #   - true if the attribute name is valid for this event.
+    #   - false otherwise.
+    def _param_event?(param_options, sEventType)
+      if param_options.key?(:for)
+        return false unless param_options[:for].include?(sEventType)
+      end
+      true
+    end
 
     # Internal runtime function for process call
     #

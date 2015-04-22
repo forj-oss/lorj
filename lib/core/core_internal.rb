@@ -288,7 +288,8 @@ module Lorj
       end
 
       _process_load_data(config, index,
-                         a_process[:process_name], defaults_file)
+                         a_process[:process_name], defaults_file,
+                         PRC::SectionConfig)
 
       data_file = a_process[:data]
       if defaults_file.nil?
@@ -336,7 +337,8 @@ module Lorj
       _process_module_set_ctr(my_process, module_process.controllers,
                               a_process[:controller_name])
 
-      _process_load_data(config, index, name, module_process.defaults_file)
+      _process_load_data(config, index, name, module_process.defaults_file,
+                         PRC::SectionConfig)
 
       _process_load_data(Lorj.data, index, name, module_process.data_file)
 
@@ -348,20 +350,22 @@ module Lorj
     end
 
     # Load data definition in process data layers
-    def _process_load_data(config, index, name, file)
+    def _process_load_data(config, index, name, file,
+                           config_class = PRC::BaseConfig)
       return unless config.layer_index(name).nil?
 
       return if file.nil?
 
       layer = PRC::CoreConfig.define_layer(:name => name,
-                                           :config => PRC::BaseConfig.new,
+                                           :config => config_class.new,
                                            :load => true,
                                            :set => false)
-      config.layer_add(layer.merge(:index => (config.layers.length - index)))
-      return if layer[:config].load(file)
+      unless layer[:config].load(file)
+        PrcLib.warning("Process '%s', data file '%s' was not loaded.",
+                       name, file)
+      end
 
-      PrcLib.warning("Process '%s', data file '%s' was not loaded.",
-                     name, file)
+      config.layer_add(layer.merge(:index => (config.layers.length - index)))
     end
 
     # Load process definition in process layers

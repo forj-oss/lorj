@@ -36,7 +36,7 @@ Gem::Specification.new do |spec|
     '--title Lorj - The Process Controllers framework system' << \
     '--main README.md'
 
-  spec.add_runtime_dependency 'config_layers', '~>0.1.2'
+  spec.add_runtime_dependency 'config_layers', '~>0.1.3'
   #  spec.add_runtime_dependency 'git', '>=1.2.7'
   #  spec.add_runtime_dependency 'rbx-require-relative', '~>0.0.7'
   spec.add_runtime_dependency 'highline', '~> 1.6.21'

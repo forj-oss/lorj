@@ -40,7 +40,8 @@ module Lorj
     # * *Raises* :
     #
     def _setup_list_from_controller_call(obj_to_load, list_options, default)
-      PrcLib.message("Loading #{obj_to_load}.")
+      PrcLib.message("Loading :object #{obj_to_load}.")
+      Lorj.debug(3, ':query_type = :controller_call')
 
       object = @object_data[obj_to_load, :ObjectData]
       object = process_create(obj_to_load) if object.nil?
@@ -78,7 +79,8 @@ module Lorj
     # * *Raises* :
     #
     def _setup_list_from_query_call(obj_to_load, list_options, default)
-      PrcLib.message("Querying #{obj_to_load}.")
+      PrcLib.message("Querying :object #{obj_to_load}.")
+      Lorj.debug(3, ':query_type = :query_call - ')
 
       query_hash = list_options[:query_params]
       query_hash = {} if query_hash.nil?
@@ -126,7 +128,8 @@ module Lorj
                           data if list_options[:query_call].nil?
       proc = list_options[:query_call]
       obj_to_load = list_options[:object]
-      Lorj.debug(2, "Running process '#{proc}' on '#{obj_to_load}'.")
+      PrcLib.message("Running process '#{proc}' on :object '#{obj_to_load}'.")
+      Lorj.debug(3, ':query_type = :process_call')
 
       # Building Process function attr_params parameter
       params = ObjectData.new
