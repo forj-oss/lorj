@@ -50,6 +50,15 @@ module Lorj
       p_set(:keys => [:keys], :value => section_map, :name => 'map')
     end
 
+    # Implement a section detection in a symbol/string
+    # Help each auto_* functions to work without update.
+    #
+    def _detect_section(key, default_section)
+      m = key.to_s.match(/^(.*)#(.*)$/)
+      return [m[1].to_sym, m[2].to_sym] if m && m[1] != '' && m[2] != ''
+      [default_section, key]
+    end
+
     # set section data mapping
     #
     def update_map(section, data)
@@ -430,35 +439,42 @@ module Lorj
     # If a key name is found in several different section,
     #
     # auto_* functions, usually, will get the first section
-    # from a key/sections mapping Array.
+    # from a key/sections mapping Array except if you provide
+    # a '#' in the data name. (Ex: :'section1#key1')
     #
     # The list of sections for one key is build thanks to
     # build_section_mapping.
     #
     # * *Args*    :
-    #   - +data+ : data name to check
+    #   - +data+ : data name to check. Support 'section#data'.
     #
     # * *Returns* :
     #   - true/false
     def auto_meta_exist?(data)
       return nil unless data
 
-      section = first_section(data)
+      section, data = first_section(data)
+
       p_exist?(:keys => [:sections, section, data])
     end
 
-    # return the 1st section name of a data.
+    # return the 1st section name found of a data or the section discovered.
     #
     # * *Args*    :
-    #   - +data+ : data name to search
+    #   - +data+ : data name to search. It supports section#name.
     #
     # * *Returns* :
-    #   - 1st section name found.
+    #   - Array:
+    #     - section name
+    #     - key name
     def first_section(data)
+      section, data = _detect_section(data, nil)
+      return [section, data] unless section.nil?
+
       return nil unless p_exist?(:keys => [:keys, data])
       arr = p_get(:keys => [:keys, data])
       return nil unless arr.is_a?(Array) && arr[0]
-      arr[0]
+      [arr[0], data]
     end
 
     # return the list of sections name of a data.
@@ -570,7 +586,7 @@ module Lorj
     #
     def auto_section_data(data, *options)
       return nil if data.nil?
-      section = first_section(data)
+      section, data = first_section(data)
       section_data(section, data, *options)
     end
 

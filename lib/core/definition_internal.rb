@@ -37,7 +37,7 @@ module Lorj
 
     def _get_account_section(key)
       return nil if key.nil?
-      Lorj.data.first_section(key)
+      Lorj.data.first_section(key)[0]
     end
 
     # internal runtime function for process call

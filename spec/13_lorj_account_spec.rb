@@ -116,6 +116,7 @@ describe 'class: Lorj::Account,' do
     it "account[:data] return 'nova_local', stored only in local." do
       expect(@account[:data]).to eq(nil)
     end
+
     it 'account.where?(:data) return false, as account not loaded.' do
       expect(@account.where?(:data)).to equal(false)
     end
@@ -219,6 +220,72 @@ describe 'class: Lorj::Account,' do
        "saved 'nova_test2'" do
       expect(@account.get(:keypair_name, nil,
                           :name => 'account')).to eq('nova_test2')
+    end
+
+    context ':credentials as section name and runtime set' do
+      it 'account.get(:"credentials#keypair_name") return '\
+         '"nova_test3"(runtime)' do
+        expect(@account.get(:"credentials#keypair_name")).to eq('nova_test3')
+      end
+
+      it 'account.get(:keypair_name, nil, :section => :credentials) '\
+         'return "nova_test3"(runtime)' do
+        expect(@account.get(:keypair_name, nil,
+                            :section => :credentials)).to eq('nova_test3')
+      end
+    end
+
+    context 'with section, no runtime' do
+      before(:all) do
+        @account.del(:keypair_name)
+      end
+
+      it 'account.get(:"credentials#keypair_name") return '\
+         '"nova_test2"(account)' do
+        expect(@account.get(:"credentials#keypair_name")).to eq('nova_test2')
+      end
+
+      it 'account.get(:keypair_name, nil, :section => :credentials) '\
+         'return "nova_test2"(account)' do
+        expect(@account.get(:keypair_name, nil,
+                            :section => :credentials)).to eq('nova_test2')
+      end
+
+      it 'account.get(:"test#keypair_name") return "nova_local"(local)' do
+        expect(@account.get(:"test#keypair_name")).to eq('nova_local')
+      end
+
+      it 'account.get(:keypair_name, nil, :section => :test) '\
+         'return "nova_local"(local)' do
+        expect(@account.get(:keypair_name, nil,
+                            :section => :test)).to eq('nova_local')
+      end
+
+      it 'account.where?(:"credentials#keypair_name") return %w(account local '\
+         'default)' do
+        expect(@account.where?('credentials#keypair_name'
+                              )).to eq(%w(account local default))
+      end
+
+      it 'account.where?(:"test#keypair_name") return %w(local '\
+         'default)' do
+        expect(@account.where?('test#keypair_name'
+                              )).to eq(%w(local default))
+      end
+    end
+
+    context 'Setting a new section, no runtime' do
+      it 'account.set(:"test#keypair_name", "nova_test3",'\
+         ':name => "account") return "nova_test3"(account)' do
+        expect(@account.set('test#keypair_name', 'nova_test3',
+                            :name => 'account')).to eq('nova_test3')
+      end
+
+      it 'account.where?(:"test#keypair_name") return %w(account local '\
+         'default)' do
+        expect(@account.where?('test#keypair_name'
+                              )).to eq(%w(account local default))
+      end
     end
   end
 

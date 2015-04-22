@@ -289,9 +289,9 @@ module Lorj
 
       PrcLib.model.data_context data
 
-      section = Lorj.data.first_section(data.key)
+      section, key = Lorj.data.first_section(data.key)
 
-      Lorj.data.define_controller_data(section, data.key, options)
+      Lorj.data.define_controller_data(section, key, options)
     end
 
     # Controller to declare a model Data value mapping

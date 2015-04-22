@@ -230,7 +230,8 @@ module Lorj
                    'in Lorj 2.0. Please update your code to call '\
                    "'Lorj.data.%s' instead.\n%s",
                    __method__, 'first_section', caller[0])
-      Lorj.data.first_section(key)
+      section, = Lorj.data.first_section(key)
+      section
     end
 
     #

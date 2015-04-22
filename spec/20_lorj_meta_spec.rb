@@ -78,16 +78,26 @@ YAMLDOC
       expect(@metadata.datas).to eq([:data1, :data2, :data3])
     end
 
-    it 'first_section(:data2) returns :section1' do
-      expect(@metadata.first_section(:data2)).to equal(:section1)
+    it 'first_section(:data2) returns [:section1, :data2]' do
+      expect(@metadata.first_section(:data2)).to eq([:section1, :data2])
     end
 
-    it 'first_section(:data1) returns :section1' do
-      expect(@metadata.first_section(:data1)).to equal(:section1)
+    it 'first_section("section2#data2") returns [:section2, :data2]' do
+      expect(@metadata.first_section('section2#data2')
+            ).to eq([:section2, :data2])
     end
 
-    it 'first_section(:data3) returns :section3' do
-      expect(@metadata.first_section(:data3)).to equal(:section3)
+    it 'first_section("section3#data2") returns [:section3, :data2]' do
+      expect(@metadata.first_section('section3#data2')
+            ).to eq([:section3, :data2])
+    end
+
+    it 'first_section(:data1) returns [:section1, :data1]' do
+      expect(@metadata.first_section(:data1)).to eq([:section1, :data1])
+    end
+
+    it 'first_section(:data3) returns [:section3, :data3]' do
+      expect(@metadata.first_section(:data3)).to eq([:section3, :data3])
     end
 
     it 'meta_exist?(:section1, :data1) returns true' do

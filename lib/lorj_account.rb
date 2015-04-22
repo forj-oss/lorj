@@ -197,7 +197,7 @@ module Lorj
       options = {} unless options.is_a?(Hash)
 
       section = options[:section]
-      section = Lorj.data.first_section(key) if section.nil?
+      section, key = Lorj.data.first_section(key) if section.nil?
 
       options = options.merge(:keys => [key], :section => section)
 
@@ -246,7 +246,7 @@ module Lorj
       options = {} unless options.is_a?(Hash)
 
       section = options[:section]
-      section = Lorj.data.first_section(key) if section.nil?
+      section, key = Lorj.data.first_section(key) if section.nil?
 
       indexes = _identify_indexes(options, exclusive?(key, section))
 
@@ -292,7 +292,7 @@ module Lorj
       options = {} unless options.is_a?(Hash)
 
       section = options[:section]
-      section = Lorj.data.first_section(key) if section.nil?
+      section, key = Lorj.data.first_section(key) if section.nil?
       options = options.merge(:keys => [key], :section => section)
 
       indexes = _identify_indexes(options, exclusive?(key, section))
@@ -323,6 +323,7 @@ module Lorj
 
       key = key.to_sym if key.class == String
       section = Lorj.defaults.get_meta_section(key) if section.nil?
+      section, key = _detect_section(key, section)
 
       return nil if section.nil?
 
@@ -349,7 +350,7 @@ module Lorj
       return nil unless key
 
       key = key.to_sym if key.class == String
-      section = Lorj.data.first_section(key) if section.nil?
+      section, key = Lorj.data.first_section(key) if section.nil?
 
       return nil if section.nil?
       result = Lorj.data[:sections, section, key, :account_exclusive]
@@ -386,9 +387,10 @@ module Lorj
       return nil if parameters.nil?
 
       key = parameters[0][0]
-      layer_name, section = parameters[1]
+      layer_name, section = parameters[1][0]
 
-      section = Lorj.data.first_section(key) if section.nil?
+      found_section, key = Lorj.data.first_section(key)
+      section = found_section if section.nil?
       section = :default if section.nil?
 
       return nil if readonly?(key, section)
@@ -439,6 +441,7 @@ module Lorj
 
       section = Lorj.defaults.get_meta_section(key) if section.nil?
       section = :default if section.nil?
+      section, key = _detect_section(key, section)
 
       return nil if readonly?(key, section)
 
@@ -543,6 +546,12 @@ module Lorj
     # private functions
 
     private
+
+    def _detect_section(key, default_section)
+      m = key.to_s.match(/^(.*)#(.*)$/)
+      return [m[1].to_sym, m[2].to_sym] if m && m[1] != '' && m[2] != ''
+      [default_section, key]
+    end
 
     def _identify_array_indexes(options, account_exclusive)
       def_indexes = options[:indexes] if options.key?(:indexes)
