@@ -202,12 +202,17 @@ module Lorj
     # * *Args*    :
     #   - +key+   : key name. Can be an key tree (Array of keys).
     #   - +value+ : Value to set
+    #   - +options+ : possible options:
+    #     - +:name+    : layer to exclusively set data.
+    #     - +:index+   : layer index to exclusively set data.
+    #       If neither :name or :index is set, set will use the 'runtime' layer.
+    #
     # * *Returns* :
     #   - value set
     # * *Raises* :
     #   Nothing
-    def set(key, value)
-      self[key] = value # Call PRC::CoreConfig [] function
+    def set(key, value, options = {})
+      p_set(options.merge(:keys => [key], :value => value))
     end
 
     # Get function
