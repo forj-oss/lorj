@@ -191,11 +191,15 @@ module PrcLib
   # Create a Logging object if missing and return it.
   # Used internally by other functions
   def log_object
-    if PrcLib.log.nil?
-      PrcLib.log = PrcLib::Logging.new
-    else
-      PrcLib.log
-    end
+    PrcLib.log = PrcLib::Logging.new if PrcLib.log.nil?
+    PrcLib.log
+  end
+
+  def log_object=(logger)
+    return PrcLib.log unless logger.is_a?(Logger)
+
+    PrcLib.log = logger if PrcLib.log.nil?
+    PrcLib.log
   end
 
   # Print out a message, not logged in the log file. This message is printed out
