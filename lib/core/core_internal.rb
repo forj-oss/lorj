@@ -250,7 +250,10 @@ module Lorj
 
       model
     end
+  end
 
+  # Define internal private functions for controllers
+  class Core
     # high level function to load process
     def _process_load(model, my_process)
       if load_process(model, my_process[:process_path])
@@ -360,9 +363,20 @@ module Lorj
                                            :config => config_class.new,
                                            :load => true,
                                            :set => false)
-      unless layer[:config].load(file)
-        PrcLib.warning("Process '%s', data file '%s' was not loaded.",
-                       name, file)
+      unless File.exist?(file)
+        PrcLib.warning("Process '%s', data file '%s' doesn't exist."\
+                       ' Not loaded.', name, file)
+        return
+      end
+
+      begin
+        unless layer[:config].load(file)
+          PrcLib.warning("Process '%s', data file '%s' was not loaded.",
+                         name, file)
+        end
+      rescue => e
+        PrcLib.error("Process '%s', unable to load data file '%s'. %s",
+                     name, file, e.message)
       end
 
       config.layer_add(layer.merge(:index => (config.layers.length - index)))
