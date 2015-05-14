@@ -419,6 +419,12 @@ module Lorj
     def meta_each
       data = p_get(:keys => [:sections], :merge => true)
 
+      if data.nil?
+        PrcLib.warning('No model data definition found. Do you have a model'\
+                       ' loaded?')
+        return
+      end
+
       data.each do |section, hValue|
         hValue.each do |key, value|
           yield section, key, value
