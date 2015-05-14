@@ -244,7 +244,7 @@ module Lorj
     #   - ++ ->
     def load
       if !PrcLib.app_defaults
-        PrcLib.warning('PrcLib.app_defaults is not set. Application defaults'\
+        PrcLib.debug('PrcLib.app_defaults is not set. Application defaults'\
                        " won't be loaded.")
       else
         @filename = File.join(PrcLib.app_defaults, 'defaults.yaml')
