@@ -57,6 +57,8 @@ module Lorj
         section = _get_account_section(data)
         # We set the value only if there is a value entered by the user.
         unless section.nil? || value.nil?
+          Lorj.debug(3, "'%s'/'%s': Setting value to '%s'",
+                     section, data, value)
           @config.set(data, value, :name => 'account', :section => section)
         end
 
@@ -130,7 +132,7 @@ module Lorj
     #  - +desc+        : Data description
     #  - +options+     : Used when user have to enter a string instead of
     #                    selecting from a list.
-    #   - +:default_value+ : predfined default value.
+    #    - +:default_value+ : predefined default value.
     #
     #     if data model defines :default_value. => choose it
     #     In this last case, the :default_value is interpreted by ERB.
@@ -159,12 +161,14 @@ module Lorj
       default = result[:default_value] unless result[:default_value].nil?
 
       begin
+        Lorj.debug(3, "'%s': ERB on default value '%s'", data, default)
         default = erb(default) unless default.nil?
       rescue => e
         PrcLib.warning("ERB error with :%s/:default_value '%s'.\n%s",
                        data, result[:default_value], e.message)
       else
         default = nil if default == ''
+        Lorj.debug(3, "'%s': default value '%s'", data, default)
         options[:default_value] = default
       end
 
@@ -207,6 +211,11 @@ module Lorj
     #
     def _setup_choose_data_from_list(data, desc, list, options)
       default = @config.get(data, options[:default_value])
+      Lorj.debug(3, "'%s': Getting value from config - '%s'(from '%s' - "\
+                    "sections '%s')"\
+                    " (default is '%s')",
+                 data, default, @config.where?(data), Lorj.data.sections(data),
+                 options[:default_value])
 
       say_msg = format("Select '%s' from the list:", desc)
       say_msg += format(' |%s|', default) unless default.nil?
@@ -259,18 +268,24 @@ module Lorj
       if default.nil? && !options[:default_value].nil?
         begin
           default = erb(options[:default_value])
+          Lorj.debug(3, "'%s': Running ERB for default_value '%s' = '%s'",
+                     data, options[:default_value], default)
         rescue => e
           PrcLib.warning("ERB error with :%s/:default_value '%s'.\n%s",
                          data, options[:default_value], e.message)
         end
       end
-      default = @config.get(data, default)
+      ask_default = @config.get(data, default)
+      Lorj.debug(3, "'%s': Getting value from config - '%s'(from '%s' - "\
+                    "sections '%s') (default is '%s')",
+                 data, ask_default, @config.where?(data),
+                 Lorj.data.sections(data), default)
 
       # validate_proc = options[:validate_function]
       proc_ask = options[:ask_function]
 
       if proc_ask.nil?
-        value = _ask(desc, default, valid_regex, is_encrypted, is_required)
+        value = _ask(desc, ask_default, valid_regex, is_encrypted, is_required)
       else
         value = @process.method(proc_ask)
       end
