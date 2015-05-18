@@ -228,8 +228,10 @@ module Lorj
     def get_meta_section(key)
       PrcLib.debug("'Lorj.defaults.%s' is obsolete and will be removed "\
                    'in Lorj 2.0. Please update your code to call '\
-                   "'Lorj.data.%s' instead.\n%s",
-                   __method__, 'first_section', caller[0])
+                   "'Lorj.data.%s' instead.\n%s. Warning! This function call "\
+                   "return is different than 'Lorj.defaults.%s'. Please read "\
+                   'the documentation',
+                   __method__, 'first_section', caller[0], __method__)
       section, = Lorj.data.first_section(key)
       section
     end
