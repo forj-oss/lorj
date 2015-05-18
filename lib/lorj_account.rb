@@ -199,7 +199,8 @@ module Lorj
       section = options[:section]
       section, key = Lorj.data.first_section(key) if section.nil?
 
-      options = options.merge(:keys => [key], :section => section)
+      options = options.merge(:keys => [key])
+      options.delete(:section)
 
       indexes = _identify_indexes(options, exclusive?(key, section))
 
@@ -256,7 +257,6 @@ module Lorj
 
       where_options = {
         :keys => [key],
-        :section => section,
         :indexes => indexes,
         :data_options => _set_data_options_per_names(names, section)
       }
@@ -294,7 +294,8 @@ module Lorj
 
       section = options[:section]
       section, key = Lorj.data.first_section(key) if section.nil?
-      options = options.merge(:keys => [key], :section => section)
+      options = options.merge(:keys => [key])
+      options.delete(:section)
 
       indexes = _identify_indexes(options, exclusive?(key, section))
 
