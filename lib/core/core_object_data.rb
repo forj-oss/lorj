@@ -16,6 +16,14 @@
 
 # rubocop: disable Metrics/AbcSize
 
+file_dir = File.join(File.dirname(__FILE__), 'compat')
+compat_version = RUBY_VERSION[0..2]
+file = File.basename(__FILE__)
+
+lib = File.join(file_dir, compat_version, file)
+lib = File.join(file_dir, file) unless File.exist?(lib)
+load lib if File.exist?(lib)
+
 # Module Lorj which contains several classes.
 #
 # Those classes describes :
@@ -130,15 +138,6 @@ module Lorj
       value
     end
 
-    # Functions used to set simple data/Object for controller/process function
-    # call.
-    # TODO: to revisit this function, as we may consider simple data, as
-    # Lorj::Data object
-    def []=(*key, value)
-      return nil if [:object, :query].include?(key[0])
-      @params.rh_set(value, key)
-    end
-
     # Add function. Add a Lorj::Data (data or list) to the ObjectData list.
     #
     # key can be an array, a string (converted to a symbol) or a symbol.
@@ -246,6 +245,8 @@ module Lorj
       @params.each { |key, data| str += format("%s:\n%s\n", key, data.to_s) }
       str
     end
+
+    include Lorj::ObjectDataRubySpec::Public
 
     private
 

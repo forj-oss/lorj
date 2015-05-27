@@ -125,7 +125,7 @@ module Lorj
     end
 
     # Remove inherited method []=
-    def []=(*_keys, _value)
+    def []=(*_prop)
     end
 
     # Load yaml documents (defaults)

@@ -18,6 +18,14 @@
 require 'rubygems'
 require 'yaml'
 
+file_dir = File.join(File.dirname(__FILE__), 'compat')
+compat_version = RUBY_VERSION[0..2]
+file = File.basename(__FILE__)
+
+lib = File.join(file_dir, compat_version, file)
+lib = File.join(file_dir, file) unless File.exist?(lib)
+load lib if File.exist?(lib)
+
 # Lorj module implements Lorj::Config
 # Lorj exposes defaults, as attribute to access the Lorj::Defaults instance.
 module Lorj
@@ -644,22 +652,6 @@ module Lorj
       p_set(:keys => keys, :name => layer, :value => options)
     end
 
-    # layer setting function
-    #
-    # * *Args*
-    #   - +type+    : :sections by default. Define the section type name.
-    #   - +section+ : Symbol. Section name of the data to define.
-    #   - +keys+    : 1 Symbol or more Symbols. Name of the data and options.
-    #   - +options+ : Hash. List of options
-    #
-    # * *Returns*
-    #   - The value set or nil
-    #
-    def []=(type, section, *keys, options)
-      return nil if keys.length == 0
-      set(type, section, keys, options)
-    end
-
     # section/data removal function
     #
     # * *Args*
@@ -741,6 +733,8 @@ module Lorj
 
       p_set(:keys => keys, :name => layer, :value => value.merge(options))
     end
+
+    include Lorj::MetaRubySpec::Public
   end
 
   module_function

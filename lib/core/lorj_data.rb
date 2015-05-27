@@ -12,6 +12,14 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+file_dir = File.join(File.dirname(__FILE__), 'compat')
+compat_version = RUBY_VERSION[0..2]
+file = File.basename(__FILE__)
+
+lib = File.join(file_dir, compat_version, file)
+lib = File.join(file_dir, file) unless File.exist?(lib)
+load lib if File.exist?(lib)
+
 # - Lorj::Data : Defines how to manage Objects data between processes,
 #   controllers and internally in the core of Lorj.
 module Lorj
@@ -203,24 +211,6 @@ module Lorj
     #
     def [](*key)
       get(*key)
-    end
-
-    # Set Lorj::data attribute value for an :object
-    #
-    # * *Args* :
-    #   - +keys+ : attribute keys
-    #   - +value+: Value to set
-    #
-    # * *Returns* :
-    #   true
-    #
-    # * *Raises* :
-    #   No exceptions
-    #
-    def []=(*key, value)
-      return false if @type == :list
-      @data.rh_set(value, :attrs, key)
-      true
     end
 
     # Get value from Lorj::data
@@ -482,6 +472,8 @@ module Lorj
       @is_registered = false
       self
     end
+
+    include Lorj::DataRubySpec::Public
   end
 
   #
