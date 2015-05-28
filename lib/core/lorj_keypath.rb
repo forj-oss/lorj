@@ -120,7 +120,9 @@ module Lorj
         res = sKeyPath.split('/')
         res.each_index do |iIndex|
           next unless res[iIndex].is_a?(String)
-          res[iIndex] = res[iIndex][1..-1].to_sym if res[iIndex][0] == ':'
+          # Ruby 1.8   : 'ab'[1] => 98 and 'ab'[1, 1] => 'b'
+          # Ruby 1.9 + : 'ab'[1] => 'b' and 'ab'[1, 1] => 'b'
+          res[iIndex] = res[iIndex][1..-1].to_sym if res[iIndex][0, 1] == ':'
         end
         @keypath = res
       else

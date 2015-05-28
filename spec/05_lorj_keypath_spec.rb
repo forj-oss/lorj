@@ -15,11 +15,12 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-#    require 'byebug'
+require 'rubygems'
+require 'spec_helper'
 
 $LOAD_PATH << File.join(File.dirname(__FILE__), '..', 'lib/core')
 
-require 'lorj_keypath'
+require 'lorj'
 
 describe 'Lorj::KeyPath,' do
   context 'initialize with :test' do

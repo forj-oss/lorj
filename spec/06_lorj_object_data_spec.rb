@@ -15,13 +15,12 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-# require 'byebug'
+require 'rubygems'
+require 'spec_helper'
 
 $LOAD_PATH << File.join(File.dirname(__FILE__), '..', 'lib/core')
 
-require 'core_object_data'
-require 'subhash'
-require 'lorj_data'
+require 'lorj'
 
 describe 'Lorj::ObjectData' do
   context 'initialize with internal false' do
@@ -44,17 +43,18 @@ describe 'Lorj::ObjectData' do
       @obj_data.<< h_hash
       expect(@obj_data[[:key3]]).to eq([:key31, :key32])
     end
-    it 'Test method #to_s' do
-      expect(@obj_data.to_s).to eq('-- Lorj::ObjectData --
-hdata:
-{}
-key1:
-value1
-key2:
-{:key22=>"value2"}
-key3:
-[:key31, :key32]
-')
+    # In version Ruby 1.8, Yaml Hash load is unstable.
+    # Seems related to some context, where to_s provides all
+    # but the order printed out depends on some context that I do not understand
+    if RUBY_VERSION.match(/1\.8/)
+      puts "WARNING! Lorj::ObjectData.to_s won't work well on ruby 1.8 : "\
+           'Hash is not keys order preserved.'
+    else
+      it 'Test method #to_s' do
+        ref = "-- Lorj::ObjectData --\nhdata:\n{}\nkey1:\nvalue1\nkey2:\n"\
+              "{:key22=>\"value2\"}\nkey3:\n[:key31, :key32]\n"
+        expect(@obj_data.to_s).to eq(ref)
+      end
     end
   end
   context 'initialize with internal true' do

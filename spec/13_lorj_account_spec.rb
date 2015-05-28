@@ -15,7 +15,8 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-#  require 'byebug'
+require 'rubygems'
+require 'spec_helper'
 
 app_path = File.dirname(__FILE__)
 

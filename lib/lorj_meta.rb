@@ -492,6 +492,11 @@ module Lorj
 
       arr = p_get(:keys => [:keys, data])
       return nil unless arr.is_a?(Array) && arr[0]
+      if /1\.8/ =~ RUBY_VERSION && arr.length > 1
+        PrcLib.warning('Avoid using Lorj::MetaAppConfig.first_section(%s) with'\
+                       ' Ruby 1.8 and searching for the first section as it do'\
+                       ' not preserve the order of Hash keys.', data)
+      end
       [arr[0], data]
     end
 

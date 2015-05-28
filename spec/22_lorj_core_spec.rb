@@ -15,10 +15,8 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-# require 'rubygems'
-#  require 'byebug'
-#  require 'debugger'
-# require 'bundler/setup'
+require 'rubygems'
+require 'spec_helper'
 
 app_path = File.dirname(__FILE__)
 

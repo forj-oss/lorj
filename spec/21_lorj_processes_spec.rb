@@ -15,10 +15,8 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-# require 'rubygems'
-#  require 'byebug'
-#  require 'debugger'
-# require 'bundler/setup'
+require 'rubygems'
+require 'spec_helper'
 
 app_path = File.dirname(__FILE__)
 
@@ -140,7 +138,11 @@ describe 'Lorj::Process,' do
 
     it 'all kept module processes in Lorj.processes not duplicated.' do
       expect(Lorj.processes.length).to eq(2)
-      expect(Lorj.processes.keys).to eq(%w(mock mock2))
+      if RUBY_VERSION.match(/1\.8/)
+        expect(Lorj.processes.keys.sort).to eq(%w(mock mock2))
+      else
+        expect(Lorj.processes.keys).to eq(%w(mock mock2))
+      end
     end
   end
 end

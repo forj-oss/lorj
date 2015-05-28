@@ -691,7 +691,9 @@ module Lorj
       handlers_dcl.each_key do |key|
         next unless handlers_options.key?(key)
 
-        unless process_context.instance_methods.include?(handlers_options[key])
+        # Warning! Use BaseProcess._instance_methods Compatibility function
+        # instead of BaseProcess.instance_methods
+        unless process_context._instance_methods.include?(handlers_options[key])
           PrcLib.dcl_fail("'%s' parameter requires a valid instance method"\
                           " '%s' in the process '%s'.",
                           key, handlers_options[key], process_context)

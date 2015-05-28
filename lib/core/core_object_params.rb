@@ -112,7 +112,7 @@ module Lorj
       end
 
       if param_options[:decrypt].is_a?(TrueClass)
-        value = _get_encrypted_value(value, _get_encrypt_key)
+        value = _get_encrypted_value(value, _get_encrypt_key, attr_name)
       end
 
       return unless param_options[:mapping]

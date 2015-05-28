@@ -18,6 +18,7 @@
 #++
 
 require 'lorj/version'
+require 'lorj/compat' # Code introduced to support Ruby 1.8
 
 # This is the lorj base library.
 

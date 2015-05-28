@@ -17,6 +17,9 @@
 
 #  require 'byebug'
 
+require 'rubygems'
+require 'spec_helper'
+
 app_path = File.dirname(__FILE__)
 $LOAD_PATH << File.join(app_path, '..', 'lib')
 

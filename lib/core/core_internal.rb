@@ -467,7 +467,9 @@ module Lorj
 
       match_found = the_process_class.scan(/_[a-z]/)
       if match_found
-        match_found.each { |str| the_process_class[str] = str[1].capitalize }
+        # Ruby 1.8   : 'ab'[1] => 98 and 'ab'[1, 1] => 'b'
+        # Ruby 1.9 + : 'ab'[1] => 'b' and 'ab'[1, 1] => 'b'
+        match_found.each { |str| the_process_class[str] = str[1, 1].capitalize }
       end
 
       the_process_class

@@ -30,18 +30,23 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'bundler'
   spec.add_development_dependency 'rake', '~> 10.0'
   spec.add_development_dependency 'rspec', '~> 3.1.0'
-  spec.add_development_dependency 'rubocop', '>= 0.29.0'
-  spec.add_development_dependency 'byebug' unless less_than_two
+  spec.add_development_dependency 'rdoc'
   spec.rdoc_options << \
     '--title Lorj - The Process Controllers framework system' << \
     '--main README.md'
 
-  spec.add_runtime_dependency 'config_layers', '~>0.1.3'
-  #  spec.add_runtime_dependency 'git', '>=1.2.7'
-  #  spec.add_runtime_dependency 'rbx-require-relative', '~>0.0.7'
+  spec.add_runtime_dependency 'config_layers', '~>0.1.4'
   spec.add_runtime_dependency 'highline', '~> 1.6.21'
   spec.add_runtime_dependency 'ansi', '>= 1.4.3'
-  #  spec.add_runtime_dependency 'bundler'
   spec.add_runtime_dependency 'encryptor', '1.3.0'
-  #  spec.add_runtime_dependency 'json', '1.7.5'
+  spec.add_runtime_dependency 'json'
+  if RUBY_VERSION.match(/1\.8/)
+    spec.add_development_dependency "ruby-debug"
+  elsif RUBY_VERSION.match(/1\.9/)
+    spec.add_development_dependency "debugger"
+    spec.add_development_dependency "rubocop", "~> 0.30.0"
+  else
+    spec.add_development_dependency "byebug"
+    spec.add_development_dependency "rubocop", "~> 0.30.0"
+  end
 end

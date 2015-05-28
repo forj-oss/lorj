@@ -15,22 +15,20 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-module Lorj
-  # Specific ALL Ruby functions, but incompatible with some other version.
-  module ObjectDataRubySpec
-    # Public functions
-    module Public
-      # Functions used to set simple data/Object for controller/process function
-      # call.
-      # TODO: to revisit this function, as we may consider simple data, as
-      # Lorj::Data object
-      def []=(*prop)
-        key = prop.clone
-        value = key.pop
-
-        return nil if [:object, :query].include?(key[0])
-        @params.rh_set(value, key)
-      end
-    end
+require 'rubygems'
+if ENV['RSPEC_DEBUG'] == 'true'
+  if /1\.8/ =~ RUBY_VERSION
+    require 'ruby-debug'
+    Debugger.start
+    alias stop debugger # rubocop: disable Style/Alias
+  elsif /1\.9/ =~ RUBY_VERSION
+    require 'debugger'
+    alias stop debugger # rubocop: disable Style/Alias
+  else
+    require 'byebug'
+    alias stop byebug # rubocop: disable Style/Alias
+  end
+else
+  def stop
   end
 end

@@ -15,9 +15,8 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-# require 'rubygems'
-#  require 'byebug'
-# require 'bundler/setup'
+require 'rubygems'
+require 'spec_helper'
 
 app_path = File.dirname(__FILE__)
 
@@ -58,12 +57,12 @@ YAMLDOC
           p_get(options)
         end
       end
-
+      stop
       @metadata = MetaAppConfigSpec.new YAML.load(data)
     end
 
     it 'sections returns [:section1, :section2].' do
-      expect(@metadata.sections).to eq([:section1, :section2, :section3])
+      expect(@metadata.sections.sort).to eq([:section1, :section2, :section3])
     end
 
     it 'sections(:data1) returns [:section1].' do
@@ -71,15 +70,20 @@ YAMLDOC
     end
 
     it 'sections(:data2) returns [:section1, :section2].' do
-      expect(@metadata.sections(:data2)).to eq([:section1, :section2])
+      expect(@metadata.sections(:data2).sort).to eq([:section1, :section2])
     end
 
-    it 'datas returns [:data1, :data2].' do
+    it 'datas returns [:data1, :data2, :data3].' do
       expect(@metadata.datas).to eq([:data1, :data2, :data3])
     end
 
-    it 'first_section(:data2) returns [:section1, :data2]' do
-      expect(@metadata.first_section(:data2)).to eq([:section1, :data2])
+    if /1\.8/ =~ RUBY_VERSION
+      puts "WARNING! first_section(:data2) won't work well on ruby 1.8 : "\
+           'Hash is not keys order preserved.'
+    else
+      it 'first_section(:data2) returns [:section1, :data2]' do
+        expect(@metadata.first_section(:data2)).to eq([:section1, :data2])
+      end
     end
 
     it 'first_section("section2#data2") returns [:section2, :data2]' do
@@ -156,7 +160,7 @@ YAMLDOC
       expect(@metadata[:sections, :section2, :data2, :option2]).to eq('value3')
       expect(@metadata.define_controller_data(:section2,
                                               :data2, data)).to eq(data)
-      expect(@metadata.sections(:data2)).to eq([:section1, :section2])
+      expect(@metadata.sections(:data2).sort).to eq([:section1, :section2])
       expect(@metadata[:sections, :section2, :data2, :option2]).to eq(:value4)
     end
 

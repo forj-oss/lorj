@@ -13,6 +13,7 @@
 #    limitations under the License.
 
 require 'highline/import'
+require 'encryptor'
 
 # Module Lorj which contains several classes.
 #
@@ -83,7 +84,7 @@ module Lorj
       return '' if enc_value.nil?
       value_hidden = ''
       begin
-        value_hidden = '*' * _get_encrypted_value(enc_value, entr).length
+        value_hidden = '*' * _get_encrypted_value(enc_value, entr, sDesc).length
       rescue => e
         PrcLib.error('Unable to decrypt your %s. You will need to re-enter it.'\
                      '\n%s', sDesc, e.message)
@@ -101,13 +102,14 @@ module Lorj
     # *parameters*:
     #   - +default+     : encrypted default value
     #   - +entropy+     : Entropy Hash
+    #   - +sDesc+       : data description
     #
     # *return*:
     # - value : decrypted value.
     #
     # *raise*:
     #
-    def _get_encrypted_value(enc_value, entr)
+    def _get_encrypted_value(enc_value, entr, sDesc)
       return '' if enc_value.nil?
       begin
         Encryptor.decrypt(
