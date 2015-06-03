@@ -49,6 +49,15 @@ module Lorj
   # puts oKey.tree      # => [:test,:test2,:test3]
   # puts oKey.key_tree  # => ':test/:test2/:test3'
   #
+  # oKey = KeyPath([:test, '{/.*/}', :test3])
+  # puts oKey.to_s      # => 'test/{\/.*\/}/test3'
+  # puts oKey.key       # => :test3
+  # puts oKey.key[0]    # => :test
+  # puts oKey.key[1]    # => '{/.*/}'
+  # puts oKey.fpath     # => ':test/{\/.*\/}/:test3'
+  # puts oKey.tree      # => [:test, '{/.*/}',:test3]
+  # puts oKey.key_tree  # => ':test/{\/.*\/}/:test3'
+  #
   class KeyPath
     def initialize(sKeyPath = nil, max_level = -1)
       @keypath = []
@@ -83,22 +92,24 @@ module Lorj
 
     def fpath
       return nil if @keypath.length == 0
-      key_access = @keypath.clone
-      key_access.each_index do |iIndex|
-        next unless key_access[iIndex].is_a?(Symbol)
-        key_access[iIndex] = ':' + key_access[iIndex].to_s
+      akey = @keypath.clone
+      akey.each_index do |i|
+        akey[i] = akey[i].gsub(%r{/}, '\/') if akey[i].is_a?(String)
+        next unless akey[i].is_a?(Symbol)
+        akey[i] = ':' + akey[i].to_s
       end
-      key_access.join('/')
+      akey.join('/')
     end
 
     def to_s
       return nil if @keypath.length == 0
-      key_access = @keypath.clone
-      key_access.each_index do |iIndex|
-        next unless key_access[iIndex].is_a?(Symbol)
-        key_access[iIndex] = key_access[iIndex].to_s
+      akey = @keypath.clone
+      akey.each_index do |i|
+        akey[i] = akey[i].gsub(%r{/}, '\/') if akey[i].is_a?(String)
+        next unless akey[i].is_a?(Symbol)
+        akey[i] = akey[i].to_s
       end
-      key_access.join('/')
+      akey.join('/')
     end
 
     def key(iIndex = -1)
@@ -116,10 +127,18 @@ module Lorj
       # rubocop: disable Style/RegexpLiteral
       if %r{[^\\/]?/[^/]} =~ sKeyPath || %r{:[^:/]} =~ sKeyPath
         # rubocop: enable Style/RegexpLiteral
-        # keypath to interpret
-        res = sKeyPath.split('/')
+        res = []
+        # split then rejoin / prefixed by \
+        sKeyPath.split('/').each do |s|
+          if res[-1] && res[-1].match(/\\$/)
+            res[-1][-1] = ''
+            res[-1] += '/' + s
+          else
+            res << s
+          end
+        end
+
         res.each_index do |iIndex|
-          next unless res[iIndex].is_a?(String)
           # Ruby 1.8   : 'ab'[1] => 98 and 'ab'[1, 1] => 'b'
           # Ruby 1.9 + : 'ab'[1] => 'b' and 'ab'[1, 1] => 'b'
           res[iIndex] = res[iIndex][1..-1].to_sym if res[iIndex][0, 1] == ':'

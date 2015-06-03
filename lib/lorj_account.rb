@@ -63,6 +63,7 @@ module Lorj
   # This class limits ERB template to access only to config object data.
   class ERBConfig
     attr_reader :config
+    attr_accessor :data
 
     def initialize(config)
       @config = config
