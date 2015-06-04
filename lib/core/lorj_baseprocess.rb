@@ -331,13 +331,27 @@ module Lorj
       list.each do |oElem|
         is_found = true
         sQuery.each do |key, value|
-          if oElem[key] != value
+          unless _qs_check_query_valid?(oElem, key, value)
             is_found = false
             break
           end
         end
         :remove unless is_found
       end
+    end
+
+    def _qs_check_query_valid?(elem, key, value)
+      if value.is_a?(Array)
+        path = value.clone
+        v = path.pop
+        return false if elem[key].nil?
+        where = elem[key].rh_get(path)
+        return true if where.is_a?(Array) && where.flatten.include?(v)
+        return true if where == v
+      else
+        return true if elem[key] == value
+      end
+      false
     end
 
     def _qs_info_init(sInfoMsg)
