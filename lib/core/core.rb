@@ -294,6 +294,27 @@ module Lorj
       @core_object.process_setup(oCloudObj)
     end
 
+    # Function to add an object to Lorj cache.
+    #
+    # This function is typically used when a previous query has been
+    # executed and you want to keep the object in lorj cache.
+    # Lorj cache is used by create/delete/etc... To avoid requerying or
+    # creating those objects (+dependencies) if missing.
+    #
+    # * *Args* :
+    #   - +oObject+     : object to register.
+    #   - +sObjectType+ : Object type to register.
+    #     By default, the object type is determined by the Object itself
+    #     if this object is an ObjectData. Otherwise, you need to define the
+    #     object type.
+    #
+    # * *Raises* :
+    #   No exceptions
+    def register(oObject, sObjectType = nil) #:doc:
+      return nil if !oObject || !@core_object
+      @core_object.register(oObject, sObjectType)
+    end
+
     # Core parameters are:
     # the_config : Optional. An instance of a configuration system which *HAVE*
     # to provide get/set/exist?/[]/[]=
