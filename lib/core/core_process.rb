@@ -127,7 +127,10 @@ module Lorj
 
       proc = PrcLib.model.meta_obj.rh_get(object_type, :lambdas, :delete_e)
 
-      return nil if proc.nil?
+      if proc.nil?
+        _remove_instant_config(hConfig)
+        return nil
+      end
 
       # Check required parameters
       _process_load_dependencies(object_type, proc, :delete_e, __callee__)
@@ -208,11 +211,17 @@ module Lorj
 
       # Check if we can re-use a previous query
       list = query_cache(object_type, hQuery)
-      return list unless list.nil?
+      unless list.nil?
+        _remove_instant_config(hConfig)
+        return list
+      end
 
       proc = PrcLib.model.meta_obj.rh_get(object_type, :lambdas, :query_e)
 
-      return nil if proc.nil?
+      if proc.nil?
+        _remove_instant_config(hConfig)
+        return nil
+      end
 
       # Check required parameters
       _process_load_dependencies(object_type, proc, :query_e, __callee__)
@@ -293,7 +302,10 @@ module Lorj
 
       proc = PrcLib.model.meta_obj.rh_get(object_type, :lambdas, :get_e)
 
-      return nil if proc.nil?
+      if proc.nil?
+        _remove_instant_config(hConfig)
+        return nil
+      end
 
       # Check required parameters
       _process_load_dependencies(object_type, proc, :get_e, __callee__)
@@ -356,7 +368,10 @@ module Lorj
 
       proc = PrcLib.model.meta_obj.rh_get(object_type, :lambdas, :update_e)
 
-      return nil if proc.nil?
+      if proc.nil?
+        _remove_instant_config(hConfig)
+        return nil
+      end
 
       _process_load_dependencies(object_type, proc, :update_e, __callee__)
 
