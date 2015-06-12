@@ -87,8 +87,21 @@ module Lorj
     # * *Raises* :
     #   - +Error+ if the key do not exist.
     def required?(oParams, *key)
-      return if oParams.exist?(key)
-
+      if oParams.exist?(key)
+        if RUBY_VERSION =~ /1\.8/
+          #  debugger # rubocop: disable Lint/Debugger
+          if oParams.otype?(*key) == :DataObject &&
+             oParams[key, :ObjectData].empty?
+            controller_error '%s is empty.', key
+          end
+        else
+          if oParams.type?(*key) == :DataObject &&
+             oParams[key, :ObjectData].empty?
+            controller_error '%s is empty.', key
+          end
+        end
+        return
+      end
       controller_error '%s is not set.', key
     end
   end

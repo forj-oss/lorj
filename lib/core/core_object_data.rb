@@ -235,9 +235,12 @@ module Lorj
 
     def type?(key)
       return nil unless @params.rh_exist?(key)
-      return :DataObject if @params[key].type == :object
+      return :DataObject if @params[key].class == Lorj::Data &&
+                            @params[key].type == :object
       :data
     end
+
+    alias :'otype?' :'type?' if RUBY_VERSION =~ /1\.8/ # rubocop: disable Alias
 
     def to_s
       str = "-- Lorj::ObjectData --\n"
