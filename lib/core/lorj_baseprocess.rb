@@ -111,6 +111,16 @@ module Lorj
   class BaseProcess
     private
 
+    def account_export(map = nil, with_name = true, account_only = false) #:doc:
+      fail Lorj::PrcError.new, 'No Base object loaded.' unless @base_object
+      @base_object.account_export(map, with_name, account_only)
+    end
+
+    def account_import(key, enc_hash, name = nil, controller = nil) #:doc:
+      fail Lorj::PrcError.new, 'No Base object loaded.' unless @base_object
+      @base_object.account_export(key, enc_hash, name, controller)
+    end
+
     def query_cache_cleanup(sObjectType) #:doc:
       fail Lorj::PrcError.new, 'No Base object loaded.' unless @base_object
       @base_object.query_cleanup(sObjectType)

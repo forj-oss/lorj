@@ -12,11 +12,10 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-# Defaults yaml file used for rspec.
-:default:
-  :maestro_url: http://example.org
-  :keypair_name: default_key
-  :data: None
-  :default_case2: 'success'
-:description:
-  :FORJ_HPC: Testing extra application default value.
+# Account example file. The structure on this file is defined by
+:account:
+  :name: test
+  :provider: :mock
+:credentials:
+  :keypair_name: 'mykey'
+  :key: 'txE/s8KgWVaYZjYkGIZ3yA=='

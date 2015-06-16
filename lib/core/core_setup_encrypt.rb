@@ -14,6 +14,7 @@
 
 require 'highline/import'
 require 'encryptor'
+require 'base64'
 
 # Module Lorj which contains several classes.
 #
@@ -27,16 +28,37 @@ require 'encryptor'
 module Lorj
   # Adding encrypt core functions.
   class BaseDefinition
+    private
+
+    # internal runtime function to create a new key
+    # *parameters*:
+    #   - +new+       : true to create a new key.
+    #
+    # *return*:
+    #   - entropy: Hash. Entropy data used as key to encrypt values.
+    #     Details from encryptor's gem.
+    #     - :key: password
+    #     - :salt : String current time number
+    #     - :iv: Base64 random iv
+    def _new_encrypt_key(key = rand(36**10).to_s(36))
+      random_iv = OpenSSL::Cipher::Cipher.new('aes-256-cbc').random_iv
+      {
+        :key => key,
+        :salt => Time.now.to_i.to_s,
+        :iv => Base64.strict_encode64(random_iv)
+      }
+    end
+
     # internal runtime function for process call
     # Get encrypted value hidden by *
     #
+    # Use PrcLib.pdata_path to store/read a '.key' file
+    #
     # *parameters*:
-    #   - +sDesc+       : data description
-    #   - +default+     : encrypted default value
-    #   - +entropy+     : Entropy Hash
+    #   - +new+       : true to create a new key.
     #
     # *return*:
-    # - value : encrypted value.
+    # - value : encrypted key value.
     #
     # *raise*:
     #
@@ -45,17 +67,12 @@ module Lorj
       key_file = File.join(PrcLib.pdata_path, '.key')
       if !File.exist?(key_file)
         # Need to create a random key.
-        random_iv = OpenSSL::Cipher::Cipher.new('aes-256-cbc').random_iv
-        entr = {
-          :key => rand(36**10).to_s(36),
-          :salt => Time.now.to_i.to_s,
-          :iv => Base64.strict_encode64(random_iv)
-        }
+        entr = _new_encrypt_key
 
         Lorj.debug(2, "Writing '%s' key file", key_file)
-        PrcLib.ensure_dir_exists(
-          PrcLib.pdata_path
-        ) unless PrcLib.dir_exists?(PrcLib.pdata_path)
+        unless PrcLib.dir_exists?(PrcLib.pdata_path)
+          PrcLib.ensure_dir_exists(PrcLib.pdata_path)
+        end
         File.open(key_file, 'w+') do |out|
           out.write(Base64.encode64(entr.to_yaml))
         end
@@ -118,10 +135,27 @@ module Lorj
           :iv => Base64.strict_decode64(entr[:iv]),
           :salt => entr[:salt]
         )
-      rescue
-        PrcLib.error('Unable to decrypt your %s. You will need to re-enter it.',
-                     sDesc)
+      rescue => e
+        PrcLib.error("Unable to decrypt your %s.\n"\
+                     "%s\n"\
+                     ' You will need to re-enter it.',
+                     sDesc, e)
       end
+    end
+
+    # Function to encrypt a data with a entr key.
+    #
+    # *return*:
+    # - value : encrypted value in Base64 encoded data.
+    def _encrypt_value(value, entr)
+      Base64.strict_encode64(
+        Encryptor.encrypt(
+          :value => value,
+          :key => entr[:key],
+          :iv => Base64.strict_decode64(entr[:iv]),
+          :salt => entr[:salt]
+        )
+      )
     end
 
     # internal runtime function for process call
@@ -132,7 +166,7 @@ module Lorj
     #   - +default+     : encrypted default value
     #
     # *return*:
-    # - value : encrypted value.
+    # - value : encrypted value in Base64.
     #
     # *raise*:
     #
@@ -160,14 +194,7 @@ module Lorj
           PrcLib.message('%s cannot be empty.', sDesc) if value_free == ''
         end
       end
-      Base64.strict_encode64(
-        Encryptor.encrypt(
-          :value => value_free,
-          :key => entr[:key],
-          :iv => Base64.strict_decode64(entr[:iv]),
-          :salt => entr[:salt]
-        )
-      )
+      _encrypt_value(value_free, entr)
     end
   end
 end

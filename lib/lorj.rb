@@ -48,6 +48,7 @@ require 'core/core_controller'     # Lorj core controller functions
 require 'core/core_object_data'    # Lorj ObjectData class
 require 'core/lorj_data'           # Lorj Lorj::Data object
 require 'core/lorj_basedefinition' # Lorj Lorj::BaseDefinition object
+require 'core/core_import_export'  # Import/export functions
 require 'core/lorj_baseprocess'    # Lorj Lorj::BaseProcess object
 require 'core/lorj_basecontroller' # Lorj Lorj::BaseController object
 require 'core/lorj_keypath'        # Lorj Lorj::BaseDefinition object

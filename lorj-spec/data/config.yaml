@@ -11,12 +11,5 @@
 #    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
-
-# Defaults yaml file used for rspec.
+---
 :default:
-  :maestro_url: http://example.org
-  :keypair_name: default_key
-  :data: None
-  :default_case2: 'success'
-:description:
-  :FORJ_HPC: Testing extra application default value.

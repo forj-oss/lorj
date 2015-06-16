@@ -460,12 +460,28 @@ module Lorj
   class Account
     def ac_new(sAccountName, provider_name)
       return nil if sAccountName.nil?
+      ac_erase
+      ac_update(sAccountName, provider_name)
+    end
+
+    # update Account protected data
+    # account name and provider name.
+    #
+    def ac_update(sAccountName, provider_name)
+      return nil if sAccountName.nil?
       @account_name = sAccountName
       index = layer_index('account')
 
       account = @config_layers[index][:config]
-      account.erase
       account.ac_new sAccountName, provider_name
+    end
+
+    def ac_erase
+      index = layer_index('account')
+
+      account = @config_layers[index][:config]
+      account.erase
+      true
     end
 
     # Load Account Information

@@ -229,6 +229,13 @@ describe 'class: Lorj::Account,' do
       expect(@account.where?(:data)).to eq(%w(runtime account))
     end
 
+    it 'account.ac_erase return true, and :data disappeared.' do
+      expect(@account.ac_erase).to equal(true)
+      expect(@account.where?(:data)).to eq(%w(runtime))
+      expect(@account.ac_load 'test1').to equal(true)
+      expect(@account.where?(:data)).to eq(%w(runtime account))
+    end
+
     it "account.get(:keypair_name, :name => 'account') return "\
        "saved 'nova_test2'" do
       expect(@account.get(:keypair_name, nil,

@@ -35,7 +35,7 @@ Gem::Specification.new do |spec|
     '--title Lorj - The Process Controllers framework system' << \
     '--main README.md'
 
-  spec.add_runtime_dependency 'config_layers', '~>0.1.4'
+  spec.add_runtime_dependency 'config_layers', '~>0.1.5'
   spec.add_runtime_dependency 'highline', '~> 1.6.21'
   spec.add_runtime_dependency 'ansi', '>= 1.4.3'
   spec.add_runtime_dependency 'encryptor', '1.3.0'

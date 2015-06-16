@@ -66,7 +66,6 @@ describe 'Module PrcLib: ' do
   end
 
   it 'default app is lorj and cannot be updated.' do
-    stop
     PrcLib.spec_cleanup
     expect(PrcLib.app_name).to eq('lorj')
     PrcLib.app_name = 'lorj-spec'

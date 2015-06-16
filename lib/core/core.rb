@@ -310,9 +310,44 @@ module Lorj
     #
     # * *Raises* :
     #   No exceptions
-    def register(oObject, sObjectType = nil) #:doc:
+    def register(oObject, sObjectType = nil)
       return nil if !oObject || !@core_object
       @core_object.register(oObject, sObjectType)
+    end
+
+    # Function to import an encrypted Hash as a Lorj Account.
+    #
+    # For details about this functions, see #Lorj::BaseDefinition.account_import
+    #
+    # * *Args* :
+    #   - +key+      : key to use to decrypt the 'enc_hash'.
+    #   - +enc_hash+ : Encrypted Hash.
+    #
+    # * *Raises* :
+    #   No exceptions
+    def account_import(key, enc_hash, name = nil, controller = nil)
+      return nil if @core_object.nil?
+      @core_object.account_import(key, enc_hash, name, controller)
+    end
+
+    # Function to export a Lorj Account in an encrypted Hash.
+    #
+    # For details about this functions, see #Lorj::BaseDefinition.account_export
+    #
+    # * *Args* :
+    #   - +map+       : Hash map of fields to extract. if map is nil, the
+    #     export function will loop in the list of keys in the 'account' layer.
+    #   - +with_name+ : True to extract :name and :provider as well.
+    #     True by default.
+    #
+    # * *returns* :
+    #   - key: String. Key used to encrypt.
+    #   - env_hash: String. Base64 encrypted Hash.
+    #   OR
+    #   - nil if issues.
+    def account_export(map = nil, with_name = true)
+      return nil if @core_object.nil?
+      @core_object.account_export(map, with_name)
     end
 
     # Core parameters are:

@@ -44,16 +44,38 @@ module PrcLib
   # app_name is set to 'lorj' if not set.
   #
   def spec_cleanup
-    @app_name = nil
-    @pdata_path = nil
-    @data_path = nil
-    @model = nil
-    @app_defaults = nil
-    @log_file = nil
-    @level = nil
-    @log = nil
-    # @lib_path is set by require 'lorj'. We should never update it.
-    # @core_level is set by require 'lorj'. We should never update it.
+    instance_variables.each do |v|
+      # @lib_path is set by require 'lorj'. We should never update it.
+      # @core_level is set by require 'lorj'. We should never update it.
+      next if [:'@lib_path', :'@core_level'].include?(v)
+      instance_variable_set(v, nil)
+    end
+  end
+
+  def to_s
+    a = {}
+    instance_variables.each do |v|
+      a[v] = instance_variable_get(v)
+    end
+    a
+  end
+end
+
+# Define some spec addon
+module Lorj
+  module_function
+
+  # Attribute app_name
+  #
+  # app_name is set to 'lorj' if not set.
+  #
+  def spec_cleanup
+    instance_variables.each do |v|
+      # @lib_path is set by require 'lorj'. We should never update it.
+      # @core_level is set by require 'lorj'. We should never update it.
+      next if [:'@lib_path', :'@core_level'].include?(v)
+      instance_variable_set(v, nil)
+    end
   end
 
   def to_s

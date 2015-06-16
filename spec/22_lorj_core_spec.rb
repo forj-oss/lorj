@@ -48,6 +48,7 @@ describe 'Lorj::Core,' do
   it 'Lorj::Core.new(nil, :mock) return an error' do
     expect { Lorj::Core.new(nil, :mock) }.to raise_error(Lorj::PrcError)
   end
+
   it 'Lorj::Core.new(nil, [{ :process_module => :mock}]) gets loaded.' do
     expect(core = Lorj::Core.new(nil, [{ :process_module => :mock }])).to be
     expect(core.config).to be
