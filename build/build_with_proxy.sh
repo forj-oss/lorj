@@ -37,7 +37,7 @@ fi
 if [ "$http_proxy" = "" ]
 then
    echo "Currently, no proxy is set. Running docker without proxy"
-   docker build $TAG
+   docker build $TAG .
    exit
 fi
 
