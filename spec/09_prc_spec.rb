@@ -15,23 +15,47 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-#  require 'byebug'
+# This spec manipulate Lorj and PrcLib module
+#
+# In the context on a complete rspec run (rake spec)
+# modules required are loaded once only.
+# So, PrcLib will need to be reloaded (load) with the spec addon.
 
-require 'rubygems'
+# spec_helper added:
+# PrcLib.spec_cleanup, to simply cleanup the library loaded.
+# This is easier than unload module and reload them later with load from all
+# Files which update PrcLib.
+# To debug spec, depending on Ruby version, you may need to install
+# 1.8 => ruby-debug
+# 1.9 => debugger
+# 2.0+ => byebug
+# The right debugger should be installed by default by bundle
+# So, just call:
+#
+#     bundle
+#
+# Then set RSPEC_DEBUG=true, put a 'stop' where you want in the spec code
+# and start rspec or even rake spec.
+#
+#     RSPEC_DEBUG=true rake spec_local (or spec which includes docker spec)
+# OR
+#     RSPEC_DEBUG=true rspec -f doc --color spec/<file>_spec.rb
+#
+
 require 'spec_helper'
 
 app_path = File.dirname(__FILE__)
-$LOAD_PATH << File.join(app_path, '..', 'lib')
 
 describe 'Module PrcLib: ' do
   after(:all) do
     Object.send(:remove_const, :PrcLib)
     load File.join(app_path, '..', 'lib', 'prc.rb') # Load prc
     load File.join(app_path, '..', 'lib', 'logging.rb') # Load logging
+    load File.join(app_path, '..', 'lib', 'lorj.rb') # Load prc
+    load File.join(app_path, 'spec_helper.rb') # Reload spec PrcLib addon
   end
 
   it 'load Lorj and PrcLib Modules' do
-    require 'lorj' # Load lorj framework
     expect(Lorj).to be
     expect(PrcLib).to be
   end
@@ -42,6 +66,8 @@ describe 'Module PrcLib: ' do
   end
 
   it 'default app is lorj and cannot be updated.' do
+    stop
+    PrcLib.spec_cleanup
     expect(PrcLib.app_name).to eq('lorj')
     PrcLib.app_name = 'lorj-spec'
     expect(PrcLib.app_name).to eq('lorj')

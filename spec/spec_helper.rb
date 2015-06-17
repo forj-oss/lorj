@@ -32,3 +32,35 @@ else
   def stop
   end
 end
+
+require 'lorj'
+
+# Define some spec addon
+module PrcLib
+  module_function
+
+  # Attribute app_name
+  #
+  # app_name is set to 'lorj' if not set.
+  #
+  def spec_cleanup
+    @app_name = nil
+    @pdata_path = nil
+    @data_path = nil
+    @model = nil
+    @app_defaults = nil
+    @log_file = nil
+    @level = nil
+    @log = nil
+    # @lib_path is set by require 'lorj'. We should never update it.
+    # @core_level is set by require 'lorj'. We should never update it.
+  end
+
+  def to_s
+    a = {}
+    instance_variables.each do |v|
+      a[v] = instance_variable_get(v)
+    end
+    a
+  end
+end

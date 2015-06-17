@@ -15,12 +15,24 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-require 'rubygems'
+# To debug spec, depending on Ruby version, you may need to install
+# 1.8 => ruby-debug
+# 1.9 => debugger
+# 2.0+ => byebug
+# The right debugger should be installed by default by bundle
+# So, just call:
+#
+#     bundle
+#
+# Then set RSPEC_DEBUG=true, put a 'stop' where you want in the spec code
+# and start rspec or even rake spec.
+#
+#     RSPEC_DEBUG=true rake spec_local (or spec which includes docker spec)
+# OR
+#     RSPEC_DEBUG=true rspec -f doc --color spec/<file>_spec.rb
+#
+
 require 'spec_helper'
-
-$LOAD_PATH << File.join(File.dirname(__FILE__), '..', 'lib/core')
-
-require 'lorj'
 
 describe 'Lorj::ObjectData' do
   context 'initialize with internal false' do

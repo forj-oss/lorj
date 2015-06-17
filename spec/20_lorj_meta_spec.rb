@@ -15,14 +15,24 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-require 'rubygems'
+# To debug spec, depending on Ruby version, you may need to install
+# 1.8 => ruby-debug
+# 1.9 => debugger
+# 2.0+ => byebug
+# The right debugger should be installed by default by bundle
+# So, just call:
+#
+#     bundle
+#
+# Then set RSPEC_DEBUG=true, put a 'stop' where you want in the spec code
+# and start rspec or even rake spec.
+#
+#     RSPEC_DEBUG=true rake spec_local (or spec which includes docker spec)
+# OR
+#     RSPEC_DEBUG=true rspec -f doc --color spec/<file>_spec.rb
+#
+
 require 'spec_helper'
-
-app_path = File.dirname(__FILE__)
-
-$LOAD_PATH << File.join(app_path, '..', 'lib')
-
-require 'lorj' # Load lorj framework
 
 describe 'Lorj::MetaAppConfig,' do
   context 'core with sample initialized,' do
@@ -57,11 +67,12 @@ YAMLDOC
           p_get(options)
         end
       end
-      stop
+
       @metadata = MetaAppConfigSpec.new YAML.load(data)
     end
 
     it 'sections returns [:section1, :section2].' do
+      # Ruby 1.8 requires to use sort, as Hash do not have order garantee
       expect(@metadata.sections.sort).to eq([:section1, :section2, :section3])
     end
 
@@ -70,11 +81,13 @@ YAMLDOC
     end
 
     it 'sections(:data2) returns [:section1, :section2].' do
+      # Ruby 1.8 requires to use sort, as Hash do not have order garantee
       expect(@metadata.sections(:data2).sort).to eq([:section1, :section2])
     end
 
     it 'datas returns [:data1, :data2, :data3].' do
-      expect(@metadata.datas).to eq([:data1, :data2, :data3])
+      # Ruby 1.8 requires to use sort, as Hash do not have order garantee
+      expect(@metadata.datas.sort).to eq([:data1, :data2, :data3].sort)
     end
 
     if /1\.8/ =~ RUBY_VERSION
@@ -160,6 +173,7 @@ YAMLDOC
       expect(@metadata[:sections, :section2, :data2, :option2]).to eq('value3')
       expect(@metadata.define_controller_data(:section2,
                                               :data2, data)).to eq(data)
+      # Ruby 1.8 requires to use sort, as Hash do not have order garantee
       expect(@metadata.sections(:data2).sort).to eq([:section1, :section2])
       expect(@metadata[:sections, :section2, :data2, :option2]).to eq(:value4)
     end
