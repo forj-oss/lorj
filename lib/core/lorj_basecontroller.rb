@@ -104,5 +104,159 @@ module Lorj
       end
       controller_error '%s is not set.', key
     end
+
+    private
+
+    # controller helper function:
+    # This helper controller function helps to query and object list
+    # from a Lorj query Hash. See query Hash details in #ctrl_query_match.
+    #
+    # * *args*:
+    #   - +objects+ : Collection of object which respond to each
+    #   - +query+   : Hash. Containing a list of attributes to test
+    #     See #ctrl_do_query_match for details
+    #   - +&block+  : block to extract the object data from a key.
+    def ctrl_query_each(objects, query) # :doc:
+      results = []
+      Lorj.debug(4, "Filtering with '%s'", query)
+      unless objects.class.method_defined?(:each)
+        controller_error "'%s' do not have 'each' function.", objects.class
+      end
+      objects.each do |o|
+        if block_given?
+          selected = ctrl_do_query_match(o, query) { |d, k| yield d, k }
+        else
+          selected = ctrl_do_query_match(o, query)
+        end
+        results.push o if selected
+      end
+      Lorj.debug(4, '%d records selected', results.length)
+      results
+    end
+
+    # controller helper function:
+    # Function to return match status
+    # from a list of attributes regarding a query attribute list
+    #
+    # * *args*:
+    #   - +object+ : Object to query.
+    #   - +query+  : Hash containing a list of attributes to test
+    #     The query value support several cases:
+    #     - Regexp : must Regexp.match
+    #     - default equality : must match ==
+    #   - +&block+ : block to extract the object data from a key.
+    #
+    # * *returns*:
+    #   - true if this object is selected by the query.
+    # OR
+    #   - false otherwise
+    #
+    # * *exception*:
+    #   - No exception
+    #
+    #   by default, this function will extract data from the object
+    #   with followinf functions: If one fails, it will try the next one.
+    #   :[], or :key or &block.
+    #   The optional &block is a third way defined by the controller to extract
+    #   data.
+    #   The &block is defined as followed:
+    #   * *args*:
+    #     - +object+ : The object to get data from
+    #     - +key+    : The key used to extract data
+    #   * *returns*:
+    #     - value extracted.
+    #   * *exception*:
+    #     - Any object exception during data extraction.
+    #
+    def ctrl_do_query_match(object, query)
+      selected = true
+      query.each do |key, match_value|
+        if block_given?
+          found, v = _get_from(object, key) { |d, k| yield d, k }
+        else
+          found, v = _get_from(object, key)
+        end
+
+        Lorj.debug(4, "'%s.%s' = '%s'", object.class, key, v) if found
+
+        selected = lorj_filter_regexp(v, match_value)
+        selected |= lorj_filter_default(v, match_value)
+        break unless selected
+      end
+      Lorj.debug(4, 'object selected.') if selected
+      selected
+    end
+
+    def ctrl_query_select(query, *limit)
+      return {} if limit.length == 0
+      query.select { |_k, v| limit.include?(v.class) }
+    end
+
+    def _get_from(data, key)
+      ret = nil
+      found = nil
+
+      [:[], key].each do |f|
+        found, ret = _get_from_func(data, key, f)
+        break if found
+      end
+      return [found, ret] if found || !block_given?
+
+      begin
+        Lorj.debug(4, "yield extract '%s' from '%s'", key, object.class)
+        return [true, yield(data, key)]
+      rescue
+        PrcLib.error("yield extract '%s' from '%s' error  \n%s",
+                     key, object.class, e)
+      end
+      [false, nil]
+    end
+
+    def _get_from_func(data, key, func = nil)
+      func = key if func.nil?
+      v = nil
+      if data.class.method_defined?(func)
+        begin
+          found = true
+          if key == func
+            Lorj.debug(5, "extract try with '%s.%s'", data.class, func)
+            v = data.send(func)
+          else
+            Lorj.debug(5, "extract try with '%s.%s(%s)'",
+                       data.class, func, key)
+            v = data.send(func, key)
+          end
+        rescue => e
+          Lorj.debug(5, "'%s': error reported by '%s.%s(%s)'\n%s",
+                     __method__, data.class, func, key, e)
+          found = false
+        end
+      end
+      [found, v]
+    end
+    # Function to check if a value match a regexp
+    #
+    # * *returns*:
+    #   - true if the match is not a regexp, or if regexp match
+    # OR
+    #   - false otherwise
+    #
+    def lorj_filter_regexp(value, match_value)
+      return false unless match_value.is_a?(Regexp)
+
+      return true if match_value.match(value)
+      false
+    end
+
+    # Function to check if a value match a filter value.
+    #
+    # * *returns*:
+    #   - true if match
+    # OR
+    #   - false otherwise
+    #
+    def lorj_filter_default(value, match_value)
+      (value == match_value)
+    end
   end
 end
