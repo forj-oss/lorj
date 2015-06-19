@@ -350,6 +350,8 @@ module Lorj
       end
     end
 
+    # rubocop: disable Metrics/CyclomaticComplexity
+    # rubocop: disable Metrics/PerceivedComplexity
     def _qs_check_query_valid?(elem, key, value)
       if value.is_a?(Array)
         path = value.clone
@@ -358,11 +360,15 @@ module Lorj
         where = elem[key].rh_get(path)
         return true if where.is_a?(Array) && where.flatten.include?(v)
         return true if where == v
+      elsif value.is_a?(Regexp)
+        return true if value.match(elem[key])
       else
         return true if elem[key] == value
       end
       false
     end
+    # rubocop : enable Metrics/CyclomaticComplexity
+    # rubocop : enable Metrics/PerceivedComplexity
 
     def _qs_info_init(sInfoMsg)
       info = {
