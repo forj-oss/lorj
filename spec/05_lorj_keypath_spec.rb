@@ -32,6 +32,8 @@
 #     RSPEC_DEBUG=true rspec -f doc --color spec/<file>_spec.rb
 #
 
+app_path = File.dirname(__FILE__)
+$LOAD_PATH << app_path unless $LOAD_PATH.include?(app_path)
 require 'spec_helper'
 
 describe 'Lorj::KeyPath' do

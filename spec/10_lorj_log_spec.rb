@@ -32,9 +32,9 @@
 #     RSPEC_DEBUG=true rspec -f doc --color spec/<file>_spec.rb
 #
 
+app_path = File.dirname(__FILE__)
+$LOAD_PATH << app_path unless $LOAD_PATH.include?(app_path)
 require 'spec_helper'
-
-app_path = File.dirname(File.dirname(__FILE__))
 
 # This spec HAVE to the the first one executed!
 # Do never create a file or rename this file, which will
@@ -77,7 +77,7 @@ describe 'Module: Lorj,' do
     it 'create PrcLib.log object at first message' do
       PrcLib.level = Logger::FATAL
       PrcLib.app_name = 'lorj-spec'
-      PrcLib.app_defaults = File.join(app_path, 'lorj-spec')
+      PrcLib.app_defaults = File.join(File.dirname(app_path), 'lorj-spec')
 
       PrcLib.debug 'Rspec logging ...'
 

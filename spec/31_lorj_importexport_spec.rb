@@ -32,9 +32,9 @@
 #     RSPEC_DEBUG=true rspec -f doc --color spec/<file>_spec.rb
 #
 
-require 'spec_helper'
-
 app_path = File.dirname(__FILE__)
+$LOAD_PATH << app_path unless $LOAD_PATH.include?(app_path)
+require 'spec_helper'
 
 describe 'Internal BaseDefinition features' do
   context 'From a derived class' do
