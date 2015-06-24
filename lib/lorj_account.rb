@@ -386,6 +386,8 @@ module Lorj
     # * *Raises* :
     #   Nothing
     def set(key, value, options = {})
+      options[:name] = 'runtime' unless options.key?(:name)
+
       parameters = validate_key_and_options(key, options)
       return nil if parameters.nil?
 
