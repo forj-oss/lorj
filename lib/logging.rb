@@ -82,8 +82,6 @@ module PrcLib
   # For details, see Logging functions
   #
   class Logging
-    attr_reader :level
-
     # Initialize Logging instance
     # The log file name is defined by PrcLib.log_file
     # The log path is defined by PrcLib.app_name and will be kept as
@@ -96,7 +94,7 @@ module PrcLib
       file_logger_initialize
 
       @out_logger = Logger.new(STDOUT)
-      @level = (PrcLib.level.nil? ? Logger::WARN : PrcLib.level)
+      @level = Logger::WARN
       @out_logger.level = @level
       @out_logger.formatter = proc do |severity, _datetime, _progname, msg|
         case severity
@@ -168,6 +166,8 @@ module PrcLib
       @level = level
       @out_logger.level = level
     end
+
+    attr_reader :level
 
     # Print out a message, not logged in the log file. This message is printed
     # out systematically as not taking care of logger level.
@@ -265,6 +265,10 @@ module PrcLib
   def level=(level)
     log_object.level = level
     nil
+  end
+
+  def level
+    log_object.level
   end
 
   # Print the message to the same line.

@@ -74,8 +74,12 @@ describe 'Module: Lorj,' do
       expect(PrcLib.log_file).to eq(log)
     end
 
-    it 'create PrcLib.log object at first message' do
+    it 'set logger level' do
       PrcLib.level = Logger::FATAL
+      expect(PrcLib.level).to equal(Logger::FATAL)
+    end
+
+    it 'create PrcLib.log object at first message' do
       PrcLib.app_name = 'lorj-spec'
       PrcLib.app_defaults = File.join(File.dirname(app_path), 'lorj-spec')
 
