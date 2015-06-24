@@ -86,7 +86,7 @@ module Base64
   # This method complies with RFC 4648.
   # No line feeds are added.
   def strict_encode64(bin)
-    [bin].pack('m0')
+    [bin].pack('m0').strip
   end
 
   # Returns the Base64-decoded version of +str+.
