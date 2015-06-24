@@ -30,10 +30,10 @@ if ARGV.length <= 3
        "                Format: <datapath>=<process>[@<libToLoad]\n"\
        "  datapath    : Path where Lorj store data.\n"\
        "  process     : Lorj process name to load. It can be a path to a\n"\
-       '                process file.'\
+       "                process file.\n"\
        "  libToLoad   : Optional. Ruby library containing The Lorj process.\n"\
        "                If missing, it will try to load a lib named \n"\
-       '                lorj_<process>'\
+       "                lorj_<process>\n"\
        'key           : Base64 encoded key. Used to decrypt the <CloudDataFi'\
        "le>\n"\
        "CloudDataFile : File containing the Lorj cloud data to import.\n"\
