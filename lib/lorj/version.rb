@@ -16,6 +16,6 @@
 
 # Lorj version
 module Lorj
-  VERSION = '1.0.13'
-  DATE = '2015-06-22'
+  VERSION = '1.0.14'
+  DATE = '2015-06-24'
 end
