@@ -22,13 +22,62 @@ require 'lorj'
 #  require 'ruby-debug'
 #  Debugger.start
 
+# Class to test encryted data.
+class Test < Lorj::BaseDefinition
+  def initialize(core)
+    @core = core
+  end
+
+  def self.def_internal(name)
+    spec_name = 's' + name
+
+    # To call the function identified internally with 'spec' prefix
+    define_method(spec_name) do |*p|
+      send(name, *p)
+    end
+  end
+
+  # Internal function to test.
+  def_internal '_get_encrypt_key'
+  def_internal '_get_encrypted_value'
+
+  def run
+    puts 'Checking imported account...'
+    tests = [:account_key_test]
+    tests.each { |t| send(t) if self.class.private_method_defined?(t) }
+  end
+
+  private
+
+  def account_key_test
+    entr = _get_encrypt_key
+    data = @core.config['credentials#account_key']
+
+    res = _get_encrypted_value(data, entr, 'credentials#account_key')
+
+    test_state(!res.nil?, 'Account key', data)
+  end
+
+  def test_state(res, test, value)
+    test_str = "#{test}. (#{value})"
+    if res
+      puts "OK   : #{test_str}"
+    else
+      puts "FAIL : #{test_str}"
+    end
+  end
+end
+
+# TODO: Implement Thor instead of ARGV use.
 if ARGV.length <= 3
   puts "Syntax is 'ruby #{__FILE__}' <LorjRef> <key> <CloudDataFile> "\
        "[<AccountName[@provider]>]\n"\
        "where:\n"\
        "LorjRef       : Lorj application struture to use. \n"\
-       "                Format: <datapath>=<process>[@<libToLoad]\n"\
+       '                Format: <datapath[|<pdatapath>]>='\
+       "<process>[@<libToLoad]\n"\
        "  datapath    : Path where Lorj store data.\n"\
+       "  pdatapath   : Path where Lorj store private data.\n"\
        "  process     : Lorj process name to load. It can be a path to a\n"\
        "                process file.\n"\
        "  libToLoad   : Optional. Ruby library containing The Lorj process.\n"\
@@ -45,20 +94,23 @@ end
 
 ref, key_encoded, data_file, account = ARGV
 
-ref_found = ref.match(/^(.*)=(.*?)(@(.*))?$/)
+ref_found = ref.match(/^(.*(\|(.*))?)=(.*?)(@(.*))?$/)
 
 unless ref_found
-  puts 'LorjRef must be formatted as : <datapath>=<process>[@<libToLoad]'
+  puts 'LorjRef must be formatted as : <datapath[|<pdatapath>]>='\
+       '<process>[@<libToLoad]'
   exit 1
 end
 
 datapath = ref_found[1]
-process = ref_found[2]
+pdatapath = datapath
+pdatapath = ref_found[3] unless ref_found[3].nil?
+process = ref_found[4]
 
-if ref_found[3].nil?
+if ref_found[6].nil?
   lib_name = "lorj_#{process}"
 else
-  lib_name = ref_found[4]
+  lib_name = ref_found[6]
 end
 
 unless File.exist?(data_file)
@@ -105,6 +157,7 @@ end
 name, controller = account.split('@') unless account.nil?
 
 PrcLib.data_path = datapath
+PrcLib.pdata_path = pdatapath
 
 keypath = Lorj::KeyPath.new(process)
 
@@ -114,15 +167,16 @@ core = Lorj::Core.new(Lorj::Account.new, processes)
 
 data = File.read(data_file).strip
 
-#  debugger # rubocop: disable Lint/Debugger
-
 core.account_import(entr, data, name, controller)
 
 puts 'Import done.'
 
-if core.config.ac_save
-  puts "Config imported and saved in #{core.config['account#name']}"
-  exit 0
+unless core.config.ac_save
+  puts 'Issue during configuration saved.'
+  exit 1
 end
-puts 'Issue during configuration saved.'
-exit 1
+puts "Config imported and saved in #{core.config['account#name']}"
+
+Test.new(core).run
+
+puts 'Import process done.'
