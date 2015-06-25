@@ -139,13 +139,16 @@ module Lorj
     #     True by default.
     #   - +account_only+ : True data extracted must come exclusively from the
     #     config 'account' layer.
+    #   - +processes_options+ : Hash. Export options for processes
+    #     - :exclude: Array. name of process to exclude.
     #
     # * *returns* :
     #   - key: String. Key used to encrypt.
     #   - env_hash: String. Base64 encrypted Hash.
     #   OR
     #   - nil if issues.
-    def account_export(map = nil, with_name = true, account_only = true)
+    def account_export(map = nil, with_name = true, account_only = true,
+                       processes_options = {})
       map = _account_map if map.nil?
 
       map.merge!('account#name' => {}, 'account#provider' => {}) if with_name
@@ -172,16 +175,19 @@ module Lorj
       entr = Lorj::SSLCrypt.new_encrypt_key
       export_data = { :enc_data => Lorj::SSLCrypt.encrypt_value(rhash.to_yaml,
                                                                 entr) }
-      export_data[:processes] = _export_processes
+      export_data[:processes] = _export_processes(processes_options)
       [entr, export_data.to_yaml]
     end
 
     private
 
-    def _export_processes
+    def _export_processes(processes_options)
       export_data = []
       PrcLib.processes.each do |p|
         next unless p.key?(:process_name) && p.key?(:lib_name)
+
+        next if processes_options[:exclude].is_a?(Array) &&
+                processes_options[:exclude].include?(p[:process_name])
 
         process = {}
         process[:process_module] = p[:process_name]

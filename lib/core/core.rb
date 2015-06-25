@@ -347,9 +347,11 @@ module Lorj
     #   - env_hash: String. Base64 encrypted Hash.
     #   OR
     #   - nil if issues.
-    def account_export(map = nil, with_name = true)
+    def account_export(map = nil, with_name = true, account_only = false,
+                       processes_options = {})
       return nil if @core_object.nil?
-      @core_object.account_export(map, with_name)
+      @core_object.account_export(map, with_name, account_only,
+                                  processes_options)
     end
 
     # Core parameters are:

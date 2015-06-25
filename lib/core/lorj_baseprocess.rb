@@ -111,9 +111,11 @@ module Lorj
   class BaseProcess
     private
 
-    def account_export(map = nil, with_name = true, account_only = false) #:doc:
+    def account_export(map = nil, with_name = true, account_only = false,
+                       processes_options = {}) #:doc:
       fail Lorj::PrcError.new, 'No Base object loaded.' unless @base_object
-      @base_object.account_export(map, with_name, account_only)
+      @base_object.account_export(map, with_name, account_only,
+                                  processes_options)
     end
 
     def account_import(key, enc_hash, name = nil, controller = nil) #:doc:
