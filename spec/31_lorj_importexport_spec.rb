@@ -113,6 +113,7 @@ describe 'Internal BaseDefinition features' do
       export = @spec_obj.account_export
       expect(export.class).to equal(Array)
       entr, export_dat = export
+      export_dat = YAML.load(export_dat)
       expect(export_dat.key?(:enc_data)).to equal(true)
       expect(export_dat.key?(:processes)).to equal(true)
       expect(export_dat[:processes].class).to equal(Array)
@@ -132,6 +133,7 @@ describe 'Internal BaseDefinition features' do
 
     it 'account_export(nil, false) returns account@name and credentials#key' do
       entr, export_dat = @spec_obj.account_export(nil, false)
+      export_dat = YAML.load(export_dat)
       dat_decrypted = Lorj::SSLCrypt.get_encrypted_value(export_dat[:enc_data],
                                                          entr, 'data encrypted')
       data = YAML.load(dat_decrypted)
@@ -142,6 +144,7 @@ describe 'Internal BaseDefinition features' do
     it 'account_export(nil, false, false) returns "runtime" keypair_name'\
        ' value' do
       entr, export_dat = @spec_obj.account_export(nil, false, false)
+      export_dat = YAML.load(export_dat)
       dat_decrypted = Lorj::SSLCrypt.get_encrypted_value(export_dat[:enc_data],
                                                          entr, 'data encrypted')
       data = YAML.load(dat_decrypted)
@@ -152,6 +155,7 @@ describe 'Internal BaseDefinition features' do
     it 'account_export({"credentials#key" => {}}) returns key, '\
        'name & provider' do
       entr, export_dat = @spec_obj.account_export('credentials#key' => {})
+      export_dat = YAML.load(export_dat)
       dat_decrypted = Lorj::SSLCrypt.get_encrypted_value(export_dat[:enc_data],
                                                          entr, 'data encrypted')
       data = YAML.load(dat_decrypted)
@@ -164,6 +168,7 @@ describe 'Internal BaseDefinition features' do
        ' returns ' do
       map = { 'credentials#key' => { :keys => [:server, :key] } }
       entr, export_dat = @spec_obj.account_export(map)
+      export_dat = YAML.load(export_dat)
       dat_decrypted = Lorj::SSLCrypt.get_encrypted_value(export_dat[:enc_data],
                                                          entr, 'data encrypted')
       data = YAML.load(dat_decrypted)
@@ -174,6 +179,7 @@ describe 'Internal BaseDefinition features' do
 
     it 'account_data_import(data) update the "account layer"' do
       entr, export_dat = @spec_obj.account_export
+      export_dat = YAML.load(export_dat)
       @config.ac_erase
       dat_decrypted = Lorj::SSLCrypt.get_encrypted_value(export_dat[:enc_data],
                                                          entr, 'data encrypted')

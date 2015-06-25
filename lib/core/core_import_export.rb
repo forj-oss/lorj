@@ -38,6 +38,7 @@ module Lorj
   # * *Raises* :
   #   No exceptions
   def self.account_import(key, import_data, name = nil)
+    import_data = YAML.load(import_data)
     hash = Lorj::SSLCrypt.get_encrypted_value(import_data[:enc_data], key,
                                               'Encrypted account data')
 
@@ -172,7 +173,7 @@ module Lorj
       export_data = { :enc_data => Lorj::SSLCrypt.encrypt_value(rhash.to_yaml,
                                                                 entr) }
       export_data[:processes] = _export_processes
-      [entr, export_data]
+      [entr, export_data.to_yaml]
     end
 
     private

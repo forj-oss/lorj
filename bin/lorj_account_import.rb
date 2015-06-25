@@ -141,7 +141,7 @@ PrcLib.pdata_path = pdatapath
 
 data = File.read(data_file).strip
 
-core = Lorj::Core.account_import(entr, data, account)
+core = Lorj.account_import(entr, data, account)
 
 puts 'Import done.'
 
