@@ -15,8 +15,6 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-# rubocop: disable Metrics/AbcSize
-
 # Module Lorj which contains several classes.
 #
 # Those classes describes :
@@ -317,17 +315,21 @@ module Lorj
 
     # Function to import an encrypted Hash as a Lorj Account.
     #
-    # For details about this functions, see #Lorj::BaseDefinition.account_import
+    # For details about this functions,
+    # see #Lorj::BaseDefinition.account_data_import
+    #
+    # To import an exported data, consider calling Lorj.account_import.
     #
     # * *Args* :
-    #   - +key+      : key to use to decrypt the 'enc_hash'.
-    #   - +enc_hash+ : Encrypted Hash.
+    #   - +data+ : Hash. data to import.
+    #   - +name+ : By default, it import in the same name described in the data.
+    #     But we can change it with this parameter.
     #
     # * *Raises* :
     #   No exceptions
-    def account_import(key, enc_hash, name = nil, controller = nil)
+    def account_import(data, name = nil)
       return nil if @core_object.nil?
-      @core_object.account_import(key, enc_hash, name, controller)
+      @core_object.account_data_import(data, name)
     end
 
     # Function to export a Lorj Account in an encrypted Hash.
@@ -402,6 +404,7 @@ module Lorj
       # (processes & controller)
       initialize_core_object(model)
       PrcLib.model.clear_heap
+      PrcLib.processes model[:processes]
     end
 
     private
@@ -470,20 +473,40 @@ module Lorj
   #     It must be controllers/<controller_name>/<controller_name>.rb
   #     You can change 'controllers' by any name, with :controllers_dir
   #
-  #   - +properties   : Optional.
+  #   - +properties   : required.
   #     - :controllers_dir : Name of the controllers directory.
   #       By default 'controllers'
+  #     - :lib_name : name of the gem library declaring the process.
   #
   #  The process will be added in Lorj.processes Hash
   #
   def declare_process(process_name, path, properties = {})
+    unless properties.is_a?(Hash) && properties[:lib_name].is_a?(String)
+      puts("Lorj: process module error: '#{__method__}"\
+           "('#{process_name}', '#{path}', #{properties})' requires :lib_name"\
+           "\nat line #{caller[0]}")
+      return nil
+    end
     process_data = Lorj::ProcessResource.new(process_name, path, properties)
 
-    return nil if process_data.nil?
+    if process_data.nil?
+      puts("Lorj: process module error: '#{process_name}' fails to be "\
+           "declared:\n"\
+           "process_name: '#{process_name}'\n"\
+           "path        : '#{path}'\n"\
+           "properties  : #{properties.to_yaml}")
+      return nil
+    end
 
     @processes = {} if @processes.nil?
 
-    return nil if process_data.process.nil?
+    if process_data.process.nil?
+      puts("Lorj: process module error: process failure:\n"\
+           "process_name: '#{process_name}'\n"\
+           "path        : '#{path}'\n"\
+           "properties  : #{properties.to_yaml}")
+      return nil
+    end
 
     process_name = process_data.name
 
@@ -492,8 +515,8 @@ module Lorj
     process_data
   end
 
-  # Define module data for lorj library configuration
-  class << self
-    attr_reader :processes
+  def processes
+    @processes = {} if @processes.nil?
+    @processes
   end
 end

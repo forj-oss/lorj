@@ -39,8 +39,9 @@ require 'spec_helper'
 describe 'Lorj::Core,' do
   context 'Using lorj-spec process, ' do
     process_path = File.expand_path(File.join(app_path, '..', 'lorj-spec'))
-    Lorj.declare_process('mock', process_path)
+    Lorj.declare_process('mock', process_path, :lib_name => 'lorj')
     Lorj.declare_process('mock2', process_path,
+                         :lib_name => 'lorj',
                          :controllers_path => File.join(process_path,
                                                         'providers_extra'))
   end

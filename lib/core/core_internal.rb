@@ -14,8 +14,6 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-# rubocop: disable Metrics/AbcSize
-
 # - Lorj::Core : Lorj exposed interface.
 #   - Initialization functions
 module Lorj
@@ -331,6 +329,7 @@ module Lorj
       module_process = Lorj.processes[name]
       my_process[:process_name] = name
       my_process[:process_path] = module_process.process
+      my_process[:lib_name] = module_process.lib_name
 
       if a_process[:controller_path]
         my_process[:controller_path] = a_process[:controller_path]
@@ -391,15 +390,20 @@ module Lorj
     def _process_module_set_ctr(my_process, controllers, controller_name)
       return if controller_name.nil?
 
+      unless controller_name.is_a?(String)
+        controller_name = controller_name.to_s
+      end
       controller_path = controllers[controller_name]
 
       if controller_path.nil?
         PrcLib.warning("Controller '%s' was not found. Please check. The "\
-                       'process may not work.', controller_name)
+                       "process may not work. \nValid one are '%s'",
+                       controller_name, controllers.keys)
         return
       end
 
       my_process[:controller_path] = controller_path
+      my_process[:controller_name] = controller_name
     end
 
     # Function analyzing the process class parameter
@@ -474,6 +478,11 @@ module Lorj
 
       the_process_class
     end
+  end
+
+  # Define private Initialize functions for controllers
+  class Core
+    private
 
     # Determine the process file path from the single name.
     # Uses PrcLib.process_path as path to load this process.

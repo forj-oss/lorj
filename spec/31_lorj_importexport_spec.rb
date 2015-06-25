@@ -55,8 +55,6 @@ describe 'Internal BaseDefinition features' do
 
         # Internal function to test.
         def_internal '_get_encrypt_key'
-        def_internal '_get_encrypted_value'
-        def_internal '_encrypt_value'
       end
 
       # Spec class for ImportExport feature spec
@@ -89,9 +87,10 @@ describe 'Internal BaseDefinition features' do
       @spec_obj = ImportExportSpec.new(@config)
 
       process_path = File.expand_path(File.join(app_path, '..', 'lorj-spec'))
-      Lorj.declare_process('mock', process_path)
+      Lorj.declare_process('mock', process_path, :lib_name => 'lorj')
 
-      @core = Lorj::Core.new(@config, [{ :process_module => :mock }])
+      @core = Lorj::Core.new(@config, [{ :process_module => :mock,
+                                         :controller_name => :mock }])
 
       @key_file = File.join(PrcLib.pdata_path, '.key')
       @crypt = BaseDefinitionSpec.new
@@ -110,14 +109,19 @@ describe 'Internal BaseDefinition features' do
       expect(@spec_obj.spec_account_map['credentials#key']).to eq({})
     end
 
-    it 'account_export() returns valid [entr, data_enc]' do
+    it 'account_export() returns valid [entr, export_dat]' do
       export = @spec_obj.account_export
       expect(export.class).to equal(Array)
-      entr, data_encrypted = export
-      data_decrypted = @crypt.s_get_encrypted_value(data_encrypted,
-                                                    entr, 'data encrypted')
-      expect(data_decrypted.class).to equal(String)
-      data = YAML.load(data_decrypted)
+      entr, export_dat = export
+      expect(export_dat.key?(:enc_data)).to equal(true)
+      expect(export_dat.key?(:processes)).to equal(true)
+      expect(export_dat[:processes].class).to equal(Array)
+      expect(export_dat[:processes][0].key?(:process_module)).to equal(true)
+      expect(export_dat[:processes][0].key?(:lib_name)).to equal(true)
+      dat_decrypted = Lorj::SSLCrypt.get_encrypted_value(export_dat[:enc_data],
+                                                         entr, 'data encrypted')
+      expect(dat_decrypted.class).to equal(String)
+      data = YAML.load(dat_decrypted)
       expect(data.rh_exist?(:account, :name)).to equal(true)
       expect(data.rh_get(:account, :name)).to eq('test')
       expect(data.rh_exist?(:credentials, :keypair_name)).to equal(true)
@@ -127,30 +131,30 @@ describe 'Internal BaseDefinition features' do
     end
 
     it 'account_export(nil, false) returns account@name and credentials#key' do
-      entr, data_encrypted = @spec_obj.account_export(nil, false)
-      data_decrypted = @crypt.s_get_encrypted_value(data_encrypted,
-                                                    entr, 'data encrypted')
-      data = YAML.load(data_decrypted)
+      entr, export_dat = @spec_obj.account_export(nil, false)
+      dat_decrypted = Lorj::SSLCrypt.get_encrypted_value(export_dat[:enc_data],
+                                                         entr, 'data encrypted')
+      data = YAML.load(dat_decrypted)
       expect(data.rh_exist?(:account, :name)).to equal(false)
       expect(data.rh_exist?(:credentials, :key)).to equal(true)
     end
 
     it 'account_export(nil, false, false) returns "runtime" keypair_name'\
        ' value' do
-      entr, data_encrypted = @spec_obj.account_export(nil, false, false)
-      data_decrypted = @crypt.s_get_encrypted_value(data_encrypted,
-                                                    entr, 'data encrypted')
-      data = YAML.load(data_decrypted)
+      entr, export_dat = @spec_obj.account_export(nil, false, false)
+      dat_decrypted = Lorj::SSLCrypt.get_encrypted_value(export_dat[:enc_data],
+                                                         entr, 'data encrypted')
+      data = YAML.load(dat_decrypted)
       expect(data.rh_exist?(:credentials, :keypair_name)).to equal(true)
       expect(data.rh_get(:credentials, :keypair_name)).to eq('another_key')
     end
 
     it 'account_export({"credentials#key" => {}}) returns key, '\
        'name & provider' do
-      entr, data_encrypted = @spec_obj.account_export('credentials#key' => {})
-      data_decrypted = @crypt.s_get_encrypted_value(data_encrypted,
-                                                    entr, 'data encrypted')
-      data = YAML.load(data_decrypted)
+      entr, export_dat = @spec_obj.account_export('credentials#key' => {})
+      dat_decrypted = Lorj::SSLCrypt.get_encrypted_value(export_dat[:enc_data],
+                                                         entr, 'data encrypted')
+      data = YAML.load(dat_decrypted)
       expect(data.rh_exist?(:credentials, :keypair_name)).to equal(false)
       expect(data.rh_exist?(:credentials, :key)).to equal(true)
       expect(data.rh_exist?(:account, :name)).to equal(true)
@@ -159,24 +163,37 @@ describe 'Internal BaseDefinition features' do
     it 'account_export({"credentials#key" => {:keys => [:server, :key]}})'\
        ' returns ' do
       map = { 'credentials#key' => { :keys => [:server, :key] } }
-      entr, data_encrypted = @spec_obj.account_export(map)
-      data_decrypted = @crypt.s_get_encrypted_value(data_encrypted,
-                                                    entr, 'data encrypted')
-      data = YAML.load(data_decrypted)
+      entr, export_dat = @spec_obj.account_export(map)
+      dat_decrypted = Lorj::SSLCrypt.get_encrypted_value(export_dat[:enc_data],
+                                                         entr, 'data encrypted')
+      data = YAML.load(dat_decrypted)
       expect(data.rh_exist?(:credentials, :key)).to equal(false)
       expect(data.rh_exist?(:server, :key)).to equal(true)
       expect(data.rh_exist?(:account, :name)).to equal(true)
     end
 
-    it 'account_import(entr, enc_hash) update the "account layer"' do
-      entr, data_encrypted = @spec_obj.account_export
+    it 'account_data_import(data) update the "account layer"' do
+      entr, export_dat = @spec_obj.account_export
       @config.ac_erase
-      data = @spec_obj.account_import(entr, data_encrypted)
-      expect(data.class).to equal(Hash)
+      dat_decrypted = Lorj::SSLCrypt.get_encrypted_value(export_dat[:enc_data],
+                                                         entr, 'data encrypted')
+      data = YAML.load(dat_decrypted)
+      res = @spec_obj.account_data_import(data)
+      expect(res.class).to equal(Hash)
       expect(@config['account#name']).to eq('test')
       expect(@config[:keypair_name]).to eq('another_key')
       expect(@config.get(:keypair_name, nil,
                          :name => 'account')).to eq('mykey')
+    end
+
+    it 'Lorj.account_import(entr, enc_hash) update the "account layer"' do
+      entr, export_dat = @spec_obj.account_export
+      core = Lorj.account_import(entr, export_dat)
+      expect(core).to be
+      expect(core.config['account#name']).to eq('test')
+      expect(core.config[:keypair_name]).to eq('mykey')
+      expect(core.config.get(:keypair_name, nil,
+                             :name => 'account')).to eq('mykey')
     end
   end
 end

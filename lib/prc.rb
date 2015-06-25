@@ -97,6 +97,10 @@ require 'logger'
 #
 #   Model loaded.
 #
+# - PrcLib.processes
+#
+#   Processes loaded.
+#
 # - PrcLib.log_file
 #
 #   Initialize a log file name (relative or absolute path) instead of default
@@ -148,7 +152,10 @@ module PrcLib
   rescue => e
     fatal_error(1, e.message)
   end
+end
 
+# Defines module parameters.
+module PrcLib
   # Define module data for lorj library configuration
   class << self
     attr_accessor :log, :core_level
@@ -226,13 +233,21 @@ module PrcLib
     end
   end
 
-  # TODO: Low. Be able to support multiple model.
+  # TODO: Low. Be able to support multiple model loaded.
 
   # Lorj::Model object access.
   # If the object doesn't exist, it will be created
   def model
     @model = Lorj::Model.new if @model.nil?
     @model
+  end
+
+  # TODO: Low. Be able to support multiple processes loaded.
+
+  # PrcLib.processes
+  def processes(p = nil)
+    @processes = p unless p.nil?
+    @processes
   end
 
   # TODO: Support for several defaults, depending on controllers loaded.

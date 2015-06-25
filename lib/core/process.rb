@@ -22,7 +22,8 @@ module Lorj
   #
   #
   class ProcessResource
-    attr_reader :defaults_file, :data_file, :process, :name, :controllers
+    attr_reader :defaults_file, :data_file, :process, :name, :controllers,
+                :lib_name
 
     # ProcessResource initialization
     #
@@ -49,6 +50,7 @@ module Lorj
     #     By default is `<name>/defaults.yaml`
     #   - :data_file    : Use a different file as process data definition.
     #     By default is `<name>/data.yaml`
+    #   - :lib_name     : Is the name of the library declaring the process.
     #
     # * *return*:
     #   - self with at least a process name and a path to it.
@@ -81,6 +83,8 @@ module Lorj
       data_file = _get_file(props, :data_file, File.join(path, 'process',
                                                          name, 'data.yaml'))
       @data_file = data_file if data_file
+
+      @lib_name = props[:lib_name] if props.key?(:lib_name)
 
       self
     end

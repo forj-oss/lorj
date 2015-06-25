@@ -82,7 +82,7 @@ module Lorj
   # Internally used with raise.
   # Used to identify the error origin, while an error is thrown.
   class PrcError < RuntimeError
-    attr_reader :lorg_message
+    attr_reader :lorj_message
 
     def initialize(message = nil)
       @lorj_message = message

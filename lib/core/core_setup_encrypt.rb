@@ -26,10 +26,8 @@ require 'base64'
 #                               and setup
 # this task to make it to work.
 module Lorj
-  # Adding encrypt core functions.
-  class BaseDefinition
-    private
-
+  # SSL Encryption feature for Lorj.
+  module SSLCrypt
     # internal runtime function to create a new key
     # *parameters*:
     #   - +new+       : true to create a new key.
@@ -40,7 +38,7 @@ module Lorj
     #     - :key: password
     #     - :salt : String current time number
     #     - :iv: Base64 random iv
-    def _new_encrypt_key(key = rand(36**10).to_s(36))
+    def self.new_encrypt_key(key = rand(36**10).to_s(36))
       random_iv = OpenSSL::Cipher::Cipher.new('aes-256-cbc').random_iv
       {
         :key => key,
@@ -48,6 +46,57 @@ module Lorj
         :iv => Base64.strict_encode64(random_iv)
       }
     end
+
+    # internal runtime function for process call #_build_hdata and
+    # #_get_encrypted_value_hidden
+    # Get encrypted value
+    #
+    # *parameters*:
+    #   - +default+     : encrypted default value
+    #   - +entropy+     : Entropy Hash
+    #   - +sDesc+       : data description
+    #
+    # *return*:
+    # - value : decrypted value.
+    #
+    # *raise*:
+    #
+    def self.get_encrypted_value(enc_value, entr, sDesc)
+      return '' if enc_value.nil?
+      begin
+        Encryptor.decrypt(
+          :value => Base64.strict_decode64(enc_value),
+          :key => entr[:key],
+          :iv => Base64.strict_decode64(entr[:iv]),
+          :salt => entr[:salt]
+        )
+      rescue => e
+        PrcLib.error("Unable to decrypt your %s.\n"\
+                     "%s\n"\
+                     ' You will need to re-enter it.',
+                     sDesc, e)
+      end
+    end
+
+    # Function to encrypt a data with a entr key.
+    #
+    # *return*:
+    # - value : encrypted value in Base64 encoded data.
+    def self.encrypt_value(value, entr)
+      Base64.strict_encode64(
+        Encryptor.encrypt(
+          :value => value,
+          :key => entr[:key],
+          :iv => Base64.strict_decode64(entr[:iv]),
+          :salt => entr[:salt]
+        )
+      )
+    end
+  end
+
+  # Adding encrypt core functions.
+  class BaseDefinition
+    private
 
     # internal runtime function for process call
     # Get encrypted value hidden by *
@@ -67,7 +116,7 @@ module Lorj
       key_file = File.join(PrcLib.pdata_path, '.key')
       if !File.exist?(key_file)
         # Need to create a random key.
-        entr = _new_encrypt_key
+        entr = Lorj::SSLCrypt.new_encrypt_key
 
         Lorj.debug(2, "Writing '%s' key file", key_file)
         unless PrcLib.dir_exists?(PrcLib.pdata_path)
@@ -101,7 +150,8 @@ module Lorj
       return '' if enc_value.nil?
       value_hidden = ''
       begin
-        value_hidden = '*' * _get_encrypted_value(enc_value, entr, sDesc).length
+        value_hidden = '*' * Lorj::SSLCrypt.get_encrypted_value(enc_value, entr,
+                                                                sDesc).length
       rescue => e
         PrcLib.error('Unable to decrypt your %s. You will need to re-enter it.'\
                      '\n%s', sDesc, e.message)
@@ -110,52 +160,6 @@ module Lorj
                        ' just press Enter', sDesc)
       end
       value_hidden
-    end
-
-    # internal runtime function for process call #_build_hdata and
-    # #_get_encrypted_value_hidden
-    # Get encrypted value
-    #
-    # *parameters*:
-    #   - +default+     : encrypted default value
-    #   - +entropy+     : Entropy Hash
-    #   - +sDesc+       : data description
-    #
-    # *return*:
-    # - value : decrypted value.
-    #
-    # *raise*:
-    #
-    def _get_encrypted_value(enc_value, entr, sDesc)
-      return '' if enc_value.nil?
-      begin
-        Encryptor.decrypt(
-          :value => Base64.strict_decode64(enc_value),
-          :key => entr[:key],
-          :iv => Base64.strict_decode64(entr[:iv]),
-          :salt => entr[:salt]
-        )
-      rescue => e
-        PrcLib.error("Unable to decrypt your %s.\n"\
-                     "%s\n"\
-                     ' You will need to re-enter it.',
-                     sDesc, e)
-      end
-    end
-
-    # Function to encrypt a data with a entr key.
-    #
-    # *return*:
-    # - value : encrypted value in Base64 encoded data.
-    def _encrypt_value(value, entr)
-      Base64.strict_encode64(
-        Encryptor.encrypt(
-          :value => value,
-          :key => entr[:key],
-          :iv => Base64.strict_decode64(entr[:iv]),
-          :salt => entr[:salt]
-        )
-      )
     end
 
     # internal runtime function for process call
@@ -194,7 +198,7 @@ module Lorj
           PrcLib.message('%s cannot be empty.', sDesc) if value_free == ''
         end
       end
-      _encrypt_value(value_free, entr)
+      Lorj::SSLCrypt.encrypt_value(value_free, entr)
     end
   end
 end

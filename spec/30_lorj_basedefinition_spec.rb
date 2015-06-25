@@ -54,11 +54,8 @@ describe 'Internal BaseDefinition features' do
         end
 
         # Internal function to test.
-        def_internal '_new_encrypt_key'
         def_internal '_get_encrypt_key'
         def_internal '_get_encrypted_value_hidden'
-        def_internal '_get_encrypted_value'
-        def_internal '_encrypt_value'
         def_internal '_account_map'
       end
 
@@ -73,8 +70,8 @@ describe 'Internal BaseDefinition features' do
       File.delete(@key_file) if File.exist?(@key_file)
     end
 
-    it '_new_encrypt_key return a new entr hash' do
-      ret = @spec_obj.spec_new_encrypt_key
+    it 'Lorj::SSLCrypt.new_encrypt_key return a new entr hash' do
+      ret = Lorj::SSLCrypt.new_encrypt_key
       expect(ret.class).to equal(Hash)
       expect(ret.keys.sort).to eq([:key, :salt, :iv].sort)
       expect(ret[:key].class).to equal(String)
@@ -93,21 +90,21 @@ describe 'Internal BaseDefinition features' do
       expect(@spec_obj.spec_get_encrypt_key).to eq(ret)
     end
 
-    it '_encrypt_value return a strict base64 data' do
+    it 'Lorj::SSLCrypt.encrypt_value return a strict base64 data' do
       to_enc = 'Data to encrypt'
       entr = @spec_obj.spec_get_encrypt_key
-      ret = @spec_obj.spec_encrypt_value(to_enc, entr)
+      ret = Lorj::SSLCrypt.encrypt_value(to_enc, entr)
 
       expect(Base64.strict_decode64(ret).class).to eq(String)
-      expect(ret).to eq(@spec_obj.spec_encrypt_value(to_enc, entr))
+      expect(ret).to eq(Lorj::SSLCrypt.encrypt_value(to_enc, entr))
     end
 
-    it '_get_encrypted_value return is decryptable' do
+    it 'Lorj::SSLCrypt.get_encrypted_value return is decryptable' do
       to_enc = 'Data to encrypt'
       entr = @spec_obj.spec_get_encrypt_key
-      ret = @spec_obj.spec_encrypt_value(to_enc, entr)
+      ret = Lorj::SSLCrypt.encrypt_value(to_enc, entr)
 
-      expect(@spec_obj.spec_get_encrypted_value(ret, entr,
+      expect(Lorj::SSLCrypt.get_encrypted_value(ret, entr,
                                                 'value')).to eq(to_enc)
     end
 
@@ -115,7 +112,7 @@ describe 'Internal BaseDefinition features' do
        'original value' do
       to_enc = 'Data to encrypt'
       entr = @spec_obj.spec_get_encrypt_key
-      ret = @spec_obj.spec_encrypt_value(to_enc, entr)
+      ret = Lorj::SSLCrypt.encrypt_value(to_enc, entr)
       hidden = @spec_obj.spec_get_encrypted_value_hidden('value', ret, entr)
 
       expect(hidden.include?('*')).to equal(true)

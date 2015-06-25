@@ -39,7 +39,6 @@ class Test < Lorj::BaseDefinition
 
   # Internal function to test.
   def_internal '_get_encrypt_key'
-  def_internal '_get_encrypted_value'
 
   def run
     puts 'Checking imported account...'
@@ -53,7 +52,8 @@ class Test < Lorj::BaseDefinition
     entr = _get_encrypt_key
     data = @core.config['credentials#account_key']
 
-    res = _get_encrypted_value(data, entr, 'credentials#account_key')
+    res = Lorj::SSLCrypt.get_encrypted_value(data, entr,
+                                             'credentials#account_key')
 
     test_state(!res.nil?, 'Account key', data)
   end
@@ -69,20 +69,15 @@ class Test < Lorj::BaseDefinition
 end
 
 # TODO: Implement Thor instead of ARGV use.
+# TODO: Support to load local process.
 if ARGV.length <= 3
   puts "Syntax is 'ruby #{__FILE__}' <LorjRef> <key> <CloudDataFile> "\
-       "[<AccountName[@provider]>]\n"\
+       "[<AccountName>]\n"\
        "where:\n"\
        "LorjRef       : Lorj application struture to use. \n"\
-       '                Format: <datapath[|<pdatapath>]>='\
-       "<process>[@<libToLoad]\n"\
+       "                Format: <datapath[|<pdatapath>]>\n"\
        "  datapath    : Path where Lorj store data.\n"\
        "  pdatapath   : Path where Lorj store private data.\n"\
-       "  process     : Lorj process name to load. It can be a path to a\n"\
-       "                process file.\n"\
-       "  libToLoad   : Optional. Ruby library containing The Lorj process.\n"\
-       "                If missing, it will try to load a lib named \n"\
-       "                lorj_<process>\n"\
        'key           : Base64 encoded key. Used to decrypt the <CloudDataFi'\
        "le>\n"\
        "CloudDataFile : File containing the Lorj cloud data to import.\n"\
@@ -94,7 +89,7 @@ end
 
 ref, key_encoded, data_file, account = ARGV
 
-ref_found = ref.match(/^(.*(\|(.*))?)=(.*?)(@(.*))?$/)
+ref_found = ref.match(/^(.*(\|(.*))?)$/)
 
 unless ref_found
   puts 'LorjRef must be formatted as : <datapath[|<pdatapath>]>='\
@@ -105,13 +100,6 @@ end
 datapath = ref_found[1]
 pdatapath = datapath
 pdatapath = ref_found[3] unless ref_found[3].nil?
-process = ref_found[4]
-
-if ref_found[6].nil?
-  lib_name = "lorj_#{process}"
-else
-  lib_name = ref_found[6]
-end
 
 unless File.exist?(data_file)
   puts "#{data_file} doesn't exist. Please check and retry."
@@ -121,12 +109,6 @@ end
 if key_encoded == ''
   puts 'The key provided is empty. Please check and retry.'
   exit 1
-end
-
-begin
-  require lib_name
-rescue => e
-  puts "Warning! Unable to load RubyGem '#{lib_name}'.\n#{e}"
 end
 
 if key_encoded.length % 4 > 0
@@ -154,20 +136,12 @@ else
   end
 end
 
-name, controller = account.split('@') unless account.nil?
-
 PrcLib.data_path = datapath
 PrcLib.pdata_path = pdatapath
 
-keypath = Lorj::KeyPath.new(process)
-
-processes = [{ :process_module => keypath.key_tree }]
-
-core = Lorj::Core.new(Lorj::Account.new, processes)
-
 data = File.read(data_file).strip
 
-core.account_import(entr, data, name, controller)
+core = Lorj::Core.account_import(entr, data, account)
 
 puts 'Import done.'
 

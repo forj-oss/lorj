@@ -17,14 +17,56 @@
 
 #
 module Lorj
+  # Function to import an encrypted Hash as a Lorj Account.
+  #
+  # The encrypted Hash will be decrypted by the key provided.
+  # The content of the hash will be stored in the 'account' layer
+  # of config.
+  #
+  # For details on how import work, look in #account_data_import
+  #
+  # * *Args* :
+  #   - +key+         : key to use to decrypt the 'enc_hash'.
+  #   - +import_data+ : import data. This data is structured as follow:
+  #     - :enc_data : The encrypted account data.
+  #     - :processes: Array or models + controllers to load.
+  #   - +name+        : Optional. Name of the account.
+  #
+  # * *returns*:
+  #   - +core+ : Core object, with loaded model, created during the import.
+  #
+  # * *Raises* :
+  #   No exceptions
+  def self.account_import(key, import_data, name = nil)
+    hash = Lorj::SSLCrypt.get_encrypted_value(import_data[:enc_data], key,
+                                              'Encrypted account data')
+
+    data = YAML.load(hash)
+
+    processes = import_data[:processes]
+
+    processes.each do |p|
+      next unless p.key?(:process_module)
+
+      PrcLib.debug("Loading module '#{p[:process_module]}' from GEM lib '%s'",
+                   p[:lib_name])
+      begin
+        require "#{p[:lib_name]}"
+      rescue => e
+        PrcLib.error("Unable to load module '#{p[:process_module]}'\n%s", e)
+      end
+    end
+
+    core = Lorj::Core.new(Lorj::Account.new, processes)
+    core.account_import(data, name)
+
+    core
+  end
+
   # Implements account_import and account_export
   # exposed by core.
   class BaseDefinition
-    # Function to import an encrypted Hash as a Lorj Account.
-    #
-    # The encrypted Hash will be decrypted by the key provided.
-    # The content of the hash will be stored in the 'account' layer
-    # of config.
+    # Function to import an account data in Lorj::Account.
     #
     # The 'account' layer is not cleaned before. If you need to
     # clean it up, do:
@@ -39,7 +81,7 @@ module Lorj
     # If you pass 'name' and 'controller', ac_update will be used to update the
     # account data
     # If the imported data contains name and controller data, by default, it
-    # will call ac_update except if name is an empty string.
+    # will call ac_update.
     #
     # The location used comes from PrcLib.data_path
     # Passwords will be encrypted by the internal .key file stored in
@@ -49,19 +91,13 @@ module Lorj
     # verify if some data are missed for any object action (create/delete/...)
     #
     # * *Args* :
-    #   - +key+        : key to use to decrypt the 'enc_hash'.
-    #   - +enc_hash+   : Encrypted Hash.
+    #   - +data+       : Account data to import.
     #   - +name+       : Optional. Name of the account.
-    #   - +controller+ : Optional. Name of the controller.
     #
     # * *Raises* :
     #   No exceptions
-    def account_import(key, enc_hash, name = nil, controller = nil)
-      hash = _get_encrypted_value(enc_hash, key, 'Encrypted account data')
-
-      data = YAML.load(hash)
-
-      _update_account_meta(data, name, controller)
+    def account_data_import(data, name = nil)
+      _update_account_meta(data, name)
 
       entr = _get_encrypt_key
 
@@ -70,7 +106,7 @@ module Lorj
           key = "#{s}##{k}"
           data_def = Lorj.data.auto_section_data(key)
           if data_def && data_def[:encrypted].is_a?(TrueClass)
-            v = _encrypt_value(v, entr)
+            v = Lorj::SSLCrypt.encrypt_value(v, entr)
           end
           config.set(key, v, :name => 'account')
         end
@@ -127,26 +163,42 @@ module Lorj
         rhash_tree = Lorj.data.first_section(k)
         rhash_tree = v[:keys] if v.key?(:keys)
         if !data_def.nil? && data_def[:encrypted].is_a?(TrueClass)
-          data = _get_encrypted_value(data, entr, data_def[:desc])
+          data = Lorj::SSLCrypt.get_encrypted_value(data, entr, data_def[:desc])
         end
         rhash.rh_set(data, *rhash_tree)
       end
 
-      entr = _new_encrypt_key
-      [entr, _encrypt_value(rhash.to_yaml, entr)]
+      entr = Lorj::SSLCrypt.new_encrypt_key
+      export_data = { :enc_data => Lorj::SSLCrypt.encrypt_value(rhash.to_yaml,
+                                                                entr) }
+      export_data[:processes] = _export_processes
+      [entr, export_data]
     end
 
     private
 
-    def _update_account_meta(data, name, controller)
+    def _export_processes
+      export_data = []
+      PrcLib.processes.each do |p|
+        next unless p.key?(:process_name) && p.key?(:lib_name)
+
+        process = {}
+        process[:process_module] = p[:process_name]
+        process[:lib_name] = p[:lib_name]
+        process[:controller] = p[:controller_name] if p.key?(:controller_name)
+        export_data << process if process.length > 0
+      end
+      export_data
+    end
+
+    def _update_account_meta(data, name)
       if name.nil? && data.rh_exist?(:account, :name)
         name = data.rh_get(:account, :name)
       end
-      if controller.nil? && data.rh_exist?(:account, :provider)
-        controller = data.rh_get(:account, :provider)
-      end
+      controller = data.rh_get(:account, :provider)
 
       name = nil if name == ''
+      controller = nil if controller == ''
 
       config.ac_update(name, controller) unless name.nil? || controller.nil?
     end

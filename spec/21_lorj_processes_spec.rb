@@ -129,7 +129,8 @@ describe 'Lorj::Process,' do
     end
 
     it 'can declare a module process' do
-      expect(Lorj.declare_process('mock', @process_path)).to be
+      expect(Lorj.declare_process('mock', @process_path,
+                                  :lib_name => 'lorj')).to be
     end
 
     it 'kept module in Lorj.processes' do
@@ -138,14 +139,19 @@ describe 'Lorj::Process,' do
     end
 
     it 'Lorj.declare_process, can declare several module processes' do
-      expect(Lorj.declare_process('mock', @process_path)).to be
-      expect(Lorj.declare_process(:mock2, @process_path)).to be
-      expect(Lorj.declare_process('mock3', @process_path)).to equal(nil)
+      expect(Lorj.declare_process('mock', @process_path,
+                                  :lib_name => 'lorj')).to be
+      expect(Lorj.declare_process(:mock2, @process_path,
+                                  :lib_name => 'lorj')).to be
+      expect(Lorj.declare_process('mock3', @process_path,
+                                  :lib_name => 'lorj')).to equal(nil)
     end
 
     it 'become empty, if name or process_path are incorrect' do
-      expect(Lorj.declare_process(nil, @process_path)).to equal(nil)
-      expect(Lorj.declare_process('mock', nil)).to equal(nil)
+      expect(Lorj.declare_process(nil, @process_path,
+                                  :lib_name => 'lorj')).to equal(nil)
+      expect(Lorj.declare_process('mock', nil,
+                                  :lib_name => 'lorj')).to equal(nil)
     end
 
     it 'all kept module processes in Lorj.processes not duplicated.' do
