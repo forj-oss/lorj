@@ -115,18 +115,39 @@ module Lorj
     #   - +objects+ : Collection of object which respond to each
     #   - +query+   : Hash. Containing a list of attributes to test
     #     See #ctrl_do_query_match for details
-    #   - +&block+  : block to extract the object data from a key.
-    def ctrl_query_each(objects, query) # :doc:
+    #   - +triggers+: Hash. Optional. Procs to interact at several places:
+    #     - :before  : &code(object) - To execute some code on the object
+    #       before extract.
+    #       *return* true to go on, or false to ignore the object.
+    #     - :after   : &code(object, query, selected) - To execute some code on
+    #       the object after extract.
+    #       This after trigger is the last change to select or not the object
+    #       for the query. Note that query structure defined by lorj by default.
+    #       *return* true if the object is selected. false otherwise.
+    #     - :extract : &code(object, key) - To execute the data extraction
+    #       This block is required only if call of [] or :<key> is not supported
+    #       *return* the value extracted.
+    #
+    def ctrl_query_each(objects, query, triggers = {}) # :doc:
       results = []
       Lorj.debug(4, "Filtering with '%s'", query)
       unless objects.class.method_defined?(:each)
         controller_error "'%s' do not have 'each' function.", objects.class
       end
       objects.each do |o|
-        if block_given?
-          selected = ctrl_do_query_match(o, query) { |d, k| yield d, k }
+        if [Proc, Method].include?(triggers[:before].class)
+          code = triggers[:before]
+          next unless code.call o
+        end
+        if [Proc, Method].include?(triggers[:extract].class)
+          code = triggers[:extract]
+          selected = ctrl_do_query_match(o, query) { |d, k| code.call d, k }
         else
           selected = ctrl_do_query_match(o, query)
+        end
+        if [Proc, Method].include?(triggers[:after].class)
+          code = triggers[:after]
+          selected = code.call o, query, selected
         end
         results.push o if selected
       end
