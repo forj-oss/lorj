@@ -48,14 +48,20 @@ class Test < Lorj::BaseDefinition
 
   private
 
+  # Test if the encryted data (if encrypted) is readable
   def account_key_test
-    entr = _get_encrypt_key
-    data = @core.config['credentials#account_key']
+    key = 'credentials#account_key'
+    opts = Lorj.data.auto_section_data(key)
+    data = @core.config[key]
+    if opts[:encrypted].is_a?(TrueClass)
+      entr = _get_encrypt_key
 
-    res = Lorj::SSLCrypt.get_encrypted_value(data, entr,
-                                             'credentials#account_key')
-
-    test_state(!res.nil?, 'Account key', data)
+      res = Lorj::SSLCrypt.get_encrypted_value(data, entr, key)
+      status = !res.nil?
+    else
+      status = true
+    end
+    test_state(status, key, data)
   end
 
   def test_state(res, test, value)

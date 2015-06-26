@@ -192,7 +192,9 @@ module Lorj
         process = {}
         process[:process_module] = p[:process_name]
         process[:lib_name] = p[:lib_name]
-        process[:controller] = p[:controller_name] if p.key?(:controller_name)
+        if p.key?(:controller_name)
+          process[:controller_name] = p[:controller_name]
+        end
         export_data << process if process.length > 0
       end
       export_data
