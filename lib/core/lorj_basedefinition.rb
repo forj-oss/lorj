@@ -137,9 +137,9 @@ module Lorj
                             object_type, key_path_obj.key,
                             value unless value_mapping.rh_exist?(value)
 
-        result.rh_set(value_mapping[value], map_path.tree)
+        result.rh_set(value_mapping[value], map_path.to_s)
       else
-        result.rh_set(value, map_path.tree)
+        result.rh_set(value, map_path.to_s)
       end
       nil
     end

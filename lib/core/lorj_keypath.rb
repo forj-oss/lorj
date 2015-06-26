@@ -34,8 +34,8 @@ module Lorj
   # oKey = KeyPath(:test)
   # puts oKey.to_s     # => 'test'
   # puts oKey.key      # => :test
-  # puts oKey.key[0]   # => :test
-  # puts oKey.key[1]   # => nil
+  # puts oKey.key(0)   # => :test
+  # puts oKey.key(1)   # => nil
   # puts oKey.fpath    # => ':test'
   # puts oKey.tree     # => [:test]
   # puts oKey.key_tree # => :test
@@ -43,8 +43,8 @@ module Lorj
   # oKey = KeyPath([:test,:test2,:test3])
   # puts oKey.to_s      # => 'test/test2/test3'
   # puts oKey.key       # => :test3
-  # puts oKey.key[0]    # => :test
-  # puts oKey.key[1]    # => :test2
+  # puts oKey.key(0)    # => :test
+  # puts oKey.key(1)    # => :test2
   # puts oKey.fpath     # => ':test/:test2/:test3'
   # puts oKey.tree      # => [:test,:test2,:test3]
   # puts oKey.key_tree  # => ':test/:test2/:test3'
@@ -52,8 +52,8 @@ module Lorj
   # oKey = KeyPath([:test, '{/.*/}', :test3])
   # puts oKey.to_s      # => 'test/{\/.*\/}/test3'
   # puts oKey.key       # => :test3
-  # puts oKey.key[0]    # => :test
-  # puts oKey.key[1]    # => '{/.*/}'
+  # puts oKey.key(0)    # => :test
+  # puts oKey.key(1)    # => '{/.*/}'
   # puts oKey.fpath     # => ':test/{\/.*\/}/:test3'
   # puts oKey.tree      # => [:test, '{/.*/}',:test3]
   # puts oKey.key_tree  # => ':test/{\/.*\/}/:test3'

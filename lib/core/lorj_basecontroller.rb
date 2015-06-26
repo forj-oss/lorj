@@ -104,7 +104,10 @@ module Lorj
       end
       controller_error '%s is not set.', key
     end
+  end
 
+  # Defining private internal controller functions
+  class BaseController
     private
 
     # controller helper function:
@@ -176,7 +179,7 @@ module Lorj
     #   - No exception
     #
     #   by default, this function will extract data from the object
-    #   with followinf functions: If one fails, it will try the next one.
+    #   with following functions: If one fails, it will try the next one.
     #   :[], or :key or &block.
     #   The optional &block is a third way defined by the controller to extract
     #   data.
@@ -192,15 +195,18 @@ module Lorj
     def ctrl_do_query_match(object, query)
       selected = true
       query.each do |key, match_value|
+        key_path = KeyPath.new(key)
         if block_given?
-          found, v = _get_from(object, key) { |d, k| yield d, k }
+          found, v = _get_from(object, key_path.tree) { |d, k| yield d, k }
         else
-          found, v = _get_from(object, key)
+          found, v = _get_from(object, key_path.tree)
         end
 
         Lorj.debug(4, "'%s.%s' = '%s'", object.class, key, v) if found
 
-        selected = lorj_filter_regexp(v, match_value)
+        selected  = lorj_filter_regexp(v,  match_value)
+        selected |= lorj_filter_hash(v,    match_value)
+        selected |= lorj_filter_array(v,   match_value)
         selected |= lorj_filter_default(v, match_value)
         break unless selected
       end
@@ -213,12 +219,20 @@ module Lorj
       query.select { |_k, v| limit.include?(v.class) }
     end
 
-    def _get_from(data, key)
+    def _get_from(data, *key)
       ret = nil
       found = nil
+      key.flatten!
 
-      [:[], key].each do |f|
-        found, ret = _get_from_func(data, key, f)
+      if data.is_a?(Hash)
+        found = data.rh_exist?(*key)
+        ret = data.rh_get(*key)
+        return [found, ret]
+      end
+
+      [:[], key[0]].each do |f|
+        found, ret = _get_from_func(data, key[0], f)
+        return _get_from(ret, key[1..-1]) if found && key.length > 1
         break if found
       end
       return [found, ret] if found || !block_given?
@@ -234,7 +248,7 @@ module Lorj
     end
 
     def _get_from_func(data, key, func = nil)
-      func = key if func.nil?
+      func = key[0] if func.nil?
       v = nil
       if data.class.method_defined?(func)
         begin
@@ -267,6 +281,42 @@ module Lorj
 
       return true if match_value.match(value)
       false
+    end
+
+    # Function to check if a value is found in an Array
+    #
+    # * *returns*:
+    #   - true if found
+    # OR
+    #   - false otherwise
+    #
+    def lorj_filter_array(value, match_value)
+      return false unless value.is_a?(Array) || match_value.is_a?(Array)
+
+      if value.is_a?(Array) && match_value.is_a?(Array)
+        return (value.sort == match_value.sort)
+      end
+
+      value.include?(match_value)
+    end
+
+    # Function to check if a value match a filter value.
+    #
+    # * *returns*:
+    #   - true if match
+    # OR
+    #   - false otherwise
+    #
+    def lorj_filter_hash(value, structure)
+      return false unless value.is_a?(Hash)
+
+      key_path = KeyPath.new(structure)
+      tree = key_path.tree[0..-2]
+      return false unless value.rh_exist?(tree)
+      match_value = key_path.key
+      res = value.rh_get(tree)
+      return lorj_filter_array(res.flatten, match_value) if res.is_a?(Array)
+      lorj_filter_default(res, match_value)
     end
 
     # Function to check if a value match a filter value.

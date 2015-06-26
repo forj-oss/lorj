@@ -480,7 +480,7 @@ module Lorj
     # Internal function
     def self._query_mapping(key, map)
       return nil unless [String, Symbol].include?(key.class)
-      return nil unless [NilClass, Symbol, String].include?(map.class)
+      return nil unless [NilClass, Symbol, String, Array].include?(map.class)
 
       object_type = PrcLib.model.object_context
       key_path = KeyPath.new(key)
