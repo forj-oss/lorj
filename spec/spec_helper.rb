@@ -78,6 +78,17 @@ module Lorj
     end
   end
 
+  def show_log(lorj_debug = nil)
+    return unless ENV['RSPEC_DEBUG'] == 'true'
+
+    env_lorj_debug = ENV['LORJ_DEBUG']
+    if lorj_debug.nil? && env_lorj_debug && /[0-9]/ =~ env_lorj_debug
+      lorj_debug = ENV['LORJ_DEBUG'].to_i
+    end
+    PrcLib.core_level = lorj_debug unless lorj_debug.nil?
+    PrcLib.level = Logger::DEBUG
+  end
+
   def to_s
     a = {}
     instance_variables.each do |v|

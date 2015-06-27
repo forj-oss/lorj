@@ -138,24 +138,44 @@ module Lorj
         controller_error "'%s' do not have 'each' function.", objects.class
       end
       objects.each do |o|
-        if [Proc, Method].include?(triggers[:before].class)
-          code = triggers[:before]
-          next unless code.call o, query
-        end
+        trig_ret = _run_trigger(triggers, :before, [TrueClass, FalseClass],
+                                true, o, query)
+        next unless trig_ret
         if [Proc, Method].include?(triggers[:extract].class)
           code = triggers[:extract]
           selected = ctrl_do_query_match(o, query) { |d, k| code.call d, k }
         else
           selected = ctrl_do_query_match(o, query)
         end
-        if [Proc, Method].include?(triggers[:after].class)
-          code = triggers[:after]
-          selected = code.call o, query, selected
-        end
+        selected = _run_trigger(triggers, :after, [TrueClass, FalseClass],
+                                selected, o, query, selected)
         results.push o if selected
       end
       Lorj.debug(4, '%d records selected', results.length)
       results
+    end
+
+    # Internal functions used by #ctrl_query_each to give control
+    # on the query feature.
+    def _run_trigger(triggers, name, expect, default, *p)
+      return default if triggers[name].nil?
+
+      code = triggers[name]
+      begin
+        trig_ret = code.call(*p)
+      rescue
+        Lorj.error("trigger '%s' '%s' is in error: \n%s",
+                   name, method_name, e)
+      end
+      method_name = "Unamed #{code.class}"
+      method_name = code.name if code.is_a?(Method)
+      if expect.length > 0 && !expect.include?(trig_ret.class)
+        PrcLib.warning("trigger '%s': Method '%s' should return one of '%s' ."\
+                       " It returns '%s'. Ignored.",
+                       name, method_name, expect, trig_ret.class)
+        return default
+      end
+      trig_ret
     end
 
     # controller helper function:
@@ -193,8 +213,12 @@ module Lorj
     #     - Any object exception during data extraction.
     #
     def ctrl_do_query_match(object, query)
+      return true unless query.is_a?(Hash)
+
+      Lorj.debug(3, "'%s' selected by '%s'?", object.class, query)
       selected = true
       query.each do |key, match_value|
+        Lorj.debug(4, "'%s' match '%s'?", key, match_value)
         key_path = KeyPath.new(key)
         if block_given?
           found, v = _get_from(object, key_path.tree) { |d, k| yield d, k }
@@ -202,12 +226,17 @@ module Lorj
           found, v = _get_from(object, key_path.tree)
         end
 
-        Lorj.debug(4, "'%s.%s' = '%s'", object.class, key, v) if found
+        controller_error("'%s': '%s' not found", object.class, key) unless found
 
-        selected  = lorj_filter_regexp(v,  match_value)
-        selected |= lorj_filter_hash(v,    match_value)
-        selected |= lorj_filter_array(v,   match_value)
-        selected |= lorj_filter_default(v, match_value)
+        Lorj.debug(4, "'%s.%s' = '%s'", object.class, key, v)
+
+        %w(regexp hash array default).each do |f|
+          t, s = method("lorj_filter_#{f}".to_sym).call v, match_value
+          next unless t
+          selected &= s
+          Lorj.debug(5, "Filter used '%s' returned '%s'", f, s)
+          break
+        end
         break unless selected
       end
       Lorj.debug(4, 'object selected.') if selected
@@ -221,7 +250,7 @@ module Lorj
 
     def _get_from(data, *key)
       ret = nil
-      found = nil
+      found = false
       key.flatten!
 
       if data.is_a?(Hash)
@@ -230,26 +259,29 @@ module Lorj
         return [found, ret]
       end
 
+      if block_given?
+        begin
+          Lorj.debug(4, "yield extract '%s' from '%s'", key, data.class)
+          return [true, yield(data, *key)]
+        rescue => e
+          PrcLib.error("yield extract '%s' from '%s' error  \n%s",
+                       key, object.class, e)
+        end
+        return [found, ret]
+      end
+
       [:[], key[0]].each do |f|
         found, ret = _get_from_func(data, key[0], f)
         return _get_from(ret, key[1..-1]) if found && key.length > 1
         break if found
       end
-      return [found, ret] if found || !block_given?
-
-      begin
-        Lorj.debug(4, "yield extract '%s' from '%s'", key, object.class)
-        return [true, yield(data, key)]
-      rescue
-        PrcLib.error("yield extract '%s' from '%s' error  \n%s",
-                     key, object.class, e)
-      end
-      [false, nil]
+      [found, ret]
     end
 
     def _get_from_func(data, key, func = nil)
-      func = key[0] if func.nil?
+      func = key if func.nil?
       v = nil
+      found = false
       if data.class.method_defined?(func)
         begin
           found = true
@@ -269,50 +301,63 @@ module Lorj
       end
       [found, v]
     end
+
     # Function to check if a value match a regexp
     #
-    # * *returns*:
-    #   - true if the match is not a regexp, or if regexp match
-    # OR
-    #   - false otherwise
+    # * *args*:
+    #   - value      : The controller value to test matching.
+    #   - match_value: RegExp object to match against value.
     #
-    def lorj_filter_regexp(value, match_value)
-      return false unless match_value.is_a?(Regexp)
+    # * *returns*:
+    #   - treated: true if match_value is RegExp
+    #   - status : true if match. false otherwise
+    #
+    def lorj_filter_regexp(value, match_value) # :doc:
+      return [false, false] unless match_value.is_a?(Regexp)
 
-      return true if match_value.match(value)
-      false
+      return [true, true] if match_value.match(value)
+      [true, false]
     end
 
-    # Function to check if a value is found in an Array
+    # Function to check if match_value is found in an Array.
+    #
+    # * *args*:
+    #   - value      : The controller value to test matching.
+    #   - match_value: The matching subhash match.
+    #     It can be an Array of match_value or just match_value
     #
     # * *returns*:
-    #   - true if found
-    # OR
-    #   - false otherwise
+    #   - treated: true if match_value is Array
+    #   - status : true if match. false otherwise
     #
-    def lorj_filter_array(value, match_value)
-      return false unless value.is_a?(Array) || match_value.is_a?(Array)
+    def lorj_filter_array(value, match_value) # :doc:
+      return [false, false] unless value.is_a?(Array) ||
+                                   match_value.is_a?(Array)
 
       if value.is_a?(Array) && match_value.is_a?(Array)
-        return (value.sort == match_value.sort)
+        return [true, (match_value - value).empty?]
       end
 
-      value.include?(match_value)
+      [true, value.include?(match_value)]
     end
 
     # Function to check if a value match a filter value.
     #
-    # * *returns*:
-    #   - true if match
-    # OR
-    #   - false otherwise
+    # * *args*:
+    #   - value    : The controller value to test matching
+    #   - structure: The matching subhash match.
+    #     It will be interpreted by #Lorj::KeyPath.
     #
-    def lorj_filter_hash(value, structure)
-      return false unless value.is_a?(Hash)
+    # * *returns*:
+    #   - treated: true if match_value is Hash
+    #   - status : true if match. false otherwise
+    #
+    def lorj_filter_hash(value, structure) # :doc:
+      return [false, false] unless value.is_a?(Hash)
 
       key_path = KeyPath.new(structure)
       tree = key_path.tree[0..-2]
-      return false unless value.rh_exist?(tree)
+      return [true, false] unless value.rh_exist?(tree)
       match_value = key_path.key
       res = value.rh_get(tree)
       return lorj_filter_array(res.flatten, match_value) if res.is_a?(Array)
@@ -321,13 +366,16 @@ module Lorj
 
     # Function to check if a value match a filter value.
     #
-    # * *returns*:
-    #   - true if match
-    # OR
-    #   - false otherwise
+    # * *args*:
+    #   - value    : The controller value to test matching
+    #   - structure: The matching subhash match.
     #
-    def lorj_filter_default(value, match_value)
-      (value == match_value)
+    # * *returns*:
+    #   - treated: true if match_value is Hash
+    #   - status : true if match. false otherwise
+    #
+    def lorj_filter_default(value, match_value) # :doc:
+      [true, (value == match_value)]
     end
   end
 end
