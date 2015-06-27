@@ -140,7 +140,7 @@ module Lorj
       objects.each do |o|
         if [Proc, Method].include?(triggers[:before].class)
           code = triggers[:before]
-          next unless code.call o
+          next unless code.call o, query
         end
         if [Proc, Method].include?(triggers[:extract].class)
           code = triggers[:extract]
