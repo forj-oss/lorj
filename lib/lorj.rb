@@ -71,6 +71,8 @@ module Lorj
   # * *Raises* :
   #   No exceptions
   def self::debug(iLevel, sMsg, *p)
+    PrcLib.core_level = 0 if PrcLib.core_level.nil?
+
     if iLevel <= PrcLib.core_level
       message = format('-%s- %s', iLevel, sMsg)
 
