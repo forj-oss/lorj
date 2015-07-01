@@ -165,8 +165,21 @@ describe 'Internal BaseDefinition features' do
     end
 
     it 'account_export({"credentials#key" => {:keys => [:server, :key]}})'\
-       ' returns ' do
+       ' returns data with :server/:key instead of :credentials/:key' do
       map = { 'credentials#key' => { :keys => [:server, :key] } }
+      entr, export_dat = @spec_obj.account_export(map)
+      export_dat = YAML.load(export_dat)
+      dat_decrypted = Lorj::SSLCrypt.get_encrypted_value(export_dat[:enc_data],
+                                                         entr, 'data encrypted')
+      data = YAML.load(dat_decrypted)
+      expect(data.rh_exist?(:credentials, :key)).to equal(false)
+      expect(data.rh_exist?(:server, :key)).to equal(true)
+      expect(data.rh_exist?(:account, :name)).to equal(true)
+    end
+
+    it "account_export({'credentials#key' => {:keys => 'server#key'}})"\
+       ' returns data with :server/:key instead of :credentials/:key' do
+      map = { 'credentials#key' => { :keys => 'server#key' } }
       entr, export_dat = @spec_obj.account_export(map)
       export_dat = YAML.load(export_dat)
       dat_decrypted = Lorj::SSLCrypt.get_encrypted_value(export_dat[:enc_data],

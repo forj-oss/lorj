@@ -164,12 +164,11 @@ module Lorj
           data = config[k]
         end
 
-        rhash_tree = Lorj.data.first_section(k)
-        rhash_tree = v[:keys] if v.key?(:keys)
+        rhash_kpath = _export_keys_as_keypath(k, v)
         if !data_def.nil? && data_def[:encrypted].is_a?(TrueClass)
           data = Lorj::SSLCrypt.get_encrypted_value(data, entr, data_def[:desc])
         end
-        rhash.rh_set(data, *rhash_tree)
+        rhash.rh_set(data, *(rhash_kpath.tree))
       end
 
       entr = Lorj::SSLCrypt.new_encrypt_key
@@ -180,6 +179,22 @@ module Lorj
     end
 
     private
+
+    # Internal function to determine which section/key to set in export file
+    #
+    # It should support Array or String with syntax 'section#key'
+    def _export_keys_as_keypath(k, v)
+      rhash_kpath = KeyPath.new(Lorj.data.first_section(k))
+      if v.key?(:keys)
+        if v[:keys].is_a?(String)
+          section, key = Lorj.data.first_section(v[:keys])
+          rhash_kpath = KeyPath.new([section, key])
+        else
+          rhash_kpath = KeyPath.new(v[:keys])
+        end
+      end
+      rhash_kpath
+    end
 
     def _export_processes(processes_options)
       export_data = []
