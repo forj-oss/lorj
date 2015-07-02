@@ -153,6 +153,7 @@ module Lorj
                              'as Lorj::Data object if ObjectType is not given.',
                             oObject.class unless sObjectType
         data_objects = Lorj::Data.new(sDataType)
+        data_objects.base = self
         data_objects.set(oObject, sObjectType) do |sObjType, oControlerObject|
           _return_map(sObjType, oControlerObject)
         end

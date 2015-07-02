@@ -75,6 +75,11 @@ module Lorj
       params = nil unless params.is_a?(Hash)
       @base_object.controller_get(sObjectType, sId, params)
     end
+
+    def controller_refresh(sObjectType, object) #:doc:
+      process_error 'No Controler object loaded.' unless @base_object
+      @base_object.controller_refresh(sObjectType, object)
+    end
   end
 
   # class describing generic Object Process
@@ -103,6 +108,11 @@ module Lorj
     def process_delete(sObjectType, hConfig = nil) #:doc:
       process_error 'No Base object loaded.' unless @base_object
       @base_object.process_delete(sObjectType, hConfig)
+    end
+
+    def process_refresh(sObjectType, object) #:doc:
+      process_error 'No Base object loaded.' unless @base_object
+      @base_object.process_refresh(sObjectType, object)
     end
   end
 

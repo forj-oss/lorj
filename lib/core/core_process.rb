@@ -44,7 +44,7 @@ module Lorj
     #   - Error if the create_e process handler raise an error.
     #
     def process_create(object_type, hConfig = nil)
-      return nil unless object_type
+      return nil unless object_type.is_a?(Symbol)
 
       _add_instant_config(hConfig)
 
@@ -64,6 +64,7 @@ module Lorj
         # This object is a meta object, without any data.
         # Used to build other kind of objects.
         object = Lorj::Data.new
+        object.base = self
         object.set({}, object_type) {}
       else
         # build Function params to pass to the event handler.
@@ -116,7 +117,7 @@ module Lorj
     #   - Error if the query_e process handler raise an error.
     #
     def process_delete(object_type, hConfig = nil)
-      return nil unless object_type
+      return nil unless object_type.is_a?(Symbol)
 
       _add_instant_config(hConfig)
 
@@ -200,7 +201,7 @@ module Lorj
     #
     #
     def process_query(object_type, hQuery, hConfig = nil)
-      return nil unless object_type
+      return nil unless object_type.is_a?(Symbol)
 
       _add_instant_config(hConfig)
 
@@ -291,7 +292,7 @@ module Lorj
     #   - Error if the get_e process handler raise an error.
     #
     def process_get(object_type, sUniqId, hConfig = nil)
-      return nil unless object_type
+      return nil unless object_type.is_a?(Symbol)
 
       _add_instant_config(hConfig)
 
@@ -344,9 +345,9 @@ module Lorj
     # updating.
     #
     # * *Returns* :
-    # - Lorj::Data of type :object
-    # OR
-    # - Lorj::Data empty.
+    #   - Lorj::Data of type :object
+    #   OR
+    #   - Lorj::Data empty.
     #
     # * *Raises* :
     #   - Warning if the Config data passed are not required by the meta object
@@ -357,7 +358,7 @@ module Lorj
     #   - Error if the get_e process handler raise an error.
     #
     def process_update(object_type, hConfig = nil)
-      return nil unless object_type
+      return nil unless object_type.is_a?(Symbol)
 
       _add_instant_config(hConfig)
 
@@ -393,6 +394,83 @@ module Lorj
       else
         @object_data.add(object)
       end
+    end
+
+    # Function to execute an object update. This function returns a Lorj::Data
+    # of type :object, refreshed.
+    #
+    # It uses the event 'refresh_e'. If not defined, the refresh is simply not
+    # executed. No warning exposed, but a debug info is thrown.
+    #
+    # refresh_e is defined and called as follow:
+    #
+    # BaseDefinition class derived function. This Process function should do any
+    # task required to execute a refresh of the object passed.
+    # The controller object data should be extracted by the controller_refresh
+    # call to refresh :attrs. See #controller_refresh.
+    # It should return true or false if the object refresh was done successfully
+    # or not
+    #
+    # It is possible to call directly the controller_refresh as the process
+    # event
+    #
+    # * *args*:
+    #   - object_type: The object_type to refresh
+    #   - object     : The Lorj::Data object to refresh
+    #
+    # * *returns*:
+    #   - boolean : true if refresh was executed successfully.
+    #     false otherwise.
+    #
+    # From the object itself, you can call object.refresh. This will call this
+    # function.
+    #
+    # The controller event usually called is controller_refresh.
+    #
+    # * *Args* :
+    #   - +object_type+ : Meta object type to query.
+    #   - +config+      : Optional. Hash containing list of data to use for
+    # updating.
+    #
+    # * *Returns* :
+    #   - boolean : true if the refresh was executed successfully.
+    #     false otherwise.
+    #
+    # * *Raises* :
+    #   - Warning if the Config data passed are not required by the meta object
+    #     (or dependencies) at creation time.
+    #   - Error if ObjectType has never been declared.
+    #   - Error if the dependencies get_e process handler did not return any
+    #     data. (nil) - Loop detection.
+    #   - Error if the get_e process handler raise an error.
+    #
+    def process_refresh(object)
+      return nil unless object.is_a?(Lorj::Data) && object.type == :object &&
+                        !object.empty?
+
+      object_type = object.object_type?
+
+      unless PrcLib.model.meta_obj.rh_exist?(object_type)
+        PrcLib.runtime_fail "$s.%s: '%s' is not a known object type.",
+                            self.class, __callee__, object_type
+      end
+
+      proc = PrcLib.model.meta_obj.rh_get(object_type, :lambdas, :refresh_e)
+
+      if proc.nil?
+        Lorj.debug(1, "No 'refresh_e' event found for object type '%s'",
+                   object_type)
+        return false
+      end
+
+      ret = @process.method(proc).call(object_type, object)
+
+      unless ret.boolean?
+        Lorj.debug(1, "'%s' has not returned a boolean. Consider return false.",
+                   object_type)
+        ret = false
+      end
+      ret
     end
   end
 

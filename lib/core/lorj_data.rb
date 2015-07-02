@@ -89,6 +89,31 @@ module Lorj
     # Return Lorj::Data object type
     attr_reader :type
 
+    def base=(base)
+      @base = base if @base.nil? && base.is_a?(Lorj::BaseDefinition)
+      @base
+    end
+
+    # Do an object refresh by calling the process_refresh function if
+    # the process has been provided.
+    #
+    # For details on refresh call, see #BaseDefinition.process_refresh
+    #
+    # * *Args* :
+    #   Nothing
+    #
+    # * *Returns* :
+    #   - +status+ : Boolean.
+    #      true if refresh is successful
+    #      false otherwise
+    def refresh
+      return false if empty? || @base.nil?
+      return false unless @base.is_a?(Lorj::BaseDefinition) &&
+                          @base.class.method_defined?(:process_refresh)
+
+      @base.process_refresh(self)
+    end
+
     # Return :object type of the Lorj::Data object.
     #
     # * *Args* :
@@ -112,21 +137,20 @@ module Lorj
     # - Set from a Lorj::Data.
     #   ex: if data is already a Lorj::Data,
     #      copy = Lorj::Data.new()
+    #      copy.base = self
     #      copy.set(data)
     # - Set from an object, not Lorj::Data and not a list.
     #   ex:
     #      data = { :test => 'toto'}
     #      copy = Lorj::Data.new()
-    #      copy.set(data, :object) { |oObject |
-    #         oObject
-    #      }
+    #      copy.base = self
+    #      copy.set(data, :object) { |oObject | oObject }
     # - Set from a list of objects, not Lorj::Data and not a :object.
     #   ex:
     #      data = [{ :name => 'toto'}, {:name => 'test'}]
     #      copy = Lorj::Data.new()
-    #      copy.set(data, :list, { :name => /^t/ }) { |oObject |
-    #         oObject
-    #      }
+    #      copy.base = self
+    #      copy.set(data, :list, { :name => /^t/ }) { |oObject | oObject }
     #
     # * *Args* :
     #   - +data+  : Lorj::Data or any other data.
@@ -148,6 +172,8 @@ module Lorj
     #
     def set(oObj, sObjType = nil, hQuery = {})
       return obj_data_set(oObj, sObjType) if oObj.is_a?(Lorj::Data)
+
+      return nil unless block_given?
 
       # while saving the object, a mapping work is done?
       case @type
@@ -222,6 +248,7 @@ module Lorj
     #     ex:
     #      data = { :name => 'toto'}
     #      copy = Lorj::Data.new()
+    #      copy.base = self
     #      copy.set(data, :object) { |oObject |
     #         {:real_name => oObject[:name]}
     #      }
@@ -239,6 +266,7 @@ module Lorj
     #     ex:
     #      data = [{ :name => 'toto'}, {:name => 'test'}]
     #      copy = Lorj::Data.new()
+    #      copy.base = self
     #      copy.set(data, :list, { :name => /^t/ }) { |oObject |
     #         {:real_name => oObject[:name]}
     #      }
@@ -309,6 +337,7 @@ module Lorj
     #         {:real_name => oObject[:name]}
     #      }
     #      list = Lorj::Data.new()
+    #      list.base = self
     #
     #      puts data.exist?(:object)          # => false
     #

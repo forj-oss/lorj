@@ -36,7 +36,7 @@ Metrics/MethodLength:
   Max: 50
 # If Method length is increased, class length need to be extended as well.
 Metrics/ClassLength:
-  Max: 150
+  Max: 200
 
 # allow arguments to be longer than 15
 Metrics/AbcSize:

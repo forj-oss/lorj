@@ -272,6 +272,34 @@ module Lorj
       @core_object.process_update(oCloudObj, hConfig)
     end
 
+    # Execution of the Update process for the `oCloudObj` object.
+    # Usually, the Controller object data is updated by the process
+    # (BaseController::set_attr)
+    # then it should call a controller_update to really update the data in the
+    # controller.
+    #
+    # * *Args* :
+    #   - +oCloudObj+ : Name of the object to initialize.
+    #   - +sId+       : data representing the ID (attribute :id) of a Lorj::Data
+    #                   object.
+    #   - +hConfig+   : Hash of hashes containing data required to initialize
+    #                   the object.
+    #     If you use this variable, any other runtime config defined
+    #     by the Data model will be cleaned before
+    #
+    # * *Returns* :
+    #   - +Lorj::Data+ : Represents the Object initialized.
+    #
+    # * *Raises* :
+    #   No exceptions
+
+    def refresh(object)
+      return false unless object.is_a?(Lorj::Data) && !object.empty? &&
+                          object.type == :object
+
+      @core_object.process_update(object)
+    end
+
     # Function used to ask users about setting up his account.
     #
     # * *Args* :

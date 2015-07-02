@@ -34,6 +34,7 @@ module Lorj
                                                  :create_e, :connect)
       controller_obj = @controller.connect(sObjectType, controller_params)
       data_obj = Lorj::Data.new
+      data_obj.base = self
       data_obj.set(controller_obj, sObjectType) do |sObjType, oObject|
         begin
           _return_map(sObjType, oObject)
@@ -60,6 +61,7 @@ module Lorj
                                                  :create_e, :create)
       controller_obj = @controller.create(sObjectType, controller_params)
       data_obj = Lorj::Data.new
+      data_obj.base = self
       data_obj.set(controller_obj, sObjectType) do |sObjType, oObject|
         begin
           _return_map(sObjType, oObject)
@@ -116,6 +118,7 @@ module Lorj
 
       controller_obj = @controller.get(sObjectType, sUniqId, controller_params)
       data_obj = Lorj::Data.new
+      data_obj.base = self
       data_obj.set(controller_obj, sObjectType) do |sObjType, oObject|
         begin
           _return_map(sObjType, oObject)
@@ -160,6 +163,7 @@ module Lorj
                                          controller_params)
 
       data_obj = Lorj::Data.new :list
+      data_obj.base = self
       data_obj.set(controller_obj,
                    sObjectType, hQuery) do |sObjType, key|
         begin
@@ -188,7 +192,7 @@ module Lorj
     #
     # returns:
     # - The controller must return true to inform about the real deletion
-    def controller_update(sObjectType, params = NIL)
+    def controller_update(sObjectType, params = nil)
       _add_instant_config(params)
 
       # Need to detect data updated and update the Controler object with the
@@ -239,6 +243,49 @@ module Lorj
       _remove_instant_config(params)
 
       is_done
+    end
+
+    # controller_refresh call lorj framework to execute a controller refresh
+    # task
+    #
+    # The controller must respect the following rule:
+    # - If the refresh was unsuccessful, due to errors, the original object
+    #   should be kept intact.
+    # - A boolean should be return to inform that therefresh was executed
+    #   successfully or not.
+    #
+    # * *parameters:*
+    #   - +object_type+: Lorj object type to use for the refresh.
+    #   - +object+     : object to refresh.
+    #
+    # * *returns*:
+    #   - boolean: true if refresh was executed successfully.
+    #     false otherwise.
+    #
+    def controller_refresh(sObjectType, data_obj)
+      return false unless data_obj.is_a?(Lorj::Data) && !data_obj.empty?
+
+      controller_obj = data_obj[:object]
+
+      is_refreshed = @controller.refresh(sObjectType, controller_obj)
+
+      PrcLib.runtime_fail "Controller function 'refresh' must return true or "\
+                          "false. Class returned: '%s'",
+                          is_refreshed.class unless is_refreshed.boolean?
+
+      Lorj.debug(1, '%s.%s - refreshed.',
+                 @process.class, sObjectType) if is_refreshed
+
+      data_obj.set(controller_obj, sObjectType) do |sObjType, an_object|
+        begin
+          _return_map(sObjType, an_object)
+       rescue => e
+         PrcLib.runtime_fail 'update %s.%s : %s',
+                             @process.class, sObjectType, e.message
+        end
+      end
+
+      is_refreshed
     end
   end
 end

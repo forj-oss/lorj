@@ -64,6 +64,27 @@ module Lorj
       controller_error 'update_object has not been redefined by the controller.'
     end
 
+    # controller refresh handlers which needs to be defined by the controller,
+    # this function should execute a controller data refresh
+    #
+    # The controller must respect the following rule:
+    # - If the refresh was unsuccessful, due to errors, the original object
+    #   should be kept intact.
+    # - A boolean should be return to inform that therefresh was executed
+    #   successfully or not.
+    #
+    # * *parameters:*
+    #   - +object_type+: Lorj object type to use for the refresh.
+    #   - +object+     : object to refresh.
+    #
+    # * *returns*:
+    #   - boolean: true if refresh was executed successfully.
+    #     false otherwise.
+    #
+    def refresh(_sObjectType, _oObject)
+      controller_error 'refresh_object has not been redefined by the controller'
+    end
+
     # Simply raise an error
     #
     # * *Args*    :

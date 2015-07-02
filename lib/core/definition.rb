@@ -125,6 +125,7 @@ module Lorj
     #     - :get_e      : Process function to call with get
     #     - :query_e    : Process function to call with query
     #     - :get_attr_e : Process function to call with get_attr
+    #     - :refresh_e  : Process function to call with refresh
     def self.define_obj(obj_type_name, handlers = nil)
       return nil unless [NilClass, String, Symbol].include?(obj_type_name.class)
       PrcLib.model.heap true
@@ -634,7 +635,8 @@ module Lorj
       # TODO: Cleanup un-used 2 levels :params/:keys by single :params
       object = { :lambdas => { :create_e => nil, :delete_e => nil,
                                :update_e => nil, :get_e => nil,
-                               :query_e => nil, :get_attr_e => nil },
+                               :query_e => nil, :get_attr_e => nil,
+                               :refresh_e => nil },
                  :params =>  { :keys => {} },
                  :options => { :controller => use_controller },
                  :query_mapping => { ':id' => ':id', ':name' => ':name' },

@@ -71,6 +71,7 @@ describe 'Lorj::ObjectData' do
       end
     end
   end
+
   context 'initialize with internal true' do
     before(:all) do
       @obj_data = Lorj::ObjectData.new(true)
@@ -78,10 +79,12 @@ describe 'Lorj::ObjectData' do
       data = [{ :name => 'toto' }]
       @internal_data.set(data, :list, :name => /^t/) { |oObject| oObject }
     end
+
     it 'Test method #add' do
       @obj_data.add(@internal_data)
       expect(@obj_data.exist?(:list)).to eq(true)
     end
+
     it 'Test method #delete' do
       deleted_data = @obj_data.delete(@internal_data)
       expect(@obj_data.exist?(:list)).to eq(false)
