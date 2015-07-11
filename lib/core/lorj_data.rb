@@ -521,6 +521,7 @@ module Lorj
           next if oElemObject.nil?
           begin
             data_obj = Lorj::Data.new(:object)
+            data_obj.base = @base
             data_obj.set(oElemObject, sObjType) do |sObjectType, oObject|
               yield(sObjectType, oObject)
             end
