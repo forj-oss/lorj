@@ -503,10 +503,12 @@ module Lorj
   #     It must be controllers/<controller_name>/<controller_name>.rb
   #     You can change 'controllers' by any name, with :controllers_dir
   #
-  #   - +properties   : required.
+  #   - +properties+   : List of possible options:
   #     - :controllers_dir : Name of the controllers directory.
   #       By default 'controllers'
-  #     - :lib_name : name of the gem library declaring the process.
+  #     - :lib_name : Required. name of the gem library declaring the process.
+  #       Used by lorj to import an account data and validate it, thanks to the
+  #       process data structure.
   #
   #  The process will be added in Lorj.processes Hash
   #

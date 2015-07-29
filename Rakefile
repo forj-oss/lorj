@@ -74,7 +74,7 @@ task :spec18 do
     else
       `docker rm lorj` if $?.exitstatus == 0
       cmd = "docker run -e RSPEC_DEBUG=#{ENV['RSPEC_DEBUG']} -it --name "\
-             'lorj -v $(pwd):/src -w /src ruby/1.8 /tmp/bundle.sh'
+             'lorj -v "$(pwd):/src" -w /src ruby/1.8 /tmp/bundle.sh'
       puts "Running #{cmd}"
       system(cmd)
     end
