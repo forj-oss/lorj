@@ -564,6 +564,8 @@ module Lorj
       return @data[key[0]] if [:object, :query].include?(key[0])
       return @data[:list][key[0]] if key.length == 1
       # can Return only attrs or the real object.
+      return nil if @data[:list].nil?
+      return nil if @data[:list][key[0]].nil?
       @data[:list][key[0]][key[1..-1]]
     end
 
