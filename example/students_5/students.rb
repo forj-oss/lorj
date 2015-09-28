@@ -114,7 +114,7 @@ puts format('Wrong student to remove: %s = %s',
             student[:id], student[:student_name])
 
 puts ANSI.bold("List of students for 'Art Drama':")
-puts student_core.query(:student,  :course => 'Art Drama').to_a
+puts student_core.query(:student, :course => 'Art Drama').to_a
 
 puts ANSI.bold('Deleted students:')
 puts student_core.query(:student, :status => :removed).to_a

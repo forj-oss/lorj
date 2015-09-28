@@ -694,7 +694,7 @@ module Lorj
                                    :config   => \
                                    Lorj::AccountConfig.new(nil, latest_version),
                                    :file_set => true,
-                                   :load     => true, :save     => true)
+                                   :load     => true, :save => true)
     end
 
     def initialize_account

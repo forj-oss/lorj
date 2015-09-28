@@ -14,8 +14,6 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-# rubocop: disable Metrics/AbcSize
-
 file_dir = File.join(File.dirname(__FILE__), 'compat')
 compat_version = RUBY_VERSION[0..2]
 file = File.basename(__FILE__)
@@ -201,7 +199,7 @@ module Lorj
     #   true/false
     # * *Raises* :
     #   PrcError
-    def exist?(*key) # rubocop: disable Metrics/MethodLength
+    def exist?(*key)
       unless [Array, String, Symbol].include?(key.class)
         PrcLib.runtime_fail 'ObjectData: key is not list of values '\
                             '(string/symbol or array)'
@@ -290,7 +288,7 @@ module Lorj
       # params are retrieved in controller context
       # By default, if key is detected as a controller object, return its
       # data.
-      return object[:object,  key[1..-1]] unless @internal
+      return object[:object, key[1..-1]] unless @internal
     end
 
     # Add function. Add a Lorj::Data (data or list) to the ObjectData list.

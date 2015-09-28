@@ -43,7 +43,6 @@ require yaml_students_file
 #   file: my_code.rb => needs to create MyCode class
 class YamlStudentsController
   # controller wrapper
-  # rubocop: disable Metrics/MethodLength
   def create(sObjectType, hParams)
     case sObjectType
     when :connection
@@ -103,8 +102,8 @@ class YamlStudentsController
                 oControlerObject.class,
                 valid_attributes) unless valid_attributes.include?(key[0])
     attributes.rh_get(key)
- rescue => e
-   Error format("get_attr: Unable to map '%s'. %s", key, e.message)
+  rescue => e
+    Error format("get_attr: Unable to map '%s'. %s", key, e.message)
   end
 
   def set_attr(oControlerObject, key, value)
@@ -115,8 +114,8 @@ class YamlStudentsController
                 oControlerObject.class,
                 valid_attributes) unless valid_attributes.include?(key[0])
     attributes.rh_set(value, key)
- rescue
-   Error format("set_attr: Unable to map '%s' on '%s'", key, sObjectType)
+  rescue
+    Error format("set_attr: Unable to map '%s' on '%s'", key, sObjectType)
   end
 
   def update(sObjectType, oObject, hParams)

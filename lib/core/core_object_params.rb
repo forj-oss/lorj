@@ -65,6 +65,8 @@ module Lorj
 
       unless param_options[:extract_from].nil?
         value = new_params[param_options[:extract_from]]
+        Lorj.debug(4, "'#{param_obj.tree}' set to '#{value} extracted' \
+                       ' from '#{param_options[:extract_from]}'")
         new_params[param_obj.tree] = value
         return value
       end
@@ -75,7 +77,7 @@ module Lorj
       default = param_options.rh_get(:default_value)
       value = @config.get(param_name, default)
       new_params[param_obj.tree] = value
-
+      Lorj.debug(4, "'%s' set to '%s'", param_obj.tree, value)
       value
     end
 

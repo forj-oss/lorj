@@ -38,14 +38,15 @@ module Lorj
       data_obj.set(controller_obj, sObjectType) do |sObjType, oObject|
         begin
           _return_map(sObjType, oObject)
-       rescue => e
-         PrcLib.runtime_fail 'connect %s.%s : %s',
-                             @process.class, sObjectType, e.message
+        rescue => e
+          PrcLib.runtime_fail 'connect %s.%s : %s',
+                              @process.class, sObjectType, e.message
         end
       end
       @object_data.add data_obj
       data_obj
     end
+
     # controller_create call lorj framework to execute a
     # controller creation task
     #
@@ -65,9 +66,9 @@ module Lorj
       data_obj.set(controller_obj, sObjectType) do |sObjType, oObject|
         begin
           _return_map(sObjType, oObject)
-       rescue => e
-         PrcLib.runtime_fail 'create %s.%s : %s',
-                             @process.class, sObjectType, e.message
+        rescue => e
+          PrcLib.runtime_fail 'create %s.%s : %s',
+                              @process.class, sObjectType, e.message
         end
       end
       @object_data.add data_obj
@@ -122,9 +123,9 @@ module Lorj
       data_obj.set(controller_obj, sObjectType) do |sObjType, oObject|
         begin
           _return_map(sObjType, oObject)
-       rescue => e
-         PrcLib.runtime_fail 'get %s.%s : %s',
-                             @process.class, sObjectType, e.message
+        rescue => e
+          PrcLib.runtime_fail 'get %s.%s : %s',
+                              @process.class, sObjectType, e.message
         end
       end
       @object_data.add data_obj
@@ -168,9 +169,9 @@ module Lorj
                    sObjectType, hQuery) do |sObjType, key|
         begin
           _return_map(sObjType, key)
-       rescue => e
-         PrcLib.runtime_fail 'query %s.%s : %s',
-                             @process.class, sObjectType, e.message
+        rescue => e
+          PrcLib.runtime_fail 'query %s.%s : %s',
+                              @process.class, sObjectType, e.message
         end
       end
 
@@ -234,9 +235,9 @@ module Lorj
       data_obj.set(controller_obj, sObjectType) do |sObjType, an_object|
         begin
           _return_map(sObjType, an_object)
-       rescue => e
-         PrcLib.runtime_fail 'update %s.%s : %s',
-                             @process.class, sObjectType, e.message
+        rescue => e
+          PrcLib.runtime_fail 'update %s.%s : %s',
+                              @process.class, sObjectType, e.message
         end
       end
 
@@ -279,9 +280,9 @@ module Lorj
       data_obj.set(controller_obj, sObjectType) do |sObjType, an_object|
         begin
           _return_map(sObjType, an_object)
-       rescue => e
-         PrcLib.runtime_fail 'update %s.%s : %s',
-                             @process.class, sObjectType, e.message
+        rescue => e
+          PrcLib.runtime_fail 'update %s.%s : %s',
+                              @process.class, sObjectType, e.message
         end
       end
 

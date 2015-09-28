@@ -509,7 +509,7 @@ module Lorj
 
       new_class = Class.new(model[:process_class])
       unless /Process$/ =~ the_process_class
-        the_process_class = format('%sProcess',  the_process_class)
+        the_process_class = format('%sProcess', the_process_class)
       end
 
       Lorj.debug(1, "Declaring Process '%s'", the_process_class)

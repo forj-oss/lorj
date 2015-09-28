@@ -598,6 +598,7 @@ module Lorj
                      build_steps.length - 1, attr_name)
       nil
     end
+
     # Internal setup function to complete the list of attributes
     # and organize attributes by step as requested by attr dependencies
     # It loops on a list of unanalyzed attributes to determine

@@ -134,7 +134,7 @@ module PrcLib
            File.writable?(path) &&
            File.executable?(path)
       msg = format("'%s is not a valid directory. "\
-                   'Check permissions and fix it.',  path)
+                   'Check permissions and fix it.', path)
 
       fatal_error(1, msg)
     end
@@ -159,7 +159,7 @@ module PrcLib
   # Define module data for lorj library configuration
   class << self
     attr_accessor :log, :core_level
-    attr_reader :app_defaults,  :level, :lib_path
+    attr_reader :app_defaults, :level, :lib_path
   end
 
   module_function
@@ -322,7 +322,7 @@ module PrcLib
 
   # Read Attribute setting for default library controller path
   def controller_path
-    File.expand_path(File.join(@lib_path,  'providers'))
+    File.expand_path(File.join(@lib_path, 'providers'))
   end
 
   # Read Attribute setting for default library model/process path

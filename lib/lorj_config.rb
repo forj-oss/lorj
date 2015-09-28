@@ -62,7 +62,7 @@ module Lorj
     # * *Args*    :
     # - +layer_name+ : Layer name to get the config file name
     def config_filename(name = 'local')
-      index =  layer_index(name)
+      index = layer_index(name)
 
       index = 1 if index.nil?
 
@@ -167,7 +167,7 @@ module Lorj
         end
 
       else
-        config.data[:default] =  nil
+        config.data[:default] = nil
         # Write the empty file
         PrcLib.info('Creating your default configuration file ...')
         config.save config_name

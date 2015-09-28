@@ -81,7 +81,7 @@ module Lorj
                    @max_level if @max_level > 0 && @keypath.length > @max_level
     end
 
-    def tree # rubocop: disable TrivialAccessors
+    def tree
       @keypath
     end
 
@@ -124,9 +124,7 @@ module Lorj
     private
 
     def string_to_sarray(sKeyPath)
-      # rubocop: disable Style/RegexpLiteral
       if %r{[^\\/]?/[^/]} =~ sKeyPath || %r{:[^:/]} =~ sKeyPath
-        # rubocop: enable Style/RegexpLiteral
         res = []
         # split then rejoin / prefixed by \
         sKeyPath.split('/').each do |s|

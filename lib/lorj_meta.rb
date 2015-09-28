@@ -700,7 +700,7 @@ module Lorj
       return nil unless check_par(section, Symbol,
                                   data,    Symbol,
                                   options, Hash,
-                                  layer,  [String, NilClass])
+                                  layer, [String, NilClass])
 
       keys = [:sections]
       keys << section << data
@@ -729,7 +729,7 @@ module Lorj
       return nil unless check_par(section, Symbol,
                                   data,    Symbol,
                                   options, Hash,
-                                  layer,  [String, NilClass])
+                                  layer, [String, NilClass])
 
       keys = [:sections, section, data]
       value = p_get(:keys => keys, :name => 'controller')

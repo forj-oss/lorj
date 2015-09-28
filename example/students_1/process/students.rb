@@ -35,5 +35,5 @@ class Lorj::BaseDefinition # rubocop:disable Style/ClassAndModuleChildren
              :create_e => :create_student
             )
 
-  obj_needs :data,         :student_name,         :for => [:create_e]
+  obj_needs :data, :student_name, :for => [:create_e]
 end

@@ -37,7 +37,7 @@ class Lorj::BaseDefinition # rubocop: disable Style/ClassAndModuleChildren
   # Those data (or objects) will be collected and passed to the process
   # handler as hParams.
 
-  obj_needs :data,   :student_name,           :for => [:create_e]
+  obj_needs :data, :student_name, :for => [:create_e]
 
   # By default, all data are required.
   # You can set it as optional. Your process will need to deal with this

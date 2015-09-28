@@ -72,7 +72,7 @@ class YamlStudents
              :create_e => :controller_create
             )
 
-  obj_needs :data,   :connection_string,  :mapping => :file_name
+  obj_needs :data,   :connection_string, :mapping => :file_name
   undefine_attribute :id    # Do not return any predefined ID
   undefine_attribute :name  # Do not return any predefined NAME
 
@@ -85,7 +85,7 @@ class YamlStudents
   # when needed.
   # obj_needs :CloudObject update the :student object to requires a connection
   # before.
-  obj_needs :CloudObject,              :connection
+  obj_needs :CloudObject, :connection
 
   # To simplify controller wrapper, we use hdata built by lorj, and passed to
   # the API

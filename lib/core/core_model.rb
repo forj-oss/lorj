@@ -14,8 +14,6 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-# rubocop: disable Metrics/AbcSize
-
 # TODO: Move most declaration functions to Model class for simplification.
 
 # - Lorj::Model : Model class reference.
@@ -186,7 +184,6 @@ module Lorj
         # declaration
         :ClassProcess => nil,   # Current Process Class declaration
         :oCurrentData => nil,   # Current data model declaration
-        :oCurrentObj => nil,    # Current object declaration
         :oCurrentKey => nil     # Current attribute declaration
       }
 

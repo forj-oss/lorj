@@ -68,6 +68,8 @@ module Lorj
         object.set({}, object_type) {}
       else
         # build Function params to pass to the event handler.
+        Lorj.debug(4, "Building parameters for '%s', proc '%s'",
+                   object_type, proc)
         params = _get_process_params(object_type, :create_e, proc)
         Lorj.debug(2, "Create Object '%s' - Running '%s'", object_type, proc)
 

@@ -51,9 +51,9 @@ class YamlSchool
       File.open(@file, 'w') do |out|
         YAML.dump(@data, out)
       end
-   rescue => e
-     Lorj.error(format("%s\n%s", e.message, e.backtrace.join("\n")))
-     return false
+    rescue => e
+      Lorj.error(format("%s\n%s", e.message, e.backtrace.join("\n")))
+      return false
     end
     true
   end

@@ -46,7 +46,7 @@ student_core.create(:student, :student_name => 'Robert Redford')
 student_core.create(:student, :student_name => 'Anthony Hopkins')
 
 # Let's create a third different student.
-students = student_core.query(:student,  :name => 'Robert Redford')
+students = student_core.query(:student, :name => 'Robert Redford')
 
 puts format('%s students found', students.length)
 
